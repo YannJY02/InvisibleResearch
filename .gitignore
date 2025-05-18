@@ -1,0 +1,3 @@
+venv/
+dump.sql
+database.sql.gz

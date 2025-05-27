@@ -18,6 +18,7 @@ gzip -dc database.sql.gz > dump.sql
 docker run -d \
   --name PKPresearch-db \
   -v /Volumes/Seagate/Research/InvisibleResearch/mysql_data:/var/lib/mysql \
+  -p 3306:3306 \
   -e MYSQL_ROOT_PASSWORD=secret \
   mysql:latest
 
@@ -28,3 +29,5 @@ docker ps
 docker exec -i PKPresearch-db mysql -uroot -psecret -e "CREATE DATABASE IF NOT EXISTS invisible_research;"
 cat /Volumes/Seagate/Research/InvisibleResearch/dump.sql | docker exec -i PKPresearch-db mysql -uroot -psecret invisible_research
 
+# Run the Python script to read from the database
+python read_database.py

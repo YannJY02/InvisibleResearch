@@ -2,3 +2,4 @@ venv/
 dump.sql
 database.sql.gz
 .DS_Store
+README.html

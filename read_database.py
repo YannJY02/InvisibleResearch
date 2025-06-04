@@ -26,6 +26,19 @@ print(inspector.get_table_names())
 for table in inspector.get_table_names():
     cols = inspector.get_columns(table)
     print(f"Columns in {table}: {[col['name'] for col in cols]}")
+    # Fetch one sample row to illustrate typical values
+    try:
+        sample_df = pd.read_sql(f"SELECT * FROM {table} LIMIT 1", con=engine)
+        if not sample_df.empty:
+            sample_row = sample_df.iloc[0].to_dict()
+            example_str = "; ".join([f"{k}={repr(v)[:60]}" for k, v in sample_row.items()])
+            print(f"  ↳ Example row: {example_str}")
+        else:
+            print("  ↳ (table is empty)")
+    except Exception as e:
+        print(f"  ↳ (failed to fetch sample row: {e})")
+
+
 
 # only read 10 records from the 'records' table
 df_meta = pd.read_sql(f"SELECT id, metadata FROM records LIMIT {N}", con=engine)
@@ -40,6 +53,29 @@ for xml_str in df_meta['metadata'].head(N):
     except Exception:
         continue
 print(f"Unique XML tags in first {N} records: {tags}")
+
+# Build a dict of one example value per XML tag
+tag_examples = {}
+for xml_str in df_meta['metadata'].head(N):
+    try:
+        root = etree.fromstring(xml_str.encode('utf-8'))
+        for elem in root.iter():
+            tag_name = elem.tag
+            # store first non-empty text as example
+            if tag_name not in tag_examples:
+                text_val = (elem.text or "").strip()
+                if text_val:
+                    tag_examples[tag_name] = text_val[:120]  # truncate long texts
+            # stop early if we've collected examples for all known tags
+            if len(tag_examples) == len(tags):
+                break
+    except Exception:
+        continue
+
+print("XML tag → example value (sample of first records):")
+for t, v in tag_examples.items():
+    print(f"{t}: {v}")
+
 
 # Extract <language>, <title> and <description> from each sample record's XML metadata
 df_meta['language'] = df_meta['metadata'].apply(

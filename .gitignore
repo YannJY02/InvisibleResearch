@@ -4,3 +4,4 @@ database.sql.gz
 .DS_Store
 README.html
 README_files
+backup_read_database.py

@@ -1,5 +1,3 @@
-
-
 """
 extract_metadata_to_parquet.py
 ------------------------------
@@ -8,9 +6,11 @@ in the `records` table and writes them to a compressed Parquet file.
 
 Fields extracted per record:
   • identifier   • title
-  • description  • language
-  • date         • creator
-  • type
+  • description  • subject
+  • language    • date
+  • creator     • type
+  • context_id  • set_spec
+  • oai_url    • repository_name
 
 The script streams the table in chunks, parses XML in parallel
 using multiple CPU cores, and appends results to a single Parquet
@@ -35,8 +35,8 @@ import pyarrow.parquet as pq
 # Configuration
 # ---------------------------------------------------------------------
 MYSQL_URI = "mysql+pymysql://root:secret@127.0.0.1:3306/invisible_research"
-CHUNK_SIZE = 50_000                       # rows per chunk
-MAX_WORKERS = os.cpu_count() or 4        # parallel XML parsers
+CHUNK_SIZE = 100_000                       # rows per chunk
+MAX_WORKERS = 6        # parallel XML parsers
 OUT_FILE = "records_metadata.parquet"    # output file
 # ---------------------------------------------------------------------
 
@@ -45,26 +45,29 @@ TARGET_COLS = [
     "identifier",
     "title",
     "description",
+    "subject",
     "language",
     "date",
     "creator",
     "type",
+    "context_id"
 ]
 
 # XML namespace for Dublin‑Core
 DC_NS = {"dc": "http://purl.org/dc/elements/1.1/"}
 
 
-def parse_xml(record: Tuple[Any, str]) -> Dict[str, Any]:
+def parse_xml(record: Tuple[Any, str, Any]) -> Dict[str, Any]:
     """
     Parse a single metadata XML string and return the desired fields.
     Falls back to None when a tag is missing or XML is invalid.
     """
-    rec_id, xml = record
-    out = {"id": rec_id}
+    rec_id, xml, ctx_id = record
+    out = {"id": rec_id, "context_id": ctx_id}
     # Initialise keys with None
     for col in TARGET_COLS[1:]:
-        out[col] = None
+        if col not in out:
+            out[col] = None
 
     if not xml:
         return out
@@ -75,6 +78,7 @@ def parse_xml(record: Tuple[Any, str]) -> Dict[str, Any]:
         out["identifier"]  = root.findtext(".//dc:identifier",  namespaces=DC_NS)
         out["title"]       = root.findtext(".//dc:title",       namespaces=DC_NS)
         out["description"] = root.findtext(".//dc:description", namespaces=DC_NS)
+        out["subject"]     = root.findtext(".//dc:subject",     namespaces=DC_NS)
         out["language"]    = root.findtext(".//dc:language",    namespaces=DC_NS)
         out["date"]        = root.findtext(".//dc:date",        namespaces=DC_NS)
         out["creator"]     = root.findtext(".//dc:creator",     namespaces=DC_NS)
@@ -94,9 +98,12 @@ def main() -> None:
     total_rows = 0
     chunk_no = 0
 
-    SQL = "SELECT id, metadata FROM records"
+    SQL = "SELECT id, metadata, context_id FROM records"
 
     with engine.connect().execution_options(stream_results=True) as conn:
+        ctx_df = pd.read_sql("SELECT id AS context_id, set_spec, endpoint_id FROM contexts", conn)
+        ep_df = pd.read_sql("SELECT id AS endpoint_id, oai_url, repository_name FROM endpoints", conn)
+
         for chunk in pd.read_sql(SQL, conn, chunksize=CHUNK_SIZE):
             chunk_no += 1
             # Parallel XML parsing
@@ -104,6 +111,18 @@ def main() -> None:
                 parsed_rows = list(pool.map(parse_xml, chunk.itertuples(index=False, name=None)))
 
             df = pd.DataFrame(parsed_rows, columns=TARGET_COLS)
+
+            # merge endpoint_id first to bring it into df
+            df = df.merge(ctx_df, on="context_id", how="left")
+            df = df.merge(ep_df, on="endpoint_id", how="left", suffixes=("", ""))
+
+            df = df.drop(columns=["endpoint_id"])
+
+            for col in ["set_spec", "oai_url", "repository_name"]:
+                if col not in df.columns:
+                    df[col] = None
+                df[col] = df[col].astype("string[pyarrow]")
+
             table = pa.Table.from_pandas(df, preserve_index=False)
 
             if writer is None:

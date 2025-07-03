@@ -5,4 +5,5 @@ database.sql.gz
 README.html
 README_files
 backup_read_database.py
-records_metadata.parquet
+data_for_analysis.parquet
+title_pred_lang.parquet

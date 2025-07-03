@@ -1,5 +1,5 @@
 """
-extract_metadata_to_parquet.py
+data_for_analysis_to_parquet.py
 ------------------------------
 Batch‑extracts specific Dublin Core fields from the `metadata` column
 in the `records` table and writes them to a compressed Parquet file.
@@ -14,10 +14,10 @@ Fields extracted per record:
 
 The script streams the table in chunks, parses XML in parallel
 using multiple CPU cores, and appends results to a single Parquet
-file (`records_metadata.parquet`) with Snappy compression.
+file (`data_for_analysis.parquet`) with Snappy compression.
 
 Run:
-    python extract_metadata_to_parquet.py
+    python data_for_analysis_to_parquet.py
 """
 
 import os
@@ -36,8 +36,8 @@ import pyarrow.parquet as pq
 # ---------------------------------------------------------------------
 MYSQL_URI = "mysql+pymysql://root:secret@127.0.0.1:3306/invisible_research"
 CHUNK_SIZE = 100_000                       # rows per chunk
-MAX_WORKERS = 6        # parallel XML parsers
-OUT_FILE = "records_metadata.parquet"    # output file
+MAX_WORKERS = 6                           # parallel XML parsers
+OUT_FILE = "data_for_analysis.parquet"    # output file
 # ---------------------------------------------------------------------
 
 TARGET_COLS = [

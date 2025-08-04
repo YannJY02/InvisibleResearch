@@ -7,3 +7,6 @@ README_files
 backup_read_database.py
 data_for_analysis.parquet
 title_pred_lang.parquet
+creator_sample.parquet
+creator_sample_clean.parquet
+name_clean.parquet

@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+title: 'Invisible Research: Uncovering Hidden Academic Scholarship'
+message: 'If you use this software, please cite it as below.'
+type: software
+authors:
+  - family-names: "Your Last Name"
+    given-names: "Your First Name"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+    affiliation: "Your Institution"
+repository-code: 'https://github.com/theinvisiblelab/invisible-research'
+url: 'https://github.com/theinvisiblelab/invisible-research'
+abstract: >-
+  The Invisible Research project confronts the critical issue of academic
+  invisibility, emphasizing the urgent need to identify, quantify, and elevate
+  valuable research outputs overlooked due to language barriers, publication biases,
+  institutional prestige hierarchies, and limited digital discoverability.
+keywords:
+  - academic research
+  - bibliometrics
+  - natural language processing
+  - multilingual analysis
+  - OAI-PMH
+  - research visibility
+license: AGPL-3.0
+version: 1.0.0
+date-released: 2024-01-01

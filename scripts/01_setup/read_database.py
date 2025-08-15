@@ -6,12 +6,12 @@ os.environ["MODIN_ENGINE"] = "python"
 from lxml import etree
 from huggingface_hub import hf_hub_download
 import fasttext
-# 让 Pandas／Modin 在打印时不省略任何列
-pd.set_option('display.max_columns', None)    # 不限制要显示的列数
-pd.set_option('display.width', 1000)         # 或更大，根据你终端的宽度调整
-pd.set_option('display.max_colwidth', None)  # 让每个单元格都完整展开
+# Configure Pandas/Modin to display all columns without truncation
+pd.set_option('display.max_columns', None)    # No limit on displayed columns
+pd.set_option('display.width', 1000)         # Adjust based on terminal width
+pd.set_option('display.max_colwidth', None)  # Display full cell content
 
-# 样本数量，用于限制读取记录数
+# Sample size to limit record reading
 N = 10
 
 engine = create_engine(

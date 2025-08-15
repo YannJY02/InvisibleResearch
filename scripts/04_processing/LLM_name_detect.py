@@ -49,8 +49,8 @@ def _get_openai_api_key() -> str:
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
-SRC_PARQUET = Path("creator_sample.parquet")
-DST_PARQUET = Path("creator_sample_clean.parquet")
+SRC_PARQUET = Path(__file__).parent.parent.parent / "data/processed/creator_sample.parquet"
+DST_PARQUET = Path(__file__).parent.parent.parent / "data/final/creator_sample_clean.parquet"
 MODEL = "gpt-4o"
 BATCH = 20               # number of complex rows per LLM call
 

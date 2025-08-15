@@ -11,7 +11,7 @@ import pyarrow as pa
 import pandas as pd
 
 # ---------------------------------------------------------------------
-PARQUET_PATH = Path("/Users/yann.jy/InvisibleResearch/data_for_analysis.parquet")
+PARQUET_PATH = Path(__file__).parent.parent.parent / "data/processed/data_for_analysis.parquet"
 MAX_SAMPLES  = 10
 # Regex pattern for author delimiters EXCLUDING comma (',' may appear inside names)
 DELIM_RE = re.compile(r"\s*(?:;|&|\band\b|\+|/|\\)\s*", flags=re.IGNORECASE)
@@ -25,7 +25,7 @@ print(f"🔍 Loading 'creator' column from {PARQUET_PATH} …")
 table = pq.read_table(PARQUET_PATH, columns=["creator", "relation"])
 df = table.to_pandas()
 
- # ① Count authors by splitting on delimiters (; & 'and' + / \) – comma is ignored
+# Count authors by splitting on delimiters (; & 'and' + / \) – comma is ignored
 df["creator_count"] = (
     df["creator"]
     .fillna("")            # avoid NaN
@@ -35,7 +35,7 @@ df["creator_count"] = (
     )
 )
 
- # ② Group by author_count and sample
+# Group by author_count and sample
 results = []
 for count, grp in df.groupby("creator_count"):
     if count == 0:       # skip empty rows
@@ -45,7 +45,7 @@ for count, grp in df.groupby("creator_count"):
     sample_tuples = list(sample_df.itertuples(index=False, name=None))  # (creator, relation)
     results.append((count, sample_tuples))
 
-# ③ Print results
+# Print results
 for count, creators in sorted(results):
     print(f"\n📝 Author count = {count} (showing {len(creators)} samples)")
     print("-" * 60)

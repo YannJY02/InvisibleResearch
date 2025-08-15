@@ -16,8 +16,8 @@ import pyarrow as pa
 import pandas as pd
 
 # ---------------------------------------------------------------------
-PARQUET_PATH = Path("/Users/yann.jy/InvisibleResearch/data_for_analysis.parquet")
-OUT_PATH     = Path("creator_sample.parquet")
+PARQUET_PATH = Path(__file__).parent.parent.parent / "data/processed/data_for_analysis.parquet"
+OUT_PATH     = Path(__file__).parent.parent.parent / "data/processed/creator_sample.parquet"
 MAX_SAMPLES  = 10
 
 # Regex for author delimiters EXCLUDING comma (',' may appear in Last, First)

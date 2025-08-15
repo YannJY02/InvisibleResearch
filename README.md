@@ -1,192 +1,91 @@
-# Invisible Research Dataset
+# Invisible Research: Uncovering Hidden Academic Scholarship
 
-A relational dump of harvested OAI-PMH records and related metadata, loaded into MySQL.  
-Covers 7 tables plus raw XML metadata in the `records` table.
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
----
+## 📖 Project Overview
 
-## Tables & Columns
+The Invisible Research project confronts the critical issue of academic invisibility, emphasizing the urgent need to identify, quantify, and elevate valuable research outputs overlooked due to language barriers, publication biases, institutional prestige hierarchies, and limited digital discoverability.
 
-### 1. `contexts`
-Stores information about each OAI-PMH “context” (data source).
+## 🚀 Quick Start
 
-| Column                  | Type / Notes                              | Example value |
-|-------------------------|-------------------------------------------|---------------|
-| `id`                    | Primary key                               | **1** |
-| `endpoint_id`           | FK → `endpoints.id`                       | 17559 |
-| `set_spec`              | OAI setSpec                               | `"KJS"` |
-| `name`                  | Human-readable name                       | `"Kuwait Journal of Science"` |
-| `group_id`              | Grouping ID                               | *NULL* |
-| `group_order`           | Order within group                        | 0 |
-| `harvested_at`          | Last harvest timestamp                    | 2024-10-15 10:31:32 |
-| `sync_started_at`       | Sync start time                           | 2025-03-28 08:10:02 |
-| `sync_succeeded_at`     | Sync success time                         | 2025-03-28 08:10:03 |
-| `sync_failed_at`        | Sync failure time                         | *NULL* |
-| `old_harvested_at`      | Previous harvest time                     | 2024-05-11 18:31:09 |
-| `old_sync_succeeded_at` | Previous success time                     | 2024-10-07 09:39:43 |
-| `errors`                | Total error count                         | 0 |
-| `failures`              | Total failure count                       | 0 |
-| `last_error`            | Last error message                        | *NULL* |
-| `removed`               | Boolean flag                              | 0 |
-| `disabled`              | Boolean flag                              | 0 |
-| `doaj_id`               | FK → `doaj.id`                            | *NULL* |
-| `created_at`            | Record creation timestamp                 | 2024-03-01 15:05:59 |
-| `modified_at`           | Record last update timestamp              | 2025-03-28 08:10:03 |
-
----
-
-### 2. `count_spans`
-Annual summary of record counts per context.
-
-| Column         | Notes                         | Example value |
-|----------------|-------------------------------|---------------|
-| `id`           | Primary key                   | **1** |
-| `context_id`   | FK → `contexts.id`            | 1 |
-| `year`         | Year                          | 2021 |
-| `record_count` | Number of records that year   | 106 |
-| `created_at`   | Creation timestamp            | 2024-03-01 15:11:19 |
-| `modified_at`  | Last update timestamp         | 2024-05-11 18:31:16 |
-
----
-
-### 3. `doaj`
-DOAJ journal metadata.
-
-| Column                   | Notes                          | Example value |
-|--------------------------|--------------------------------|---------------|
-| `id`                     | Primary key                    | **1** |
-| `url`                    | Journal URL                    | `https://www.frontierspartnerships.org/journals/transplant-i` |
-| `host`                   | Host/domain                    | `www.frontierspartnerships.org` |
-| `print_issn`             | Print ISSN                     | *(empty)* |
-| `online_issn`            | Online ISSN                    | 1432-2277 |
-| `publisher`              | Publisher name                 | Frontiers Media S.A. |
-| `country`                | Country                        | Switzerland |
-| `country_iso`            | Country code                   | CH |
-| `society`                | Society name                   | European Society for Organ Transplantation |
-| `society_country`        | Society country                | Italy |
-| `society_country_iso`    | Society country code           | IT |
-| `created_at`             | Creation timestamp             | 2024-05-06 20:17:37 |
-| `modified_at`            | Last update timestamp          | 2024-05-06 20:17:37 |
-
----
-
-### 4. `endpoints`
-Configuration & status of each OAI-PMH endpoint.
-
-| Column                 | Notes                                      | Example value |
-|------------------------|--------------------------------------------|---------------|
-| `id`                   | Primary key                                | **17521** |
-| `application`          | App identifier                             | `"ojs"` |
-| `oai_url`              | Raw OAI-PMH base URL                       | `https://jurnal.unpad.ac.id/oai` |
-| `oai_url_normalized`   | Normalized URL                             | `jurnal.unpad.ac.id/oai` |
-| `stats_id`             | FK to stats tracking                       | 53ac0a66e3205 |
-| `host`                 | Host/domain                                | `jurnal.unpad.ac.id` |
-| `first_beacon`         | First successful reach timestamp           | 2020-04-30 23:59:24 |
-| `last_beacon`          | Last successful reach timestamp            | 2024-09-09 18:01:27 |
-| `last_oai_response`    | Time of last OAI-PMH response              | 2021-07-17 07:07:37 |
-| `admin_email`          | Admin email                                | `derryadrian@unpad.ac.id` |
-| `earliest_datestamp`   | Earliest record timestamp reported         | 2012-05-21 03:24:38 |
-| `repository_name`      | OAI repository name                        | Jurnal Universitas Padjadjaran |
-| `sync_started_at`      | Sync start time                            | 2024-10-30 02:40:58 |
-| `sync_succeeded_at`    | Sync success time                          | 2024-10-06 06:15:49 |
-| `sync_failed_at`       | Sync failure time                          | 2024-10-30 02:40:59 |
-| `errors`               | Aggregated error count                     | 22 |
-| `failures`             | Failure count                              | 1 |
-| `disabled`             | Boolean flag                               | 0 |
-| `last_error`           | Last error message                         | `"ListSets: Client error …"` |
-| `country_tld`          | Geo info (TLD)                             | ID |
-| `country_ip`           | Geo info (IP code)                         | ID |
-| `created_at`           | Creation timestamp                         | 2024-03-01 14:25:45 |
-| `modified_at`          | Last update timestamp                      | 2024-10-30 02:40:59 |
-
----
-
-### 5. `issns`
-ISSN list per context.
-
-| Column        | Notes                   | Example value |
-|---------------|-------------------------|---------------|
-| `id`          | Primary key             | **3** |
-| `context_id`  | FK → `contexts.id`      | 3 |
-| `issn`        | ISSN string             | 2338-7823 |
-| `format`      | e.g. “print” / “online” | Print |
-| `marc`        | MARC tag                | io |
-| `country`     | Country name            | ID |
-| `url`         | Reference URL           | *NULL* |
-| `created_at`  | Creation timestamp      | 2024-03-01 15:11:20 |
-| `modified_at` | Last update timestamp   | 2024-03-01 15:11:20 |
-
----
-
-### 6. `records`
-Raw harvested records (OAI-PMH XML/JSON).
-
-| Column        | Notes                                            | Example value |
-|---------------|--------------------------------------------------|---------------|
-| `id`          | Primary key                                      | **1** |
-| `context_id`  | FK → `contexts.id`                               | 163757 |
-| `update_date` | Last update timestamp (OAI datestamp)            | 2022-08-12 01:20:01 |
-| `publish_date`| Publication date                                 | 2021-03-25 00:00:00 |
-| `removed_at`  | Removal timestamp                                | *NULL* |
-| `metadata`    | Raw XML/JSON payload                             | `<record xmlns=\"http://www.openarchives.org/OAI/2.0/\">…` |
-| `identifier`  | Record identifier                                | 7649 |
-| `created_at`  | Creation timestamp                               | 2024-05-06 16:13:59 |
-| `modified_at` | Last update timestamp                            | 2024-05-08 15:44:13 |
-
----
-
-### 7. `versions`
-Version history for each endpoint.
-
-| Column        | Notes                       | Example value |
-|---------------|-----------------------------|---------------|
-| `id`          | Primary key                 | **1** |
-| `endpoint_id` | FK → `endpoints.id`         | 51961 |
-| `version`     | Version string              | 3.1.1.4 |
-| `date`        | Version timestamp           | 2020-09-21 08:34:50 |
-| `created_at`  | Creation timestamp          | 2024-03-01 15:11:47 |
-| `modified_at` | Last update timestamp       | 2024-03-01 15:11:47 |
-
----
-
-## XML Metadata Tags
-
-In the first sample of 5 records, we found these unique XML element tags:
-
-```text
-OAI-PMH Tags (OAI/2.0 namespace):
-  - record, header, metadata, identifier, datestamp, setSpec
-  - oai_dc:dc  (container for Dublin Core)
-
-Dublin Core Tags (http://purl.org/dc/elements/1.1/):
-  - title, creator, contributor, subject*, description, publisher
-  - date, type, format, identifier, source
-  - rights, language, relation
+### Environment Setup
+```bash
+git clone https://github.com/theinvisiblelab/invisible-research.git
+cd invisible-research
+python -m venv environments/venv
+source environments/venv/bin/activate
+pip install -r requirements.txt
 ```
-## XML Tags & Example Values  
 
+### Run Pipeline
+```bash
+# Data extraction
+python scripts/02_extraction/data_for_analysis_to_parquet.py
 
-| XML Tag | Example Value                                                                                        |
-|-----------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `record`       | *(container element – no direct text)*                                                                         |
-| `header`       | *(container – holds `identifier`, `datestamp`, `setSpec`)*                                                     |
-| `identifier`   | `oai:oai.ejournal.unisba.ac.id:article/7649`                                                                   |
-| `datestamp`    | `2022-08-12T01:20:01Z`                                                                                         |
-| `setSpec`      | `hikmah:ART`                                                                                                   |
-| `metadata`     | *(container – wraps `dc`)*                                                                                     |
-| `dc`           | *(container – holds Dublin Core elements)*                                                                     |
-| `title`        | `SPIRITUALITAS MASYARAKAT PERKOTAAN`                                                                           |
-| `creator`      | `Afidah, Ida`                                                                                                  |
-| `contributor`  | *(not present in this sample)*                                                                                 |
-| `subject`      | `Learning Model, Aptitude Treatment Interaction, Learning Activities.`                                         |
-| `description`  | `Masyarakat perkotaan sering diidentikan sebagai masyarakat modern, dikarenakan cara berfikir …`               |
-| `publisher`    | `Universitas Islam Bandung`                                                                                    |
-| `date`         | `2021-03-25`                                                                                                   |
-| `type`         | `info:eu-repo/semantics/article`                                                                               |
-| `format`       | `application/pdf`                                                                                              |
-| `source`       | `HIKMAH : Jurnal Dakwah & Sosial; Vol 1, No 1 (2021): Jurnal Hikmah`                                            |
-| `language`     | `eng`                                                                                                          |
-| `relation`     | `https://ejournal.unisba.ac.id/index.php/hikmah/article/view/7649/pdf`                                         |
-| `rights`       | `Copyright (c) 2021 HIKMAH`                                                                                    |
+# Author analysis  
+python scripts/03_analysis/judge_creator.py
+python scripts/03_analysis/test_LLM_name_detect_parquet.py
 
-> **Note** – For container tags (`record`, `header`, `metadata`, `oai_dc:dc`) the table notes that they don’t carry literal text; the example focuses on child elements that do.
+# Intelligent processing
+OPENAI_API_KEY=your_key python scripts/04_processing/LLM_name_detect.py
+
+# Language detection
+python scripts/04_processing/result_GlotLID.py
+```
+
+## 📊 Data Sources
+
+- **Scale**: ~20 million OAI-PMH records
+- **Time span**: 2000-2024  
+- **Languages**: 100+ languages
+- **Sources**: 7000+ academic repositories
+
+## 🔬 Methodology
+
+1. **Data Extraction**: OAI-PMH batch harvesting, MySQL storage
+2. **Author Parsing**: GPT-4o intelligent processing of complex author fields
+3. **Language Detection**: GlotLID multilingual identification
+
+## 🛠️ Project Structure
+
+```
+scripts/01_setup/      # Environment setup
+scripts/02_extraction/ # Data extraction
+scripts/03_analysis/   # Data analysis  
+scripts/04_processing/ # Advanced processing
+data/raw/             # Raw data
+data/processed/       # Intermediate results
+data/final/           # Final outputs
+```
+
+**📋 For detailed data-script relationships**: See [`docs/DATA_SCRIPT_MAPPING.md`](docs/DATA_SCRIPT_MAPPING.md)
+
+## 🤖 Multi-Agent Research Workflow
+
+This project is enhanced with a **protocol-driven, multi-agent research system** designed for Cursor AI. It transforms natural language requests into rigorous, academic-standard outputs.
+
+**🎯 How it Works**: The system acts as an intelligent coordinator. It analyzes your request, clarifies ambiguities, assigns expert agent roles (e.g., Research, Analysis, Documentation), and executes tasks using structured, professional protocols.
+
+**💬 Natural Language Interface**: Simply describe your high-level goal. The system handles the rest.
+- `"Find literature on social media's impact on political trust."`
+- `"Analyze our dataset for language patterns and write a results section."`
+- `"Organize the project files and commit the recent changes."`
+
+**📖 System Documentation & Examples**:
+- **Core AI Protocol**: The AI's behavior is governed by high-level rules in [`.cursor/rules/`](.cursor/rules/).
+- **Detailed Agent Guides**: For a full breakdown of the agent workflows, templates, and examples, please see the [Agent Documentation Hub](docs/agents/).
+- **GitHub Integration**: Complete GitHub project management workflow - see [GitHub Management Protocol](docs/agents/github-management.md).
+- **Iteration Workflow**: Multi-round review and refinement process - see [Iteration & Review Workflow](docs/agents/iteration-workflow.md).
+
+## 📝 Citation
+
+```bibtex
+@software{invisible_research_2024,
+  title={Invisible Research: Uncovering Hidden Academic Scholarship},
+  year={2024},
+  url={https://github.com/theinvisiblelab/invisible-research}
+}
+```
+
+See `docs/` folder for detailed documentation.

@@ -1,12 +1,91 @@
+# 大数据文件
+*.parquet
+*.sql
+*.gz
+data/processed/
+data/final/
+
+# 配置和密钥
+.env
+*.env
+config/database.conf
+*_api_key*
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 虚拟环境
 venv/
-dump.sql
-database.sql.gz
+env/
+.venv
+.env
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# 操作系统
 .DS_Store
-README.html
-README_files
-backup_read_database.py
-data_for_analysis.parquet
-title_pred_lang.parquet
-creator_sample.parquet
-creator_sample_clean.parquet
-name_clean.parquet
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# 模型文件
+model.bin
+*.model
+*.pkl
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# 测试和覆盖率
+.coverage
+.pytest_cache/
+htmlcov/
+
+# 文档生成
+_build/
+.doctrees/
+
+# 保留样本数据
+!data/raw/sample_records_language_title_abstract.csv

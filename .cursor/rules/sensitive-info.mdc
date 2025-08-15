@@ -1,0 +1,6 @@
+---
+description: "Sensitive Information Management: Never hardcode secrets, always use environment variables."
+globs: []
+alwaysApply: true
+---
+绝不能将任何敏感信息（如API密钥、密码、私有URL）直接写入代码或配置文件。必须总是使用环境变量（例如，通过 `.env` 文件加载）来处理此类数据，并提醒用户进行相应配置。

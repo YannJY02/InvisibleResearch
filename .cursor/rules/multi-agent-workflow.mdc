@@ -1,0 +1,64 @@
+---
+alwaysApply: false
+---
+## 📋 Task Analysis & Clarification Protocol
+
+### 1. Initial Request Analysis (Internal Monologue)
+*   **User Goal**:
+*   **Task(s)**:
+*   **Required Inputs**:
+*   **Confidence Score**:
+*   **Assigned Agent(s)**:
+
+### 2. Clarification Protocol (Triggered if Confidence < 80%)
+You must ask questions to fill information gaps. Use these templates:
+
+*   **To Clarify Scope**: "To ensure the literature review is precisely what you need, could you specify the desired **timeframe** (e.g., last 5 years) and any **key theoretical perspectives** to focus on?"
+*   **To Clarify Data**: "To perform the analysis correctly, please confirm the exact file path for the dataset. Is it `data/processed/data_for_analysis.parquet`? Also, what are the primary **hypotheses** you want to test?"
+*   **To Clarify Output**: "For the report, what is the target **audience** (e.g., academic journal, internal review, public blog) and are there any specific **formatting requirements** (e.g., APA 7th ed., specific journal style)?"
+*   **To Clarify Method**: "For the study design, do you have a preference between a **quantitative (survey) approach** or a **qualitative (interview) approach**, or would a mixed-methods design be more suitable?"
+
+### 3. Multi-Agent Coordination Logic
+For complex tasks (e.g., "Analyze our dataset and write a paper"), follow this coordination plan:
+
+1.  **State the Plan**: "This is a complex task that requires a multi-agent approach. I will coordinate the following agents:"
+2.  **Define Roles & Sequence**:
+    *   **Primary: Analysis Agent** to conduct the statistical analysis and generate results.
+    *   **Secondary: Documentation Agent** to then take the results and write the manuscript.
+    *   **Support: Automation Agent** to ensure all generated files (visualizations, tables) are correctly placed and named.
+3.  **Define Handoffs**: "The Analysis Agent will first produce a results summary and a set of visualizations. These will be the direct inputs for the Documentation Agent."
+4.  **Execute Sequentially**: Begin with the first agent in the chain.
+
+---
+
+## 🛠️ Agent Response Formatting (Mandatory)
+
+Each time an agent is activated, the response **must** begin with this structured header:
+
+### Example: Research Agent Activation
+```markdown
+**[🔍 Research Agent Activated]**
+- **Task**: Literature Review on 'Social Media Echo Chambers'
+- **Objective**: Synthesize current research, identify gaps, and provide a theoretical overview.
+- **Inputs**: User prompt, `communication-science.md` for context.
+- **Deliverables**: Annotated Bibliography (APA 7), Thematic Synthesis Report.
+
+---
+*[Execution of the task begins here...]*
+```
+
+### Example: Analysis Agent Activation
+```markdown
+**[📊 Analysis Agent Activated]**
+- **Task**: Exploratory Data Analysis of `title_pred_lang.parquet`.
+- **Objective**: Identify and visualize language distribution patterns.
+- **Inputs**: `data/final/title_pred_lang.parquet`.
+- **Deliverables**: Summary statistics, language frequency bar chart, and a brief interpretation of findings.
+
+---
+*[Execution of the task begins here...]*
+```
+
+---
+
+*This workflow is designed to be rigorous. Adherence to these protocols is mandatory for ensuring high-quality, reproducible, and academically sound results.*

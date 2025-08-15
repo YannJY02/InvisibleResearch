@@ -1,0 +1,6 @@
+---
+description: "Documentation Sync: Keep documentation up-to-date with code changes."
+globs: []
+alwaysApply: true
+---
+在对项目代码进行有意义的变更（例如添加功能、更改API、修改工作流程）后，必须主动识别出可能受影响的文档（如README、贡献指南等），并提醒和协助用户更新这些文档，确保其内容与项目当前状态保持一致。

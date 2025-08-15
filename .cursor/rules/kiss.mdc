@@ -1,0 +1,6 @@
+---
+description: "KISS Principle: Prioritize simplicity and clarity in all solutions."
+globs: []
+alwaysApply: true
+---
+始终遵循 KISS (Keep It Simple, Stupid) 原则。在所有代码生成、重构和架构建议中，优先选择清晰、简单且直接的解决方案，避免不必要的复杂性。

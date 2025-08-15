@@ -1,0 +1,6 @@
+---
+description: "Git Commit Convention: Follow Conventional Commits format for all commits."
+globs: []
+alwaysApply: true
+---
+当生成Git提交信息时，必须严格遵循 Conventional Commits 规范 (`<type>(<scope>): <subject>`)，以确保提交历史的清晰性和自动化处理的可行性。

@@ -207,20 +207,13 @@ Use GitHub Projects with columns:
 
 ## 📊 Quality Gates & Standards
 
-### Academic Quality Checklist
-- [ ] **Reproducibility**: Can others replicate the results?
-- [ ] **Documentation**: Is the methodology clearly explained?
-- [ ] **Data Integrity**: Are data sources and transformations documented?
-- [ ] **Statistical Rigor**: Are analyses statistically sound?
-- [ ] **Citation Standards**: Are sources properly attributed?
-- [ ] **Ethical Compliance**: Does work meet research ethics standards?
+**Universal Quality Standards**: See [Agent Reference Guide](agent-reference.md) for complete academic and technical quality checklists.
 
-### Technical Quality Checklist
-- [ ] **Code Quality**: Clean, readable, and well-commented code
-- [ ] **Testing**: Adequate test coverage for data processing
-- [ ] **Performance**: Efficient algorithms for large datasets
-- [ ] **Security**: No sensitive data in version control
-- [ ] **Dependencies**: All requirements documented and versioned
+**GitHub-Specific Quality Requirements**:
+- [ ] **Issue Clarity**: Clear, actionable issue descriptions
+- [ ] **PR Completeness**: All required sections filled in PR template
+- [ ] **Review Responsiveness**: Timely response to review feedback
+- [ ] **Documentation Sync**: All changes reflected in project documentation
 
 ---
 

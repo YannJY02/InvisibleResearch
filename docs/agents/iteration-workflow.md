@@ -115,33 +115,13 @@ When a GitHub Issue requires multiple agents, follow this coordination protocol:
 
 ### Quality Gates by Agent Type
 
-#### 🔍 Research Agent Quality Gates
-- [ ] **Literature Coverage**: Comprehensive search across relevant databases
-- [ ] **Source Quality**: Peer-reviewed, credible sources appropriate for academic work
-- [ ] **Theoretical Grounding**: Clear connection to established communication theories
-- [ ] **Gap Identification**: Clear articulation of research gaps and contributions
-- [ ] **Citation Standards**: Proper APA 7th edition formatting throughout
+**Universal Quality Standards**: See [Agent Reference Guide](agent-reference.md) for complete quality gate specifications for all agent types.
 
-#### 📊 Analysis Agent Quality Gates
-- [ ] **Data Integrity**: Input data validated and preprocessing documented
-- [ ] **Statistical Rigor**: Appropriate tests selected and assumptions verified
-- [ ] **Reproducibility**: Code documented and executable by others
-- [ ] **Visualization Quality**: Clear, publication-ready figures with proper labeling
-- [ ] **Interpretation Accuracy**: Results interpreted correctly with appropriate caveats
-
-#### 📝 Documentation Agent Quality Gates
-- [ ] **Structure Compliance**: Follows IMRaD or other appropriate academic structure
-- [ ] **Writing Quality**: Clear, concise, and academically appropriate language
-- [ ] **Citation Integration**: Sources properly integrated and attributed
-- [ ] **Formatting Standards**: Consistent with target venue requirements
-- [ ] **Completeness**: All required sections present and adequately developed
-
-#### 🔧 Automation Agent Quality Gates
-- [ ] **File Organization**: Project structure follows established conventions
-- [ ] **Version Control**: Proper commit messages and branch management
-- [ ] **Documentation Updates**: README and other docs reflect current project state
-- [ ] **Dependency Management**: All requirements documented and versions specified
-- [ ] **Reproducibility Setup**: Clear instructions for environment setup and execution
+**Key Quality Checkpoints**:
+- Pre-implementation validation
+- Mid-process quality checks  
+- Final deliverable validation
+- Handoff quality assurance
 
 ## 📊 Progress Tracking & Metrics
 

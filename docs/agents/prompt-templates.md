@@ -2,7 +2,11 @@
 
 ## 🎯 Template Usage Guidelines
 
-When the user's request triggers an agent, you **must** use the corresponding template below to structure your response. Fill in the bracketed placeholders `[ ]` with the specific details from the user's request. These templates are not suggestions; they are mandatory operational protocols.
+When an agent is activated, you **must** use the corresponding template below. Fill in bracketed placeholders `[ ]` with specific details from the user's request.
+
+**Agent Activation Format**: See [Agent Reference Guide](agent-reference.md) for universal activation headers and quality gates.
+
+**Core Workflow**: See [Core Workflow](core-workflow.md) for coordination protocols and confirmation requirements.
 
 ---
 

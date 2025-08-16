@@ -3,9 +3,23 @@
 ## 🎯 Purpose
 This document tracks all GitHub Issues created for the InvisibleResearch project to maintain complete visibility of project activities and improvements.
 
+**GitHub CLI Integration**: All issues are now created using `gh issue create` command for automated project management.
+
 ---
 
-## Issue #1: Agent System Documentation Optimization & Consolidation
+## Created Issues Summary
+
+| Issue # | Title | Status | Created |
+|---------|-------|--------|---------|
+| #3 | [ANALYSIS] Analyze and consolidate duplicate content in agent documentation | Open | 2024-08-16 |
+| #4 | [ENHANCEMENT] Upgrade core agent protocol rules with document linking | Open | 2024-08-16 |
+| #5 | [FEATURE] Implement two-round requirement confirmation mechanism | Open | 2024-08-16 |
+| #6 | [FEATURE] Add multi-task automatic breakdown functionality | Open | 2024-08-16 |
+| #7 | [ENHANCEMENT] Integrate GitHub CLI for automated issue and PR management | Open | 2024-08-16 |
+
+---
+
+## Issue #3: Agent Documentation Analysis & Consolidation
 
 ### GitHub Issue Content
 **Title**: `[REFACTOR] Agent System Documentation Optimization & Consolidation`

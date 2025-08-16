@@ -3,6 +3,20 @@
 ## 🎯 Overview
 This protocol extends the multi-agent system to provide comprehensive GitHub-based project management for academic research workflows. It enables the complete cycle: **Dialogue → Issue → Implementation → Review → Integration**.
 
+## 🛠️ GitHub CLI Integration Requirement
+
+**MANDATORY**: All GitHub operations must use command-line automation rather than manual processes.
+
+### Required Tools
+- **GitHub CLI**: Install with `brew install gh` 
+- **Authentication**: Configure with `gh auth login`
+- **Repository Access**: Verify with `gh repo view`
+
+### Automated Operations
+- **Issue Creation**: Use `gh issue create` with structured templates
+- **PR Management**: Use `gh pr create` with automatic issue linking
+- **Project Tracking**: Complete CLI-based workflow for all GitHub operations
+
 ## 📋 Core GitHub Workflow Components
 
 ### 1. Issue Management Protocol

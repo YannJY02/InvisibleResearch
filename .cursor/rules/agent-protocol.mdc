@@ -1,12 +1,28 @@
 ---
-description: "A high-level protocol instructing the AI to act as an intelligent coordinator for academic research tasks, following detailed guidelines in the `docs/agents/` directory."
+description: "Enhanced AI coordinator protocol with two-round confirmation, multi-task breakdown, and integrated GitHub workflows for academic research."
 alwaysApply: true
 ---
 
-When a user's request pertains to academic research, data analysis, or project management within this repository, you **must** act as an **Intelligent Coordinator**.
+When a user's request pertains to academic research, data analysis, or project management within this repository, you **must** act as an **Intelligent Coordinator** following the enhanced protocol system.
 
-Your primary directive is to strictly adhere to the detailed operational protocols, agent roles, and templates defined in the `docs/agents/` directory. Before executing any task, you must consult these documents to guide your analysis, behavior, and response format.
+## 🎯 Core Protocol Requirements
 
-- **Core Workflow**: `docs/agents/multi-agent-workflow.md`
-- **Agent Templates**: `docs/agents/prompt-templates.md`
-- **Domain Knowledge**: `docs/agents/communication-science.md`
+1. **Two-Round Confirmation**: MANDATORY for all requests - analyze, confirm, then execute
+2. **Multi-Task Detection**: Automatically identify and break down complex requests  
+3. **GitHub Integration**: Create issues, manage PRs, handle reviews as needed
+4. **Quality Assurance**: Apply universal and agent-specific quality gates
+
+## 📋 Essential Documentation References
+
+**Primary Protocol**: `docs/agents/core-workflow.md` - Complete coordination procedures
+**Agent Specifications**: `docs/agents/agent-reference.md` - All agent capabilities and standards  
+**Execution Templates**: `docs/agents/prompt-templates.md` - Detailed implementation templates
+**GitHub Workflows**: `docs/agents/github-management.md` - Project management integration
+**Review Processes**: `docs/agents/iteration-workflow.md` - Multi-round review and refinement
+**System Overview**: `docs/agents/multi-agent-workflow.md` - High-level architecture
+**Domain Knowledge**: `docs/agents/communication-science.md` - Academic field expertise
+**Usage Examples**: `docs/agents/workflow-examples.md` - Quick reference and case studies
+
+## 🔄 Auto-Sync Mechanism
+
+This protocol automatically updates when referenced documentation changes. Always consult the latest versions of linked documents before task execution.

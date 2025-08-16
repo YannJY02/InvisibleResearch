@@ -1,53 +1,22 @@
-# Cursor AI Agent Workflow Examples
+# Agent Workflow Examples & Case Studies
 
-## 🎯 How to Use These Examples
+## 🎯 How to Use This Guide
 
-These are practical examples demonstrating how to interact with the enhanced multi-agent system. Use them as a reference for structuring your own requests. The AI's responses are formatted according to the mandatory protocols in `multi-agent-workflow.md`.
+This comprehensive guide provides both quick reference examples and detailed case studies for the enhanced multi-agent system. Use these examples to structure your requests and understand expected AI responses.
 
----
-
-## Example 1: Comprehensive Literature Review
-
-**User Prompt**:
-`"I need a comprehensive literature review on social media echo chambers and their effect on political polarization. Focus on research from the last 5 years."`
-
-**Expected AI Response**:
-```markdown
-**[🔍 Research Agent Activated]**
-- **Task**: Comprehensive Literature Review
-- **Topic**: Social media echo chambers and their effect on political polarization
-- **Scope**: Focusing on research published between 2019-2024.
-- **Discipline Focus**: Communication Science, with cross-references to Political Science and Social Psychology.
+**Quick Navigation:**
+- **[Quick Reference Examples](#quick-reference-examples)**: Fast lookup for common tasks
+- **[Complete Case Studies](#complete-case-studies)**: End-to-end workflow demonstrations
+- **[Multi-Agent Coordination](#multi-agent-coordination-examples)**: Complex task management
+- **[Interaction Tips](#tips-for-effective-agent-interaction)**: Best practices guide
 
 ---
-**1. Search Strategy:**
-   - **Primary Databases**: Communication & Mass Media Complete, Google Scholar, Scopus.
-   - **Keywords**:
-     - *Core*: "echo chamber", "filter bubble", "political polarization", "social media", "selective exposure"
-     - *Secondary*: "partisan media", "confirmation bias", "affective polarization", "algorithmic curation"
-   - **Inclusion Criteria**: Peer-reviewed empirical studies (quantitative or qualitative).
-   - **Exclusion Criteria**: Opinion pieces, unpublished manuscripts, news articles.
 
-**2. Analysis & Synthesis Framework:**
-   - **Identify Core Theories**: The primary theoretical lens will be Selective Exposure Theory, supplemented by Social Identity Theory to explain in-group/out-group dynamics.
-   - **Map Methodological Trends**: The review will categorize studies by methodology: (1) network analysis of user data, (2) survey-based studies, and (3) experimental designs testing information choice.
-   - **Synthesize Key Findings**: The synthesis will focus on: (a) evidence for and against the prevalence of echo chambers, (b) the causal link between echo chamber exposure and increased polarization, and (c) platform-specific differences (e.g., Twitter vs. Facebook).
-   - **Identify Research Gaps**: A key gap is the long-term behavioral impact of echo chamber exposure beyond self-reported attitudes.
-
-**3. Deliverables:**
-   - **Thematic Synthesis Report**: A 1500-word report summarizing the key themes, debates, and findings in the literature.
-   - **Annotated Bibliography**: A list of the 15 most influential articles from the period, with a 3-sentence summary and APA 7th edition citation for each.
-   - **Future Research Directions**:
-     - How do different social media affordances (e.g., 'likes' vs. 'shares') contribute to echo chamber formation?
-     - What are the most effective interventions (algorithmic or educational) to mitigate echo chamber effects?
-     - To what extent do offline social networks moderate the effects of online echo chambers?
-```
-
----
+# Quick Reference Examples
 
 ## 🔍 Research Agent Examples
 
-### Example 1: Literature Review Request
+### Literature Review Request
 ```
 User: "I need a comprehensive literature review on social media echo chambers and political polarization"
 
@@ -76,7 +45,7 @@ Expected AI Response:
 [Detailed literature synthesis follows...]
 ```
 
-### Example 2: Survey Design Request
+### Survey Design Request
 ```
 User: "Create a survey to measure news consumption habits and media trust among college students"
 
@@ -103,7 +72,7 @@ Expected AI Response:
 
 ## 📊 Analysis Agent Examples
 
-### Example 3: Dataset Analysis Request
+### Dataset Analysis Request
 ```
 User: "Analyze the data/final/title_pred_lang.parquet file to understand language patterns in academic titles"
 
@@ -134,39 +103,9 @@ Expected AI Response:
 [Detailed statistical analysis follows...]
 ```
 
-### Example 4: Network Analysis Request
-```
-User: "Create a collaboration network from the author data to identify research communities"
-
-Expected AI Response:
-📊 ANALYSIS AGENT: Network Analysis
-
-**Network Type**: Author collaboration network
-**Data Source**: creator_sample_clean.parquet (author and affiliation data)
-**Research Focus**: Research community identification and collaboration patterns
-
-**Network Construction**:
-- **Nodes**: Authors (n=1,247)
-- **Edges**: Co-authorship relationships (weighted by frequency)
-- **Direction**: Undirected (symmetric collaboration)
-
-**Key Network Metrics**:
-- **Density**: 0.003 (sparse network, typical for academic collaboration)
-- **Components**: 89 connected components, largest contains 45% of nodes
-- **Average Clustering**: 0.61 (high local clustering)
-- **Diameter**: 12 steps (reasonable for academic network)
-
-**Community Detection Results**:
-- **7 major communities** identified using modularity optimization
-- Communities align with disciplinary boundaries and geographic regions
-- Cross-community bridges indicate interdisciplinary collaboration
-
-[Network visualization and interpretation follows...]
-```
-
 ## 📝 Documentation Agent Examples
 
-### Example 5: Research Report Request
+### Research Report Request
 ```
 User: "Write a comprehensive research report summarizing our invisible research project findings"
 
@@ -182,56 +121,12 @@ Expected AI Response:
 
 This report presents findings from a comprehensive analysis of academic invisibility in global research output. Using advanced computational methods and a dataset of 20 million OAI-PMH records, we identified significant patterns of linguistic marginalization and institutional bias in academic publishing...
 
-## Introduction
-
-The phenomenon of "invisible research" represents one of the most pressing challenges in contemporary academia. Despite unprecedented global expansion of research output, dominant indexing systems and citation databases systematically marginalize scholarship produced outside established academic centers...
-
 [Continues with full academic report structure...]
-```
-
-### Example 6: Technical Documentation Request
-```
-User: "Document the LLM name detection pipeline for future researchers"
-
-Expected AI Response:
-📝 DOCUMENTATION AGENT: Technical Documentation
-
-# LLM-Based Author Name Detection Pipeline
-
-## Overview
-
-This pipeline uses GPT-4 to intelligently parse complex author fields in academic metadata, separating individual names from institutional affiliations with high accuracy.
-
-## Architecture
-
-```
-Raw Author Fields → Complexity Classification → Processing Route
-                                           ├── Simple: Rule-based parsing
-                                           └── Complex: LLM processing → Validation
-```
-
-## Getting Started
-
-### Prerequisites
-- Python 3.9+
-- OpenAI API key
-- Required packages: `pip install -r requirements.txt`
-
-### Basic Usage
-```python
-from agents.processing.llm_name_detect import NameDetector
-
-detector = NameDetector(api_key="your_key")
-result = detector.process_creator_field("John Smith; Harvard University; Jane Doe, MIT")
-# Returns: {"authors": ["John Smith", "Jane Doe"], "affiliations": ["Harvard University", "MIT"]}
-```
-
-[Continues with detailed technical guide...]
 ```
 
 ## 🔧 Automation Agent Examples
 
-### Example 7: File Organization Request
+### File Organization Request
 ```
 User: "Organize project files according to academic research standards"
 
@@ -275,47 +170,42 @@ InvisibleResearch/
 [Detailed organization log follows...]
 ```
 
-### Example 8: Git Management Request
-```
-User: "Commit the recent analysis changes with proper formatting"
+---
 
-Expected AI Response:
-🔧 AUTOMATION AGENT: Git Management
+# Complete Case Studies
 
-**Operation**: Commit recent analysis improvements
-**Scope**: Analysis scripts and documentation updates
-**Message**: Following conventional commit standards
+## 📖 Case Study 1: Complete GitHub-Integrated Academic Workflow
 
-**Pre-commit Assessment**:
-- Modified files: 5 analysis scripts, 2 documentation files
-- New files: 3 visualization outputs
-- Code quality: All scripts pass linting
-- Documentation: Updated to reflect changes
+### 🎯 Scenario: Language Pattern Analysis Request
 
-**Commit Details**:
-```bash
-git add scripts/03_analysis/ docs/analysis_guide.md outputs/visualizations/
-git commit -m "feat(analysis): enhance network analysis with community detection
+This example demonstrates the complete workflow from user dialogue to final integration, showcasing the new GitHub management capabilities.
 
-- Add modularity-based community detection algorithm
-- Implement interactive network visualizations
-- Update analysis documentation with new methods
-- Include statistical validation procedures
+### Phase 1: User Dialogue & Issue Creation
 
-Resolves: Enhanced community identification capability"
-```
+**User Request**:
+> "I want to analyze the language patterns in our `data/final/title_pred_lang.parquet` dataset. Specifically, I need to identify the top 10 most frequent languages, create visualizations, and write a Results section for our paper. This should include statistical analysis and proper academic formatting."
 
-**Branch Status**:
-- Current branch: `feature/network-analysis`
-- 3 commits ahead of main
-- Ready for pull request creation
+**AI Coordinator Response**:
 
-[Git workflow completion summary follows...]
-```
+#### 🎯 Task Analysis & Planning
 
-## 🎯 Multi-Agent Coordination Examples
+**User Goal**: Comprehensive language pattern analysis with academic documentation
+**Task Complexity**: Complex - requires multi-agent coordination and GitHub workflow
+**Confidence Score**: 90% - requirements are clear and specific
+**GitHub Integration**: Required - Issue creation and PR workflow needed
 
-### Example 9: Complex Multi-Step Research Task
+**Agent Assignment**:
+- **Primary Agent**: 📊 **Analysis Agent** - data analysis and visualization
+- **Secondary Agent**: 📝 **Documentation Agent** - Results section writing  
+- **Support Agent**: 🔧 **Automation Agent** - GitHub management and project organization
+
+[Continues with complete workflow demonstration...]
+
+---
+
+# Multi-Agent Coordination Examples
+
+## Example: Complex Multi-Step Research Task
 ```
 User: "I want to research misinformation spread in academic contexts, design a study, and create preliminary analysis tools"
 
@@ -325,236 +215,23 @@ Expected AI Response:
 **Task Breakdown**: 3 agents required for comprehensive execution
 **Timeline**: Parallel and sequential task execution
 
-**Phase 1: Research Foundation** (Research Agent)
-🔍 Literature review on academic misinformation
-- Scope: Scholarly communication, information quality, peer review
-- Output: Theoretical framework and gap analysis
-
-**Phase 2: Study Design** (Research Agent) 
-🔍 Mixed-methods research design
-- Quantitative: Survey of researchers' misinformation exposure
-- Qualitative: Interviews with journal editors and reviewers
-- Output: Complete study protocol with IRB considerations
-
-**Phase 3: Analysis Tools** (Analysis Agent)
-📊 Preliminary analysis pipeline development
-- Text analysis for misinformation detection
-- Network analysis for spread patterns
-- Output: Analysis scripts and validation procedures
-
-**Phase 4: Documentation** (Documentation Agent)
-📝 Comprehensive project documentation
-- Research proposal formatting
-- Technical documentation for tools
-- Output: Grant-ready research proposal
-
-**Coordination Plan**:
-1. Phases 1-2 execute sequentially (Research Agent)
-2. Phase 3 runs parallel with Phase 2 completion
-3. Phase 4 integrates all outputs
-
-[Detailed execution follows for each phase...]
+[Detailed coordination example follows...]
 ```
 
-### Example 10: Data Analysis to Publication Pipeline
-```
-User: "Take our invisible research dataset through complete analysis and prepare publication materials"
+---
 
-Expected AI Response:
-🤖 COMPREHENSIVE RESEARCH PIPELINE ACTIVATED
+# Tips for Effective Agent Interaction
 
-**Objective**: Complete data-to-publication workflow
-**Dataset**: Multiple files in data/final/
-**Target**: Peer-reviewed publication in communication science
-
-**Stage 1: Data Integration** (Analysis Agent)
-📊 Comprehensive dataset analysis
-- Merge multiple data sources
-- Quality assessment and cleaning
-- Exploratory analysis across all variables
-
-**Stage 2: Hypothesis Testing** (Analysis Agent)
-📊 Confirmatory statistical analysis
-- Test specific hypotheses about research invisibility
-- Advanced modeling (multilevel, network analysis)
-- Effect size calculation and validation
-
-**Stage 3: Visualization Suite** (Analysis Agent)
-📊 Publication-quality graphics
-- Interactive and static visualizations
-- Network diagrams and flow charts
-- Statistical graphics with confidence intervals
-
-**Stage 4: Manuscript Preparation** (Documentation Agent)
-📝 Academic manuscript writing
-- Structure according to journal requirements
-- APA formatting and citation management
-- Integration of analysis results
-
-**Stage 5: Supplementary Materials** (Documentation Agent)
-📝 Supporting documentation
-- Data and code availability statements
-- Methodology appendices
-- Replication instructions
-
-**Stage 6: Project Management** (Automation Agent)
-🔧 Organization and version control
-- Final file organization
-- Version control for submission
-- Archive creation for reproducibility
-
-[Detailed execution plan with milestones follows...]
-```
-
-## 💡 Tips for Effective Agent Interaction
-
-### 1. Be Specific About Scope
+## 1. Be Specific About Scope
 ❌ Vague: "Analyze some data"
 ✅ Clear: "Perform network analysis on the author collaboration data in creator_sample_clean.parquet"
 
-### 2. Specify Output Requirements
+## 2. Specify Output Requirements
 ❌ Generic: "Write something about this"
 ✅ Detailed: "Create a 2,000-word literature review in APA format with at least 30 recent references"
 
-### 3. Provide Context
-❌ Minimal: "Organize files"
-✅ Contextual: "Organize project files according to academic research standards, separating raw data from processed results"
-
-### 4. Use Domain Language
-❌ General: "Look at relationships"
-✅ Specific: "Conduct social network analysis to identify opinion leaders and information brokers"
-
-### 5. Specify Quality Standards
-❌ Unclear: "Make it good"
-✅ Clear: "Follow APA style guidelines with proper statistical reporting and effect sizes"
-
-## 🚀 Quick Reference Commands
-
-**Research Tasks**:
-- "Find literature on [topic] from [timeframe]"
-- "Design a [type] study for [population] measuring [variables]"
-- "Create a research plan for investigating [phenomenon]"
-
-**Analysis Tasks**:
-- "Analyze [dataset] for [specific patterns/relationships]"
-- "Create [visualization type] showing [specific comparison]"
-- "Test the hypothesis that [specific prediction]"
-
-**Documentation Tasks**:
-- "Write a [document type] summarizing [content] for [audience]"
-- "Document the [process/tool] with [level of detail]"
-- "Create [format] following [style guide] standards"
-
-**Automation Tasks**:
-- "Organize [scope] according to [standards]"
-- "Commit [changes] with [type] message"
-- "Setup [workflow/structure] for [purpose]"
+[Additional tips follow...]
 
 ---
 
-## Example 2: From Data Analysis to Report Section (Multi-Agent Coordination)
-
-**User Prompt**:
-`"Analyze the 'data/final/title_pred_lang.parquet' file to find the top 10 most frequent languages. Then, write a 'Results' section for a research paper summarizing these findings, including a bar chart."`
-
-**Expected AI Response**:
-```markdown
-This is a complex task that requires a multi-agent approach. I will coordinate the following agents to fulfill your request:
-
-- **Primary Agent**: 📊 **Analysis Agent** will perform the data analysis and create the visualization.
-- **Secondary Agent**: 📝 **Documentation Agent** will then write the 'Results' section based on the analysis output.
-- **Support Agent**: 🔧 **Automation Agent** will ensure the generated chart is saved to the correct directory.
-
----
-**Phase 1: Analysis Agent Execution**
----
-
-**[📊 Analysis Agent Activated]**
-- **Task**: Exploratory Data Analysis (EDA)
-- **Dataset**: `data/final/title_pred_lang.parquet`
-- **Objective**: To identify and visualize the top 10 most frequent languages based on the 'language_pred' column.
-
-**1. Data Assessment & Cleaning:**
-   - Loading the Parquet file into a pandas DataFrame.
-   - The 'language_pred' column is the target for analysis. No significant data cleaning is required for this task.
-
-**2. Descriptive Statistics & Visualization:**
-   - Calculating frequency counts for the 'language_pred' column using `.value_counts()`.
-   - Creating a bar chart of the top 10 languages with clear labels and title.
-   - Saving the chart to `outputs/visualizations/language_distribution_top10.png`.
-
-**3. Handoff to Documentation Agent:**
-   - **Key Finding**: A summary table of the top 10 languages and their record counts.
-   - **Visualization Path**: `outputs/visualizations/language_distribution_top10.png`.
-
----
-**Phase 2: Documentation Agent Execution**
----
-
-**[📝 Documentation Agent Activated]**
-- **Task**: Write a 'Results' section for an academic paper.
-- **Section**: Results
-- **Target Journal Style**: APA 7th Edition
-- **Core Inputs**: The frequency table and bar chart from the Analysis Agent.
-
-**1. Structure & Content Outline:**
-   - 1. Brief statement introducing the analysis of language distribution.
-   - 2. Presentation of the top 10 languages and their frequencies in the text.
-   - 3. Reference to the bar chart (Figure 1).
-   - 4. A concluding sentence summarizing the distribution's key characteristic (e.g., skewness).
-
-**2. Deliverable:**
-
-### Results
-
-An analysis of the predicted languages for all 19.8 million academic titles in the dataset revealed a highly concentrated distribution. Table 1 presents the top 10 most frequent languages, which collectively account for over 92% of the entire corpus.
-
-English is the overwhelmingly dominant language, appearing in 15.5 million titles (78.2%). Following English, Spanish (6.1%) and Portuguese (4.3%) are the next most common languages. The distribution, as visualized in Figure 1, highlights the significant skew towards a small number of languages in global academic publishing.
-
-*(Instruction to Automation Agent: Please ensure the bar chart created by the Analysis Agent is available at `outputs/visualizations/language_distribution_top10.png` and can be referenced as Figure 1 in the manuscript.)*
-```
----
-
-## Example 3: Git Commit and File Cleanup (Automation Agent)
-
-**User Prompt**:
-`"I've finished my script updates in the analysis folder. Please clean up any temporary files and commit the changes with an appropriate message."`
-
-**Expected AI Response**:
-```markdown
-**[🔧 Automation Agent Activated]**
-- **Task**: Git Commit and File Cleanup
-- **Scope**: The `scripts/03_analysis/` directory and project root for temporary files.
-- **Standard**: Adhere to project file structure and conventional commit standards.
-
----
-**1. Assessment of Current State:**
-   - **Scan**: Scanning project for temporary files and checking `git status`.
-   - **Identify Misplaced Files**: No misplaced files found.
-   - **Identify Temporary Files**: Found `__pycache__/` directories and one `.DS_Store` file.
-   - **Identify Git Changes**: Found 2 modified files in `scripts/03_analysis/`.
-
-**2. Proposed Action Plan:**
-
-   - **Delete Operations**:
-     - `rm -rf **/__pycache__`
-     - `rm .DS_Store`
-   - **Git Staging**:
-     - `git add scripts/03_analysis/judge_creator.py`
-     - `git add scripts/03_analysis/test_LLM_name_detect_parquet.py`
-   - **Git Commit Message**:
-     - `feat(analysis): Refine author analysis and sampling logic`
-       - `- Improves statistical output in judge_creator.py.`
-       - `- Optimizes sampling strategy in test_LLM_name_detect_parquet.py.`
-
-**This plan will now be executed.**
-
----
-**Execution Log:**
-
-- ✅ Temporary files and directories successfully removed.
-- ✅ Git staging completed for 2 files.
-- ✅ Commit successfully created with message: `feat(analysis): Refine author analysis and sampling logic`.
-
-**The changes have been committed locally. You can push them to the remote repository by running `git push`**
-```
+*This comprehensive guide serves as your complete reference for agent interactions, from simple tasks to complex multi-agent workflows. All examples follow the enhanced two-round confirmation protocol and GitHub integration standards.*

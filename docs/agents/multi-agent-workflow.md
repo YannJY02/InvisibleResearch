@@ -44,7 +44,7 @@ The system automatically identifies multiple tasks when requests contain:
 ## 🔗 Integration Points
 
 ### GitHub Workflow Integration
-- **Issue Creation**: Automatic for new research tasks
+- **Issue Creation**: IMMEDIATE after user's final confirmation (before task execution)
 - **PR Management**: For completed work requiring review
 - **Review Processing**: For feedback integration and iteration
 

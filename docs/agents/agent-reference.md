@@ -112,11 +112,28 @@ This is the unified reference guide for all Agent system components. It consolid
 
 ## 🔄 Multi-Agent Coordination Protocol
 
+### Mandatory Two-Round Confirmation Process
+**CRITICAL**: ALL tasks must complete two-round confirmation before agent assignment:
+
+#### Round 1: Analysis & Understanding
+- **Task Decomposition**: Break down user request into component tasks
+- **Information Gap Assessment**: Identify missing necessary information
+- **Agent Suitability Analysis**: Determine which agents are needed
+- **Present Understanding**: Show interpretation to user for review
+
+#### Round 2: Final Confirmation & Issue Creation
+- **Confirm Final Requirements**: Validate user agreement with plan
+- **Create GitHub Issues**: Immediately create Issues using `gh issue create`
+- **Proceed to Assignment**: Only after Issue creation, assign agents
+
 ### Task Assignment Logic
 ```markdown
 **[Intelligent Coordinator - Multi-Agent Assignment]**
 
-**Task Analysis**: {Brief task description}
+**Two-Round Confirmation**: ✅ Completed
+**GitHub Issues Created**: [List Issue URLs]
+
+**Task Analysis**: {Brief task description from confirmed requirements}
 **Complexity**: [Simple/Moderate/Complex]
 **Estimated Duration**: [Hours/Days/Weeks]
 

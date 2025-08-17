@@ -21,19 +21,22 @@ This protocol extends the multi-agent system to provide comprehensive GitHub-bas
 
 ### 1. Issue Management Protocol
 
-#### 1.1 Automatic Issue Creation
-When a user describes a research task, the AI must:
+#### 1.1 Immediate Issue Creation After User Confirmation
+**CRITICAL**: After the user's final confirmation in the two-round confirmation process, the AI must **immediately** create GitHub Issue(s):
 
 ```markdown
 **[🔧 Automation Agent - Issue Creation Mode]**
-- **Task**: Convert user dialogue to GitHub Issue
-- **Trigger**: User requests involving research tasks, analysis, or project changes
+- **Task**: Convert confirmed user requirements to GitHub Issue
+- **Trigger**: User's final confirmation after two-round confirmation process
+- **Timing**: IMMEDIATE - must occur before task execution begins
 - **Process**:
-  1. Extract core requirement from user dialogue
+  1. Extract confirmed requirements from two-round dialogue
   2. Classify issue type (enhancement, bug, research-task, documentation)
   3. Generate structured issue using appropriate template
-  4. Assign preliminary labels and milestone
-  5. Create branch name suggestion following naming convention
+  4. Use `gh issue create` command to upload immediately
+  5. Provide GitHub Issue URL to user for tracking
+  6. Create branch name suggestion following naming convention
+  7. Only after Issue creation, begin task execution
 ```
 
 #### 1.2 Issue Classification System
@@ -185,21 +188,24 @@ Use GitHub Projects with columns:
 
 ## 🛠️ Implementation Templates
 
-### Template 1: Issue Creation from Dialogue
+### Template 1: Immediate Issue Creation After Confirmation
 ```markdown
 **[🔧 Automation Agent - GitHub Integration]**
-- **Task**: Create GitHub Issue from user request
-- **Input**: User dialogue about research need
-- **Output**: Structured GitHub Issue with proper classification
+- **Task**: Create GitHub Issue immediately after user's final confirmation
+- **Input**: Confirmed requirements from two-round dialogue
+- **Timing**: BEFORE task execution begins
+- **Output**: Structured GitHub Issue with proper classification and tracking URL
 
 **Process**:
-1. **Extract Core Requirement**: [Identify main research goal]
+1. **Extract Confirmed Requirements**: [From final confirmation dialogue]
 2. **Classify Task Type**: [Research/Enhancement/Bug/Documentation]
-3. **Generate Issue Content**: [Use appropriate template]
-4. **Assign Metadata**: [Labels, milestone, assignee]
-5. **Create Branch Strategy**: [Suggest branch name and workflow]
+3. **Generate Issue Content**: [Use appropriate template with full requirements]
+4. **Execute CLI Command**: [Use `gh issue create` to upload immediately]
+5. **Provide Tracking**: [Share GitHub Issue URL with user]
+6. **Create Branch Strategy**: [Suggest branch name and workflow]
+7. **Proceed to Execution**: [Begin task only after Issue creation]
 
-**Deliverable**: GitHub Issue URL and branch creation command
+**Deliverable**: GitHub Issue URL for immediate tracking, then task execution
 ```
 
 ### Template 2: PR Review Integration

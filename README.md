@@ -18,6 +18,22 @@ source environments/venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### 🔐 API Configuration
+For LLM-based author processing, configure your API credentials:
+
+```bash
+# 1. Copy the configuration template
+cp config/env.template .env
+
+# 2. Edit .env with your actual API key
+# OPENAI_API_KEY=your_api_key_here
+# OPENAI_BASE_URL=https://your-proxy.com/v1  # Optional
+
+# 3. The .env file is automatically ignored by git for security
+```
+
+📋 **See [Security Guide](docs/SECURITY_GUIDE.md) for detailed configuration instructions and best practices.**
+
 ### Run Pipeline
 ```bash
 # Data extraction
@@ -27,8 +43,8 @@ python scripts/02_extraction/data_for_analysis_to_parquet.py
 python scripts/03_analysis/judge_creator.py
 python scripts/03_analysis/test_LLM_name_detect_parquet.py
 
-# Intelligent processing
-OPENAI_API_KEY=your_key python scripts/04_processing/LLM_name_detect.py
+# Intelligent processing (requires API configuration)
+python scripts/04_processing/LLM_name_detect.py
 
 # Language detection
 python scripts/04_processing/result_GlotLID.py

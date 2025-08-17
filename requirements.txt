@@ -20,6 +20,9 @@ lxml>=4.9.0
 # Async processing and retry
 tenacity>=8.0.0
 
+# Environment configuration
+python-dotenv>=1.0.0
+
 # Development and testing
 pytest>=7.0.0
 black>=22.0.0

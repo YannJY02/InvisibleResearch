@@ -1,8 +1,6 @@
 ---
-description: "Enhanced AI coordinator protocol with two-round confirmation, multi-task breakdown, and integrated GitHub workflows for academic research."
-alwaysApply: true
+alwaysApply: false
 ---
-
 When a user's request pertains to academic research, data analysis, or project management within this repository, you **must** act as an **Intelligent Coordinator** following the enhanced protocol system.
 
 ## 🎯 Core Protocol Requirements

@@ -5,14 +5,21 @@ LLM_name_detect.py
 Pipeline on top of `creator_sample.parquet` to:
 1) Pre-clean the raw `creator` field (strip HTML, normalize whitespace, Unicode NFKC)
 2) Decide whether a row is "simple" (rule-based parsing is enough) or "complex" (send to an LLM)
-3) Use GPT-4o (function calling style) to extract a clean list of authors and affiliations for complex rows
+3) Use GPT-4o to extract a clean list of authors and affiliations for complex rows
 4) Write the result to `creator_sample_clean.parquet`, adding `authors_clean` and `affiliations` columns
 
 Dependencies:
-    pip install pyarrow pandas beautifulsoup4 lxml unidecode nameparser openai tenacity
+    pip install pyarrow pandas beautifulsoup4 lxml unidecode nameparser openai tenacity python-dotenv
+
+Configuration:
+    Create a .env file in the project root or set environment variables:
+    OPENAI_API_KEY=your_api_key_here                    # Required: Your OpenAI API key
+    OPENAI_BASE_URL=https://your-proxy.com/v1          # Optional: Custom proxy URL
+    OPENAI_MODEL=gpt-4o                                 # Optional: Model to use (default: gpt-4o)
+    BATCH_SIZE=20                                       # Optional: Batch size (default: 20)
 
 Run:
-    OPENAI_API_KEY=<your_key> python LLM_name_detect.py
+    python LLM_name_detect.py
 """
 from __future__ import annotations
 
@@ -20,9 +27,8 @@ from pathlib import Path
 import os
 import re
 import json
-import asyncio
 import unicodedata
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import pandas as pd
 import pyarrow.parquet as pq
@@ -31,31 +37,76 @@ from bs4 import BeautifulSoup
 from unidecode import unidecode
 from nameparser import HumanName
 
-from openai import AsyncOpenAI
+import openai
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
+# Try to load .env file if available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv is optional
+
 # -----------------------------------------------------------------------------
-# OpenAI API‑key helper
+# OpenAI API configuration
 # -----------------------------------------------------------------------------
-def _get_openai_api_key() -> str:
-    """Return the OpenAI API key from env or raise an explicit error."""
-    key = os.getenv("OPENAI_API_KEY")
-    if not key:
+def _validate_api_key(api_key: str) -> bool:
+    """Validate API key format (basic security check)."""
+    if not api_key:
+        return False
+    if len(api_key) < 10:  # Reasonable minimum length
+        return False
+    if api_key.startswith('sk-') and len(api_key) < 20:  # OpenAI format check
+        return False
+    return True
+
+def _get_openai_client() -> openai.OpenAI:
+    """Initialize and return the OpenAI client with secure configuration."""
+    # Read configuration from environment variables
+    api_key = os.getenv("OPENAI_API_KEY")
+    base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")  # Default to official API
+    
+    # Validate API key
+    if not api_key:
         raise EnvironmentError(
-            "OPENAI_API_KEY environment variable is not set. Please `export OPENAI_API_KEY=<key>` first."
+            "OPENAI_API_KEY environment variable is not set.\n"
+            "Please set it in your environment or create a .env file with:\n"
+            "OPENAI_API_KEY=your_api_key_here\n"
+            "OPENAI_BASE_URL=your_proxy_url_here  # Optional, defaults to OpenAI official API"
         )
-    return key
+    
+    if not _validate_api_key(api_key):
+        raise ValueError(
+            "Invalid API key format. Please check your OPENAI_API_KEY environment variable."
+        )
+    
+    # Additional security: mask API key in logs
+    masked_key = api_key[:8] + "*" * (len(api_key) - 12) + api_key[-4:] if len(api_key) > 12 else "*" * len(api_key)
+    print(f"🔐 Initializing OpenAI client with API key: {masked_key}")
+    print(f"🌐 Using base URL: {base_url}")
+    
+    return openai.OpenAI(
+        api_key=api_key,
+        base_url=base_url
+    )
 
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
 SRC_PARQUET = Path(__file__).parent.parent.parent / "data/processed/creator_sample.parquet"
-DST_PARQUET = Path(__file__).parent.parent.parent / "data/final/creator_sample_clean.parquet"
-MODEL = "gpt-4o"
-BATCH = 20               # number of complex rows per LLM call
+DST_PARQUET = Path(__file__).parent.parent.parent / "data/final/creator_sample_clean_v2.parquet"
+MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")  # Default to official model name, can be overridden
+BATCH = int(os.getenv("BATCH_SIZE", "20"))   # Configurable batch size
 
-# Instantiate the async OpenAI client (requires helper above)
-client = AsyncOpenAI(api_key=_get_openai_api_key())
+# Instantiate the OpenAI client (will be initialized when needed)
+client: Optional[openai.OpenAI] = None
+
+def get_client() -> openai.OpenAI:
+    """Get or initialize the OpenAI client."""
+    global client
+    if client is None:
+        client = _get_openai_client()
+    return client
 
 # -----------------------------------------------------------------------------
 # Regex patterns and helpers
@@ -173,14 +224,14 @@ SYSTEM_MSG = (
 
 
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(6))
-async def call_llm(text: str) -> dict:
-    """Send one creator string to GPT‑4o (OpenAI 1.x API) and return a dict."""
+def call_llm(text: str) -> dict:
+    """Send one creator string to GPT-4o and return a dict."""
     messages = [
         {"role": "system", "content": SYSTEM_MSG},
         {"role": "user",   "content": text},
     ]
 
-    response = await client.chat.completions.create(
+    response = get_client().chat.completions.create(
         model=MODEL,
         messages=messages,
         temperature=0,
@@ -204,74 +255,63 @@ async def call_llm(text: str) -> dict:
 # -----------------------------------------------------------------------------
 # Main pipeline
 # -----------------------------------------------------------------------------
-async def main() -> None:
+def main() -> None:
     if not SRC_PARQUET.exists():
         raise SystemExit(f"Parquet not found: {SRC_PARQUET}")
 
     df = pq.read_table(SRC_PARQUET).to_pandas()
 
     n = len(df)
-    authors_orig_out: List[List[str]] = [None] * n
-    affil_out:   List[List[str]] = [None] * n
+    authors_clean: List[str] = [""] * n
+    affil_out: List[List[str]] = [None] * n
 
-    complex_batch: List[str] = []
-    complex_idx:   List[int] = []
-    pending_tasks: List[asyncio.Task] = []
+    complex_batch: List[Tuple[str, int]] = []
 
-    semaphore = asyncio.Semaphore(8)  # limit concurrent LLM requests
+    def process_batch(batch: List[Tuple[str, int]]) -> None:
+        """Process a batch of complex rows synchronously."""
+        for clean_txt, idx in batch:
+            try:
+                res = call_llm(clean_txt)
+                # Extract authors and format as clean string
+                authors = res.get("authors_original", [])
+                authors_clean[idx] = "; ".join(author.strip() for author in authors if author.strip())
+                affil_out[idx] = res.get("affiliations", [])
+            except Exception as e:
+                print(f"Warning: Failed to process row {idx}: {e}")
+                authors_clean[idx] = ""
+                affil_out[idx] = []
 
-    async def flush_batch() -> None:
-        """Send queued complex rows concurrently, keep order mapping."""
-        nonlocal complex_batch, complex_idx
-        if not complex_batch:
-            return
-
-        async def runner(txt: str, i: int):
-            async with semaphore:
-                res = await call_llm(txt)
-                return i, res
-
-        tasks = [asyncio.create_task(runner(t, i)) for t, i in zip(complex_batch, complex_idx)]
-        pending_tasks.extend(tasks)
-        complex_batch, complex_idx = [], []
-
-    # Pass 1: decide simple vs complex and collect complex batches
+    # Process all rows
     for idx, raw in enumerate(df["creator"].astype(str).fillna("")):
         clean_txt = rough_clean(raw)
         if not clean_txt:
-            authors_orig_out[idx] = []
+            authors_clean[idx] = ""
             affil_out[idx] = []
             continue
 
         if is_simple(clean_txt):
-            # Do not modify name text, just trim outer spaces
-            name_str = clean_txt.strip()
-            authors_orig_out[idx] = [name_str] if name_str else []
+            # Simple case: use the cleaned text as-is
+            authors_clean[idx] = clean_txt.strip()
             affil_out[idx] = []
         else:
-            complex_batch.append(clean_txt)
-            complex_idx.append(idx)
+            # Complex case: add to batch for LLM processing
+            complex_batch.append((clean_txt, idx))
+            
+            # Process batch when it reaches the limit
             if len(complex_batch) >= BATCH:
-                await flush_batch()
+                process_batch(complex_batch)
+                complex_batch = []
 
-    await flush_batch()  # flush remaining complex rows
+    # Process any remaining complex rows
+    if complex_batch:
+        process_batch(complex_batch)
 
-    # Pass 2: gather results from LLM and place them into the right rows
-    for fut in pending_tasks:
-        i, res = await fut
-        authors_orig_out[i] = res.get("authors_original", [])
-        affil_out[i]        = res.get("affiliations", [])
+    # Safety: ensure no None values remain
+    affil_out = [a if a is not None else [] for a in affil_out]
 
-    # Safety: any leftover None -> empty list
-    authors_orig_out = [a if a is not None else [] for a in authors_orig_out]
-    affil_out   = [b if b is not None else [] for b in affil_out]
-
-    # Only standardize separators between people; keep each name string untouched (except trimming)
-    authors_clean = ["; ".join(n.strip() for n in names if n) for names in authors_orig_out]
-
-    df["authors_original"] = authors_orig_out      # list[str] untouched
-    df["authors_clean"]    = authors_clean         # single string "name1; name2" ...
-    df["affiliations"]     = affil_out
+    # Add columns to dataframe
+    df["authors_clean"] = authors_clean
+    df["affiliations"] = affil_out
 
     # Write back to Parquet
     pq.write_table(pa.Table.from_pandas(df), DST_PARQUET)
@@ -279,4 +319,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

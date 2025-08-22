@@ -33,8 +33,8 @@ class ReportGenerator:
         
         self.report_settings = self.config['report_settings']
         
-        # 设置中文字体（如果需要）
-        plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans', 'Arial Unicode MS']
+        # Set fonts for better compatibility
+        plt.rcParams['font.sans-serif'] = ['Arial', 'DejaVu Sans', 'Arial Unicode MS']
         plt.rcParams['axes.unicode_minus'] = False
     
     def calculate_detailed_statistics(self, records: List[ValidationRecord]) -> Dict[str, Any]:
@@ -274,7 +274,7 @@ class ReportGenerator:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LLM名称提取验证报告</title>
+    <title>{title}</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f5f5f5; }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -301,7 +301,7 @@ class ReportGenerator:
 </head>
 <body>
     <div class="container">
-        <h1>🔍 LLM名称提取验证报告</h1>
+        <h1>🔍 LLM Named Entity Extraction Validation Report</h1>
         
         <div class="summary">
             <h2 style="color: white; border: none;">📊 总体概览</h2>

@@ -264,10 +264,19 @@ class ValidationApp:
             return False
     
     def auto_save(self):
-        """自动保存（每30秒）"""
+        """自动保存（每30秒）和自动备份"""
         current_time = time.time()
         if current_time - st.session_state.last_save_time > 30:
             self.save_progress()
+            
+            # 执行自动备份（如果需要）
+            try:
+                from utils.data_protection import create_protection_manager
+                protection = create_protection_manager()
+                if protection.auto_backup_if_needed():
+                    print("🔒 自动备份已创建")
+            except Exception as e:
+                print(f"⚠️ 自动备份失败: {e}")
     
     def render_sidebar(self):
         """渲染侧边栏"""
@@ -369,6 +378,37 @@ class ValidationApp:
         if st.sidebar.button(self.get_text('manual_save'), key="manual_save_btn"):
             if self.save_progress():
                 st.sidebar.success(self.get_text('saved_successfully'))
+                # 手动保存后创建备份
+                try:
+                    from utils.data_protection import create_protection_manager
+                    protection = create_protection_manager()
+                    backup_path = protection.create_backup("manual")
+                    if backup_path:
+                        st.sidebar.info(f"🔒 备份已创建: {backup_path.name}")
+                except Exception as e:
+                    st.sidebar.warning(f"备份创建失败: {e}")
+        
+        # 数据保护状态显示
+        try:
+            from utils.data_protection import create_protection_manager
+            protection = create_protection_manager()
+            stats = protection.get_data_statistics()
+            
+            if stats['file_exists']:
+                st.sidebar.write(f"📊 **数据状态**")
+                st.sidebar.write(f"记录总数: {stats['record_count']}")
+                st.sidebar.write(f"已完成: {stats['completed_records']}")
+                st.sidebar.write(f"备份数量: {stats['backup_count']}")
+                
+                # 数据保护操作
+                if st.sidebar.button("🔒 创建备份", key="create_backup_btn"):
+                    backup_path = protection.create_backup("manual")
+                    if backup_path:
+                        st.sidebar.success(f"备份已创建: {backup_path.name}")
+                    else:
+                        st.sidebar.error("备份创建失败")
+        except Exception as e:
+            st.sidebar.warning(f"数据保护状态获取失败: {e}")
         
         # 报告生成区域
         st.sidebar.write(f"**{self.get_text('generate_report')}**")
@@ -379,7 +419,7 @@ class ValidationApp:
             '🇺🇸 English Report': 'en'
         }
         selected_report_lang = st.sidebar.selectbox(
-            self.get_text('select_report_language') if 'select_report_language' in self.translations[st.session_state.language] else "选择报告语言",
+            self.get_text('select_report_language'),
             list(report_lang_options.keys()),
             key="report_language_select"
         )
@@ -687,6 +727,16 @@ class ValidationApp:
         if report_language is None:
             report_language = st.session_state.language
         
+        # 报告生成前创建数据备份
+        try:
+            from utils.data_protection import create_protection_manager
+            protection = create_protection_manager()
+            backup_path = protection.create_backup("pre_report")
+            if backup_path:
+                st.info(f"🔒 报告生成前备份已创建: {backup_path.name}")
+        except Exception as e:
+            st.warning(f"备份创建失败: {e}")
+        
         with st.spinner(self.get_text('generating_report')):
             try:
                 output_dir = Path("data/validation/reports")
@@ -716,7 +766,7 @@ class ValidationApp:
     def run(self):
         """运行应用"""
         st.set_page_config(
-            page_title="LLM名称提取验证系统",
+            page_title=self.get_text('title'),
             page_icon="🔍",
             layout="wide",
             initial_sidebar_state="expanded"

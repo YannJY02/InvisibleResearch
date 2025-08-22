@@ -234,8 +234,8 @@ class DataManager:
             return {}
     
     def save_validation_progress(self, progress: Dict[str, ValidationRecord]) -> None:
-        """保存验证进度"""
-        progress_file = Path(self.data_paths['validation_progress'])
+        """保存验证进度（带数据保护）"""
+        from .data_protection import create_protection_manager
         
         # 转换为可序列化的字典
         serializable_progress = {}
@@ -243,10 +243,23 @@ class DataManager:
             serializable_progress[record_id] = asdict(record)
         
         try:
-            with open(progress_file, 'w', encoding='utf-8') as f:
-                json.dump(serializable_progress, f, ensure_ascii=False, indent=2)
+            # 使用数据保护管理器安全保存
+            protection = create_protection_manager()
+            success = protection.safe_save(serializable_progress)
+            
+            if success:
+                print(f"✅ 验证进度已安全保存 (记录数: {len(serializable_progress)})")
+            else:
+                print(f"⚠️ 安全保存失败，尝试直接保存...")
+                # 回退到直接保存
+                progress_file = Path(self.data_paths['validation_progress'])
+                with open(progress_file, 'w', encoding='utf-8') as f:
+                    json.dump(serializable_progress, f, ensure_ascii=False, indent=2)
+                print(f"✅ 验证进度已直接保存 (记录数: {len(serializable_progress)})")
+                
         except Exception as e:
             print(f"⚠️ 保存进度文件失败: {e}")
+            raise
     
     def save_validation_results(self, records: List[ValidationRecord]) -> None:
         """保存最终验证结果到Parquet文件"""

@@ -36,7 +36,7 @@ class ReportGenerator:
         # Set fonts for better compatibility
         plt.rcParams['font.sans-serif'] = ['Arial', 'DejaVu Sans', 'Arial Unicode MS']
         plt.rcParams['axes.unicode_minus'] = False
-    
+
     def _get_template_content(self, language: str) -> Dict[str, str]:
         """获取模板内容文本"""
         if language == 'en':
@@ -135,11 +135,11 @@ class ReportGenerator:
                 }
             
             complexity_stats[complexity]['total'] += 1
-            complexity_stats[complexity][record.overall_status] += 1
+            if record.overall_status in ['correct', 'partial', 'incorrect']:
+                complexity_stats[complexity][record.overall_status] += 1
             
         # 计算各复杂度准确率
-        for complexity in complexity_stats:
-            stats = complexity_stats[complexity]
+        for complexity, stats in complexity_stats.items():
             stats['accuracy'] = stats['correct'] / stats['total'] if stats['total'] > 0 else 0.0
         
         # 错误分析
@@ -161,7 +161,7 @@ class ReportGenerator:
 
     def create_complexity_chart(self, stats: Dict[str, Any], output_dir: Path, language: str = 'zh') -> str:
         """创建复杂度准确率图表"""
-        if not stats['accuracy_by_complexity']:
+        if 'accuracy_by_complexity' not in stats or not stats['accuracy_by_complexity']:
             return None
         
         complexity_data = stats['accuracy_by_complexity']
@@ -197,7 +197,11 @@ class ReportGenerator:
         plt.savefig(chart_path, dpi=300, bbox_inches='tight')
         plt.close()
         
-        return str(chart_path)
+        # 将图片转换为Base64编码
+        with open(chart_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+        
+        return f"data:image/png;base64,{encoded_string}"
 
     def generate_csv_report(self, records: List[ValidationRecord], output_path: Path) -> str:
         """生成CSV格式报告"""
@@ -390,7 +394,7 @@ class ReportGenerator:
                 <li><strong>{template_content['low_accuracy_suggestion']}</strong></li>
                 {{% endif %}}
                 
-                {{% if stats.accuracy_by_complexity.complex and stats.accuracy_by_complexity.simple and stats.accuracy_by_complexity.complex.accuracy < stats.accuracy_by_complexity.simple.accuracy %}}
+                {{% if stats.accuracy_by_complexity.get('complex') and stats.accuracy_by_complexity.get('simple') and stats.accuracy_by_complexity.complex.accuracy < stats.accuracy_by_complexity.simple.accuracy %}}
                 <li><strong>{template_content['complex_cases_suggestion']}</strong></li>
                 {{% endif %}}
                 
@@ -418,10 +422,13 @@ class ReportGenerator:
         
         # 渲染模板
         template = Template(html_template)
+        generation_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
         html_content = template.render(
             stats=stats,
             chart_files=chart_files,
-            generation_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            generation_time=generation_time,
+            template_content=template_content
         )
         
         # 写入文件
@@ -460,15 +467,15 @@ class ReportGenerator:
 
 
 def main():
-    """测试报告生成功能"""
+    """测试报告生成器"""
     try:
-        from data_manager import DataManager
-    except ImportError:
         from .data_manager import DataManager
+    except ImportError:
+        from data_manager import DataManager
     
-    # 创建测试数据
+    # 准备测试数据
     dm = DataManager()
-    records = dm.prepare_validation_records()[:10]  # 使用前10条记录进行测试
+    records = dm.prepare_validation_records()[:10]  # 取前10条记录
     
     # 模拟一些验证结果
     for i, record in enumerate(records):

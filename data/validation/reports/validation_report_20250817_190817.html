@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM名称提取验证报告</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; border-left: 4px solid #3498db; padding-left: 10px; }
+        .summary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .metric { display: inline-block; margin: 10px 20px; text-align: center; }
+        .metric-value { font-size: 2em; font-weight: bold; display: block; }
+        .metric-label { font-size: 0.9em; opacity: 0.9; }
+        .chart { text-align: center; margin: 20px 0; }
+        .chart img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #3498db; color: white; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        .status-correct { color: #27ae60; font-weight: bold; }
+        .status-partial { color: #f39c12; font-weight: bold; }
+        .status-incorrect { color: #e74c3c; font-weight: bold; }
+        .progress-bar { width: 100%; background-color: #ecf0f1; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 20px; background: linear-gradient(90deg, #2ecc71, #27ae60); text-align: center; line-height: 20px; color: white; font-size: 12px; }
+        .error-list { background-color: #fdf2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 15px; margin: 10px 0; }
+        .recommendation { background-color: #f0f9ff; border: 1px solid #7dd3fc; border-radius: 6px; padding: 15px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 LLM名称提取验证报告</h1>
+        
+        <div class="summary">
+            <h2 style="color: white; border: none;">📊 总体概览</h2>
+            <div class="metric">
+                <span class="metric-value">178</span>
+                <span class="metric-label">总记录数</span>
+            </div>
+            <div class="metric">
+                <span class="metric-value">79</span>
+                <span class="metric-label">已验证记录</span>
+            </div>
+            <div class="metric">
+                <span class="metric-value">44.4%</span>
+                <span class="metric-label">完成率</span>
+            </div>
+            <div class="metric">
+                <span class="metric-value">91.1%</span>
+                <span class="metric-label">整体准确率</span>
+            </div>
+        </div>
+
+        
+        <h2>📈 按复杂度分类的准确率分析</h2>
+        <div class="chart">
+            <img src="data/validation/reports/charts/complexity_accuracy.png" alt="复杂度准确率图表">
+        </div>
+        
+
+        <h2>📋 复杂度详细统计</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>复杂度</th>
+                    <th>总数</th>
+                    <th>正确</th>
+                    <th>部分正确</th>
+                    <th>错误</th>
+                    <th>准确率</th>
+                    <th>成功率</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>Simple</td>
+                    <td>10</td>
+                    <td class="status-correct">10</td>
+                    <td class="status-partial">0</td>
+                    <td class="status-incorrect">0</td>
+                    <td>100.0%</td>
+                    <td>100.0%</td>
+                </tr>
+                
+                <tr>
+                    <td>Medium</td>
+                    <td>19</td>
+                    <td class="status-correct">16</td>
+                    <td class="status-partial">1</td>
+                    <td class="status-incorrect">2</td>
+                    <td>84.2%</td>
+                    <td>89.5%</td>
+                </tr>
+                
+                <tr>
+                    <td>Complex</td>
+                    <td>50</td>
+                    <td class="status-correct">46</td>
+                    <td class="status-partial">3</td>
+                    <td class="status-incorrect">1</td>
+                    <td>92.0%</td>
+                    <td>98.0%</td>
+                </tr>
+                
+            </tbody>
+        </table>
+
+        
+        <h2>📊 评分分布分析</h2>
+        <div class="chart">
+            <img src="data/validation/reports/charts/score_distributions.png" alt="评分分布图表">
+        </div>
+        
+
+        <h2>🎯 各维度评分统计</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>评估维度</th>
+                    <th>平均分</th>
+                    <th>最低分</th>
+                    <th>最高分</th>
+                    <th>分布</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        作者识别
+                        
+                    </td>
+                    <td>4.78</td>
+                    <td>1</td>
+                    <td>5</td>
+                    <td>
+                        
+                            1分:3, 
+                        
+                            2分:0, 
+                        
+                            3分:2, 
+                        
+                            4分:1, 
+                        
+                            5分:73
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        分割准确性
+                        
+                    </td>
+                    <td>4.78</td>
+                    <td>1</td>
+                    <td>5</td>
+                    <td>
+                        
+                            1分:3, 
+                        
+                            2分:0, 
+                        
+                            3分:2, 
+                        
+                            4分:1, 
+                        
+                            5分:73
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        分类准确性
+                        
+                    </td>
+                    <td>4.87</td>
+                    <td>1</td>
+                    <td>5</td>
+                    <td>
+                        
+                            1分:2, 
+                        
+                            2分:0, 
+                        
+                            3分:1, 
+                        
+                            4分:0, 
+                        
+                            5分:76
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        格式质量
+                        
+                    </td>
+                    <td>4.82</td>
+                    <td>1</td>
+                    <td>5</td>
+                    <td>
+                        
+                            1分:3, 
+                        
+                            2分:0, 
+                        
+                            3分:1, 
+                        
+                            4分:0, 
+                        
+                            5分:75
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+
+        
+
+        
+        <h2>👥 验证者性能</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>验证者</th>
+                    <th>验证数量</th>
+                    <th>正确数量</th>
+                    <th>准确率</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>anonymous</td>
+                    <td>79</td>
+                    <td>72</td>
+                    <td>91.1%</td>
+                </tr>
+                
+            </tbody>
+        </table>
+        
+
+        <h2>💡 改进建议</h2>
+        <div class="recommendation">
+            <h3>基于分析结果的建议:</h3>
+            <ul>
+                
+                
+                
+                <li><strong>复杂案例处理能力不足</strong>: 需要针对复杂案例优化算法</li>
+                
+                
+                
+                
+                
+                
+                <li><strong>持续监控</strong>: 建议定期进行验证以确保处理质量</li>
+                <li><strong>人工复核</strong>: 对于低置信度案例建议增加人工复核流程</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center; color: #7f8c8d; font-size: 0.9em;">
+            <p>报告生成时间: 2025-08-17 19:08:21</p>
+            <p>LLM验证审核系统 - InvisibleResearch项目</p>
+        </div>
+    </div>
+</body>
+</html>
+        

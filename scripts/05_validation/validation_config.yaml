@@ -1,0 +1,114 @@
+# LLM验证审核系统配置文件
+# LLM Validation Suite Configuration
+
+# 数据路径配置
+data_paths:
+  input_file: "data/processed/creator_sample.parquet"
+  output_file: "data/final/creator_sample_clean_v2.parquet" 
+  validation_results: "data/validation/validation_results.parquet"
+  validation_progress: "data/validation/validation_progress.json"
+
+# 审核模式配置
+validation_modes:
+  # 全量审核
+  full_audit:
+    enabled: true
+    description: "审核所有178条记录"
+    
+  # 分层抽样
+  stratified_sampling:
+    enabled: true
+    simple_sample_size: 10      # 简单案例抽样数
+    medium_sample_size: 20      # 中等复杂案例抽样数
+    complex_sample_size: 30     # 复杂案例抽样数
+    
+  # 专项审核
+  targeted_audit:
+    multi_author_cases: true    # 多作者案例
+    affiliation_cases: true     # 包含机构信息案例
+    error_prone_cases: true     # 疑似错误案例
+
+# 复杂度分类标准
+complexity_criteria:
+  simple:
+    max_length: 50              # 最大字符长度
+    max_authors: 1              # 最大作者数
+    has_affiliations: false     # 无机构信息
+    
+  medium:
+    max_length: 200
+    max_authors: 3
+    has_affiliations: true
+    
+  complex:
+    max_length: 99999           # 无限制
+    max_authors: 99999
+    has_affiliations: true
+
+# 外部验证工具配置
+external_validation:
+  google_scholar:
+    enabled: true
+    base_url: "https://scholar.google.com/scholar"
+    search_template: "?q=\"{title}\" \"{author}\""
+    
+  crossref:
+    enabled: true
+    api_url: "https://api.crossref.org/works"
+    rate_limit: 1000            # 每小时请求限制
+    
+  orcid:
+    enabled: true
+    api_url: "https://pub.orcid.org/v3.0/search"
+    
+  custom_search:
+    enabled: true
+    templates:
+      - name: "Google通用搜索"
+        url: "https://www.google.com/search?q=\"{title}\" \"{author}\""
+      - name: "百度学术"
+        url: "https://xueshu.baidu.com/s?wd=\"{title}\" \"{author}\""
+      - name: "Semantic Scholar"
+        url: "https://www.semanticscholar.org/search?q=\"{title}\" \"{author}\""
+
+# 评估标准配置
+evaluation_criteria:
+  author_identification:
+    weight: 0.3
+    description: "作者姓名识别准确性"
+    scale: [1, 2, 3, 4, 5]      # 1=很差, 5=很好
+    
+  author_separation:
+    weight: 0.25
+    description: "多作者分割准确性"
+    scale: [1, 2, 3, 4, 5]
+    
+  name_affiliation_classification:
+    weight: 0.25
+    description: "姓名vs机构信息分类准确性"
+    scale: [1, 2, 3, 4, 5]
+    
+  name_formatting:
+    weight: 0.2
+    description: "姓名格式化质量"
+    scale: [1, 2, 3, 4, 5]
+
+# 界面配置
+ui_settings:
+  page_title: "LLM名称提取验证系统"
+  records_per_page: 10
+  auto_save_interval: 30       # 秒
+  theme: "light"
+  
+# 报告配置
+report_settings:
+  formats: ["html", "csv", "json"]
+  include_charts: true
+  include_error_analysis: true
+  include_recommendations: true
+  
+# 多用户支持
+multi_user:
+  enabled: true
+  user_assignment_strategy: "round_robin"  # 或 "manual"
+  conflict_resolution: "majority_vote"     # 或 "expert_review"

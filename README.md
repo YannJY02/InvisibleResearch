@@ -48,6 +48,9 @@ python scripts/04_processing/LLM_name_detect.py
 
 # Language detection
 python scripts/04_processing/result_GlotLID.py
+
+# LLM validation (optional - for accuracy assessment)
+python scripts/05_validation/start_validation.py
 ```
 
 ## 📊 Data Sources
@@ -62,6 +65,7 @@ python scripts/04_processing/result_GlotLID.py
 1. **Data Extraction**: OAI-PMH batch harvesting, MySQL storage
 2. **Author Parsing**: GPT-4o intelligent processing of complex author fields
 3. **Language Detection**: GlotLID multilingual identification
+4. **Validation System**: Comprehensive manual validation suite for LLM accuracy assessment
 
 ## 🛠️ Project Structure
 
@@ -70,12 +74,41 @@ scripts/01_setup/      # Environment setup
 scripts/02_extraction/ # Data extraction
 scripts/03_analysis/   # Data analysis  
 scripts/04_processing/ # Advanced processing
+scripts/05_validation/ # LLM validation suite
 data/raw/             # Raw data
 data/processed/       # Intermediate results
 data/final/           # Final outputs
+data/validation/      # Validation data and reports
 ```
 
 **📋 For detailed data-script relationships**: See [`docs/DATA_SCRIPT_MAPPING.md`](docs/DATA_SCRIPT_MAPPING.md)
+
+## 🔍 LLM Validation Suite
+
+The project includes a comprehensive validation system for assessing the accuracy of GPT-4o's named entity extraction in author processing.
+
+### Features
+- **Interactive Web Interface**: Streamlit-based validation dashboard
+- **External Verification**: Integration with CrossRef, ORCID, and Google Scholar
+- **Multilingual Support**: Chinese/English interface and report generation
+- **Data Protection**: Multi-layer backup system with automatic recovery
+- **Comprehensive Reporting**: HTML, CSV, and JSON output formats with statistical analysis
+
+### Quick Start
+```bash
+# Launch validation interface
+python scripts/05_validation/start_validation.py
+# Access: http://localhost:8501
+
+# Launch data protection dashboard
+python -m streamlit run scripts/05_validation/data_protection_dashboard.py --server.port 8502
+# Access: http://localhost:8502
+```
+
+### System Requirements
+```bash
+pip install streamlit matplotlib seaborn plotly jinja2
+```
 
 ## 🤖 Multi-Agent Research Workflow
 

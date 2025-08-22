@@ -1,0 +1,2888 @@
+{
+  "generation_time": "2025-08-22T20:39:43.281377",
+  "summary_statistics": {
+    "basic_info": {
+      "total_records": 178,
+      "completed_records": 178,
+      "completion_rate": 1.0
+    },
+    "overall_accuracy": 0.9325842696629213,
+    "accuracy_by_complexity": {
+      "simple": {
+        "total": 10,
+        "correct": 10,
+        "partial": 0,
+        "incorrect": 0,
+        "accuracy": 1.0
+      },
+      "medium": {
+        "total": 20,
+        "correct": 16,
+        "partial": 2,
+        "incorrect": 2,
+        "accuracy": 0.8
+      },
+      "complex": {
+        "total": 148,
+        "correct": 140,
+        "partial": 7,
+        "incorrect": 1,
+        "accuracy": 0.9459459459459459
+      }
+    },
+    "error_analysis": {
+      "incorrect_identification": 3,
+      "partial_errors": 9
+    }
+  },
+  "detailed_records": [
+    {
+      "record_id": "815607",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:08:41.263974",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43058074",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:16:52.381363",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "67039324",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:17:18.961761",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "106642758",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:17:12.092258",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "67773607",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:17:32.762815",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "29636171",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:17:39.550220",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9682493",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:17:42.622553",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "18769457",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:17:49.812838",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "19005953",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:17:53.483262",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "41324221",
+      "complexity_level": "simple",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:17:56.426905",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "36845107",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:18:42.481814",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "97756206",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:19:57.452384",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "62327056",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:20:06.697009",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "60184848",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:20:11.263232",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "1893239",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:20:21.656912",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9589451",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:21:09.284544",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "120308330",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:21:42.872454",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "19006639",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:23:46.708721",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9756659",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:24:36.702926",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "51903314",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:25:34.706816",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "44856307",
+      "complexity_level": "medium",
+      "overall_status": "incorrect",
+      "scores": {
+        "author_identification": 1,
+        "author_separation": 1,
+        "name_affiliation": 1,
+        "name_formatting": 1
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:25:49.511752",
+        "notes": "快速标记为错误"
+      }
+    },
+    {
+      "record_id": "90299532",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:26:04.370175",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8131919",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:26:11.754128",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "6616337",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:26:41.019772",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "37202951",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:26:48.226641",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8517637",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:26:54.431587",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "51904292",
+      "complexity_level": "medium",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:28:17.256476",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "87723947",
+      "complexity_level": "medium",
+      "overall_status": "partial",
+      "scores": {
+        "author_identification": 3,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:36:04.686979",
+        "notes": "can not find full records of this article in any platform. Not sure whether \"Dedan kimathi\" is a author or location"
+      }
+    },
+    {
+      "record_id": "96443617",
+      "complexity_level": "medium",
+      "overall_status": "partial",
+      "scores": {
+        "author_identification": 3,
+        "author_separation": 3,
+        "name_affiliation": 3,
+        "name_formatting": 3
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:44:59.308994",
+        "notes": "can not find this article"
+      }
+    },
+    {
+      "record_id": "9917639",
+      "complexity_level": "medium",
+      "overall_status": "incorrect",
+      "scores": {
+        "author_identification": 1,
+        "author_separation": 1,
+        "name_affiliation": 1,
+        "name_formatting": 1
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:36:20.200656",
+        "notes": "快速标记为错误"
+      }
+    },
+    {
+      "record_id": "9035603",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:37:10.350942",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43636808",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 4,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:40:26.011765",
+        "notes": "can not find accessable records"
+      }
+    },
+    {
+      "record_id": "55827976",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:41:26.158657",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9745895",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:41:33.266088",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "92760277",
+      "complexity_level": "complex",
+      "overall_status": "incorrect",
+      "scores": {
+        "author_identification": 1,
+        "author_separation": 1,
+        "name_affiliation": 5,
+        "name_formatting": 1
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:43:32.178296",
+        "notes": "\"Stan Beatris Cela\" is a person's name, not two name."
+      }
+    },
+    {
+      "record_id": "26587507",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:43:58.212743",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "25300629",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:44:08.462018",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "77813453",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:44:13.748642",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "101067841",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:44:17.442863",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9838427",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:44:47.225992",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "87590582",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:49:17.746658",
+        "notes": "ai works pretty well, Even if the original fields used inconsistent delimiters (sometimes ;, sometimes ,), AI can still correctly separate different names."
+      }
+    },
+    {
+      "record_id": "19006887",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:49:47.416606",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "125069472",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:50:23.450725",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "42208497",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:51:19.126614",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "11421095",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:51:34.253693",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "48778638",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:51:51.099488",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "45707072",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:52:10.947423",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9747567",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:52:16.730829",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "22389425",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:52:30.986786",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9074385",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:52:40.173798",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9860087",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:52:50.524292",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "4173179",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:53:35.319580",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8560885",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:53:42.874021",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9860133",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:53:52.527848",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "26587131",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:53:56.737766",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "124013862",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:54:05.583618",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "92760423",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:54:11.518382",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8540741",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:54:17.432046",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "9707841",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:55:13.544954",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "89235214",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:55:44.845707",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "27001297",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:56:11.280998",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "50200798",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:56:25.971423",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "84699893",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:56:32.265946",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43562950",
+      "complexity_level": "complex",
+      "overall_status": "partial",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 4,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T18:59:56.954164",
+        "notes": "Reni Silva should be one person. rockenbach and suelen should be two person. But this error recognition is caused by the original data, which incorrectly split these names."
+      }
+    },
+    {
+      "record_id": "78946373",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:00:07.912228",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91388683",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:00:17.075430",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "49920067",
+      "complexity_level": "complex",
+      "overall_status": "partial",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 3,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:02:29.168443",
+        "notes": "Hernandez, D.D., Giménez, M.E. y Vaquero, P.G. is one person's name."
+      }
+    },
+    {
+      "record_id": "3934915",
+      "complexity_level": "complex",
+      "overall_status": "partial",
+      "scores": {
+        "author_identification": 3,
+        "author_separation": 3,
+        "name_affiliation": 3,
+        "name_formatting": 3
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:05:07.755661",
+        "notes": "not sure, because original data different from third party information"
+      }
+    },
+    {
+      "record_id": "91622560",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:05:16.974186",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "33983733",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:05:37.076087",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21828123",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:05:57.916940",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8541675",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:06:03.550432",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "84699595",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:06:09.358363",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21829267",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:06:49.895095",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8533873",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:06:56.722247",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91623121",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:07:03.461868",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "132617436",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:07:11.902415",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91622594",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:07:32.162550",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "27001159",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:08:00.108985",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8533859",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-17T19:08:04.425855",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8541717",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:41:27.898872",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063746",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:41:37.906280",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21829129",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:41:57.492873",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "77886863",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:42:06.878228",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "2531417",
+      "complexity_level": "complex",
+      "overall_status": "partial",
+      "scores": {
+        "author_identification": 2,
+        "author_separation": 2,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:47:05.307168",
+        "notes": "correct names are: NASCIMENTO, Neirivane Santos1, SIQUEIRA, Pedro Zucon Ramos2, SIQUEIRA, Edmar Ramos3. \nThe main reason for poor name detection is poor quality of the original data."
+      }
+    },
+    {
+      "record_id": "21828641",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:47:19.603445",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "2106115",
+      "complexity_level": "complex",
+      "overall_status": "partial",
+      "scores": {
+        "author_identification": 2,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:49:05.703124",
+        "notes": "correct name: Sierra Juárez, Guillermo\nThe main reason for poor name detection is poor quality of the original data."
+      }
+    },
+    {
+      "record_id": "43063756",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:49:11.495914",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8534543",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:49:22.699831",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "2106163",
+      "complexity_level": "complex",
+      "overall_status": "partial",
+      "scores": {
+        "author_identification": 3,
+        "author_separation": 3,
+        "name_affiliation": 3,
+        "name_formatting": 3
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:50:32.044018",
+        "notes": "same as 2106115\ncorrect name: Álvarez Echeverria, Francisco A.\nThe main reason for poor name detection is poor quality of the original data."
+      }
+    },
+    {
+      "record_id": "91623147",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:50:47.370179",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "55690772",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:50:50.612864",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "90025953",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:51:02.193635",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "63470589",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:52:01.167081",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21829163",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:52:44.400244",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8533639",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:52:48.450435",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "51730285",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:53:02.082107",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91622972",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:53:14.569804",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "49789179",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:53:43.337674",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063751",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:53:53.141805",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "37803223",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:53:59.539422",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "84700863",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:54:08.446839",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "37803173",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:54:15.007993",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8534571",
+      "complexity_level": "complex",
+      "overall_status": "partial",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 4,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T17:57:35.099380",
+        "notes": "wrongly include title into name entities"
+      }
+    },
+    {
+      "record_id": "43063788",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:34:52.875486",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063763",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:35:01.139811",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91622699",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:35:13.622798",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91622661",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:35:10.489595",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "49999201",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:35:34.324630",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "40226261",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:35:42.134529",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "67702291",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:35:45.116374",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "84700839",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:35:59.387493",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063783",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:02.627635",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8534095",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:06.129126",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8534633",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:14.367407",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063769",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:18.579742",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "57005862",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:23.802246",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8537213",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:27.441778",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "84701164",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:31.228895",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "84699602",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:36.238359",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "26587155",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:41.662841",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "25543575",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:36:59.473337",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "128116572",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:37:03.209254",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "41974383",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:37:09.094316",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91717347",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:37:31.719130",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8533751",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:37:49.526251",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "33983725",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:37:58.358109",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "128116603",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:38:02.051273",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "49203654",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:38:05.206617",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21828637",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:38:18.460534",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8541741",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:38:25.124719",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "26999303",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:38:40.930511",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "27001217",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:38:50.503885",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "33983705",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:38:57.853030",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91622934",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:39:04.765916",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "26587925",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:39:26.787182",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21828185",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:39:36.072318",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91622946",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:39:39.361672",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "33983715",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:39:44.171968",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "26999935",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:39:48.733556",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91622933",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:39:54.176657",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21829167",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:39:57.762314",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21828501",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:02.351804",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "37803187",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:07.992787",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91622958",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:11.145116",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063800",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:13.968388",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "33983729",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:16.339686",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21828497",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:18.566831",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063764",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:24.555504",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "94811917",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:27.145635",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "78886305",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:30.766620",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8534511",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:38.407529",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063791",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:45.076838",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "33983695",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:40:56.215780",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "21828457",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:12.490744",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "37803169",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:18.920157",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8534709",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:24.589414",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063747",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:29.244751",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "128116586",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:31.903901",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063820",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:34.211580",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "37803227",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:36.862792",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "128116609",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:39.685480",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063765",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:42.730515",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "33983731",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:46.912488",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "128116608",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:50.504667",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "37803179",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:53.579640",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8537365",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:41:58.005060",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "43063796",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:42:04.847796",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8534505",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:42:12.368220",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "84700841",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:42:16.513809",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "82638474",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:42:20.234703",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8537211",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:42:24.474465",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "19864035",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:42:37.113867",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "19864023",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:42:43.498485",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "91622959",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:43:06.909239",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8560817",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:43:16.446319",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8541617",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:43:19.581012",
+        "notes": "快速标记为正确"
+      }
+    },
+    {
+      "record_id": "8534097",
+      "complexity_level": "complex",
+      "overall_status": "correct",
+      "scores": {
+        "author_identification": 5,
+        "author_separation": 5,
+        "name_affiliation": 5,
+        "name_formatting": 5
+      },
+      "validation_info": {
+        "validator_name": "anonymous",
+        "validation_timestamp": "2025-08-22T18:43:56.058917",
+        "notes": "快速标记为正确"
+      }
+    }
+  ]
+}

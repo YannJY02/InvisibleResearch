@@ -125,15 +125,16 @@ class ValidationApp:
             st.sidebar.progress(progress_percentage)
             
             # 导航按钮
-            col1, col2 = st.sidebar.columns(2)
+            st.sidebar.write("**导航按钮**")
+            col1, col2 = st.sidebar.columns([1, 1])
             
             with col1:
-                if st.button("⬅️ 上一条", disabled=current_index <= 0, key="nav_prev"):
+                if st.button("⬅️ 上一条", disabled=current_index <= 0, key="nav_prev", use_container_width=True):
                     st.session_state.current_index = max(0, current_index - 1)
                     st.rerun()
             
             with col2:
-                if st.button("➡️ 下一条", disabled=current_index >= total_records - 1, key="nav_next"):
+                if st.button("➡️ 下一条", disabled=current_index >= total_records - 1, key="nav_next", use_container_width=True):
                     st.session_state.current_index = min(total_records - 1, current_index + 1)
                     st.rerun()
             
@@ -160,6 +161,8 @@ class ValidationApp:
             # 应用筛选
             if st.sidebar.button("应用筛选", key="apply_filter_btn"):
                 self.apply_filters(filter_status, filter_complexity)
+        else:
+            st.sidebar.info("数据加载完成后将显示导航控制")
         
         st.sidebar.divider()
         
@@ -227,15 +230,15 @@ class ValidationApp:
             
             # 标题
             st.write("**标题**:")
-            st.text_area("", value=record.title, height=60, disabled=True, key=f"title_{record.record_id}")
+            st.text_area("标题内容", value=record.title, height=60, disabled=True, key=f"title_{record.record_id}", label_visibility="collapsed")
             
             # 原始creator
             st.write("**原始Creator字段**:")
-            st.text_area("", value=record.original_creator, height=120, disabled=True, key=f"original_{record.record_id}")
+            st.text_area("原始creator内容", value=record.original_creator, height=120, disabled=True, key=f"original_{record.record_id}", label_visibility="collapsed")
             
             # 处理结果
             st.write("**处理后Authors Clean**:")
-            st.text_area("", value=record.processed_authors, height=100, disabled=True, key=f"processed_{record.record_id}")
+            st.text_area("处理后authors内容", value=record.processed_authors, height=100, disabled=True, key=f"processed_{record.record_id}", label_visibility="collapsed")
             
             # 机构信息
             if record.processed_affiliations:
@@ -505,15 +508,15 @@ class ValidationApp:
         # 自动保存
         self.auto_save()
         
-        # 渲染侧边栏
-        self.render_sidebar()
-        
         # 主界面
         st.title("🔍 LLM名称提取验证系统")
         st.markdown("---")
         
         # 加载数据
         self.load_data()
+        
+        # 渲染侧边栏（在数据加载后）
+        self.render_sidebar()
         
         if not st.session_state.records:
             st.info("请等待数据加载...")

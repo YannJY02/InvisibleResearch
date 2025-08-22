@@ -128,18 +128,18 @@ class ValidationApp:
             col1, col2 = st.sidebar.columns(2)
             
             with col1:
-                if st.button("⬅️ 上一条", disabled=current_index <= 0):
+                if st.button("⬅️ 上一条", disabled=current_index <= 0, key="nav_prev"):
                     st.session_state.current_index = max(0, current_index - 1)
                     st.rerun()
             
             with col2:
-                if st.button("➡️ 下一条", disabled=current_index >= total_records - 1):
+                if st.button("➡️ 下一条", disabled=current_index >= total_records - 1, key="nav_next"):
                     st.session_state.current_index = min(total_records - 1, current_index + 1)
                     st.rerun()
             
             # 跳转到指定记录
-            jump_to = st.sidebar.number_input("跳转到记录", min_value=1, max_value=total_records, value=current_index + 1)
-            if st.sidebar.button("跳转"):
+            jump_to = st.sidebar.number_input("跳转到记录", min_value=1, max_value=total_records, value=current_index + 1, key="jump_to_input")
+            if st.sidebar.button("跳转", key="jump_to_btn"):
                 st.session_state.current_index = jump_to - 1
                 st.rerun()
             
@@ -147,16 +147,18 @@ class ValidationApp:
             st.sidebar.subheader("筛选选项")
             filter_status = st.sidebar.selectbox(
                 "筛选状态",
-                ["全部", "未完成", "已完成", "正确", "部分正确", "错误"]
+                ["全部", "未完成", "已完成", "正确", "部分正确", "错误"],
+                key="filter_status_select"
             )
             
             filter_complexity = st.sidebar.selectbox(
                 "筛选复杂度",
-                ["全部", "simple", "medium", "complex"]
+                ["全部", "simple", "medium", "complex"],
+                key="filter_complexity_select"
             )
             
             # 应用筛选
-            if st.sidebar.button("应用筛选"):
+            if st.sidebar.button("应用筛选", key="apply_filter_btn"):
                 self.apply_filters(filter_status, filter_complexity)
         
         st.sidebar.divider()
@@ -164,14 +166,14 @@ class ValidationApp:
         # 操作按钮
         st.sidebar.subheader("操作")
         
-        if st.sidebar.button("💾 手动保存"):
+        if st.sidebar.button("💾 手动保存", key="manual_save_btn"):
             if self.save_progress():
                 st.sidebar.success("保存成功!")
         
-        if st.sidebar.button("📊 生成报告"):
+        if st.sidebar.button("📊 生成报告", key="generate_report_btn"):
             self.generate_report()
         
-        if st.sidebar.button("🔄 重新加载"):
+        if st.sidebar.button("🔄 重新加载", key="reload_data_btn"):
             st.session_state.records = []
             st.session_state.validation_progress = {}
             st.rerun()

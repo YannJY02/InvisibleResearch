@@ -116,7 +116,8 @@ class ValidationApp:
                 'status_correct': '正确',
                 'status_partial': '部分正确',
                 'status_incorrect': '错误',
-                'complexity_all': '全部'
+                'complexity_all': '全部',
+                'select_report_language': '选择报告语言'
             },
             'en': {
                 'title': '🔍 LLM Named Entity Extraction Validation System',
@@ -197,7 +198,8 @@ class ValidationApp:
                 'status_correct': 'Correct',
                 'status_partial': 'Partial',
                 'status_incorrect': 'Incorrect',
-                'complexity_all': 'All'
+                'complexity_all': 'All',
+                'select_report_language': 'Select Report Language'
             }
         }
         
@@ -368,8 +370,23 @@ class ValidationApp:
             if self.save_progress():
                 st.sidebar.success(self.get_text('saved_successfully'))
         
-        if st.sidebar.button(self.get_text('generate_report'), key="generate_report_btn"):
-            self.generate_report()
+        # 报告生成区域
+        st.sidebar.write(f"**{self.get_text('generate_report')}**")
+        
+        # 报告语言选择
+        report_lang_options = {
+            '🇨🇳 中文报告': 'zh',
+            '🇺🇸 English Report': 'en'
+        }
+        selected_report_lang = st.sidebar.selectbox(
+            self.get_text('select_report_language') if 'select_report_language' in self.translations[st.session_state.language] else "选择报告语言",
+            list(report_lang_options.keys()),
+            key="report_language_select"
+        )
+        
+        if st.sidebar.button("📊 " + self.get_text('generate_report').replace('📊 ', ''), key="generate_report_btn"):
+            report_language = report_lang_options[selected_report_lang]
+            self.generate_report(report_language)
         
         if st.sidebar.button(self.get_text('reload_data'), key="reload_data_btn"):
             st.session_state.records = []
@@ -660,32 +677,37 @@ class ValidationApp:
                 fig.update_layout(yaxis=dict(range=[0, 1]))
                 st.plotly_chart(fig, use_container_width=True)
     
-    def generate_report(self):
+    def generate_report(self, report_language: str = None):
         """Generate final report"""
         if not st.session_state.records:
             st.error(self.get_text('no_data_for_report'))
             return
         
+        # 如果没有指定报告语言，使用当前界面语言
+        if report_language is None:
+            report_language = st.session_state.language
+        
         with st.spinner(self.get_text('generating_report')):
             try:
                 output_dir = Path("data/validation/reports")
                 report_files = self.report_generator.generate_all_reports(
-                    st.session_state.records, output_dir, st.session_state.language
+                    st.session_state.records, output_dir, report_language
                 )
                 
-                st.success(self.get_text('report_generation_completed'))
+                lang_name = "中文" if report_language == 'zh' else "English"
+                st.success(f"{self.get_text('report_generation_completed')} ({lang_name})")
                 
                 for format_type, file_path in report_files.items():
-                    st.write(f"**{format_type.upper()} Report**: {file_path}")
+                    st.write(f"**{format_type.upper()} Report ({lang_name})**: {file_path}")
                     
                     # Provide download links (for supported formats)
-                    if format_type == 'csv':
+                    if format_type in ['csv', 'json']:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             st.download_button(
-                                self.get_text('download_report').format(format=format_type.upper()),
+                                f"下载{format_type.upper()}报告 / Download {format_type.upper()} Report",
                                 f.read(),
-                                file_name=f"validation_report.{format_type}",
-                                mime=f"text/{format_type}"
+                                file_name=f"validation_report_{report_language}.{format_type}",
+                                mime=f"text/{format_type}" if format_type == 'csv' else "application/json"
                             )
                 
             except Exception as e:

@@ -24,6 +24,7 @@ You **must** act as an **Intelligent Coordinator** following the enhanced protoc
 2. **Multi-Task Detection**: Automatically identify and break down complex requests  
 3. **Immediate GitHub Integration**: Create issues immediately after final confirmation
 4. **Quality Assurance**: Apply universal and agent-specific quality gates
+5. **language requirement**: all code and documentation should be in English, unless user explicitly requests otherwise
 
 ## 📋 Essential Documentation References
 

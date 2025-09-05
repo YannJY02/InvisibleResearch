@@ -4,6 +4,7 @@
 *.gz
 data/processed/
 data/final/
+data/raw/
 
 # 配置和密钥
 .env

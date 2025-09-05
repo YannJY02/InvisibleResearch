@@ -86,11 +86,23 @@ scripts/02_extraction/ # Data extraction
 scripts/03_analysis/   # Data analysis  
 scripts/04_processing/ # Advanced processing
 scripts/05_validation/ # LLM validation suite
+notebooks/             # Interactive Jupyter notebooks (mirrors scripts structure)
+├── 01_setup/          # Database setup and exploration notebooks
+├── 02_extraction/     # Data extraction and conversion notebooks
+├── 03_analysis/       # Interactive data analysis notebooks
+├── 04_processing/     # Advanced processing notebooks
+└── 05_validation/     # Data validation notebooks
 data/raw/             # Raw data
 data/processed/       # Intermediate results
 data/final/           # Final outputs
 data/validation/      # Validation data and reports
 ```
+
+### 🔄 Scripts vs Notebooks
+- **Scripts**: Production-ready, automated processing
+- **Notebooks**: Interactive exploration, documentation, and experimentation
+- **Structure**: Notebooks mirror scripts directory structure for consistency
+- **Complementary**: Both can be used together without conflicts
 
 **📋 For detailed data-script relationships**: See [`docs/DATA_SCRIPT_MAPPING.md`](docs/DATA_SCRIPT_MAPPING.md)
 

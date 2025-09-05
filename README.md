@@ -55,10 +55,21 @@ python scripts/05_validation/start_validation.py
 
 ## 📊 Data Sources
 
+### Core Database
 - **Scale**: ~20 million OAI-PMH records
 - **Time span**: 2000-2024  
 - **Languages**: 100+ languages
 - **Sources**: 7000+ academic repositories
+
+### High-Performance ArticleInfo Database
+- **Format**: Apache Parquet (compressed)
+- **Records**: 29.9 million processed academic papers
+- **Size**: 3.8 GB (73% compression from 14.2GB CSV)
+- **Performance**: 5-20x faster queries vs CSV
+- **Schema**: 16 optimized columns with proper data types
+- **Integration**: Seamless compatibility with existing analysis pipeline
+
+**📋 See detailed specification**: [`docs/ARTICLEINFO_DATABASE.md`](docs/ARTICLEINFO_DATABASE.md)
 
 ## 🔬 Methodology
 
@@ -126,6 +137,11 @@ This project is enhanced with a **protocol-driven, multi-agent research system**
 - **Detailed Agent Guides**: For a full breakdown of the agent workflows, templates, and examples, please see the [Agent Documentation Hub](docs/agents/).
 - **GitHub Integration**: Complete GitHub project management workflow - see [GitHub Management Protocol](docs/agents/github-management.md).
 - **Iteration Workflow**: Multi-round review and refinement process - see [Iteration & Review Workflow](docs/agents/iteration-workflow.md).
+
+**📊 Data Documentation**:
+- **MySQL Database Schema**: Complete relational database structure - see [Database Documentation](docs/README.md).
+- **ArticleInfo Parquet Database**: High-performance analytical database - see [ArticleInfo Database Guide](docs/ARTICLEINFO_DATABASE.md).
+- **Data Processing Pipeline**: Complete script-data mapping - see [Data Script Mapping](docs/DATA_SCRIPT_MAPPING.md).
 
 ## 📝 Citation
 

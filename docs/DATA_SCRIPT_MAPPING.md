@@ -127,7 +127,9 @@ After step 3, these can run independently:
 | `database.sql.gz` | 20GB+ | ~20M | Complete database dump |
 | `sample_records_language_title_abstract.csv` | 14KB | 10 | Sample exploration data |
 | `data_for_analysis.parquet` | ~19GB | ~20M | Main analysis dataset |
-| `creator_sample.parquet` | 50KB | ~100 | Author field samples |
+| `articleInfo.parquet` | 3.8GB | ~30M | Processed metadata dataset |
+| `creator_sample.parquet` | 50KB | ~100 | Author field samples (from data_for_analysis) |
+| `new_creator_sample.parquet` | ~50KB | ~100 | Author field samples (from articleInfo) |
 | `creator_sample_clean.parquet` | 92KB | ~100 | LLM-processed authors |
 | `title_pred_lang.parquet` | ~1.8GB | ~20M | Language predictions |
 | `name_clean.parquet` | ~380MB | ~20M | Traditional name parsing |
@@ -177,4 +179,43 @@ python scripts/04_processing/result_GlotLID.py
 # Check if required files exist
 ls -la data/processed/data_for_analysis.parquet
 ls -la data/processed/creator_sample.parquet
+ls -la data/processed/articleInfo.parquet
 ```
+
+## 📓 Notebooks Integration
+
+The project now includes Jupyter notebooks that mirror and extend the functionality of scripts with interactive capabilities:
+
+### Notebooks Structure
+```
+notebooks/
+├── 01_setup/              (mirrors scripts/01_setup/)
+├── 02_extraction/          (data conversion notebooks)
+│   ├── csv_to_parquet_converter.ipynb → articleInfo.parquet (3.8GB)
+│   └── README.md
+├── 03_analysis/           (interactive analysis notebooks)
+│   ├── new_test_LLM_name_detect_parquet.ipynb → new_creator_sample.parquet
+│   └── README.md
+├── 04_processing/         (mirrors scripts/04_processing/)
+└── 05_validation/         (mirrors scripts/05_validation/)
+```
+
+### Script-Notebook Correspondence
+
+| Script | Notebook Equivalent | Key Differences |
+|--------|-------------------|----------------|
+| `scripts/03_analysis/test_LLM_name_detect_parquet.py` | `notebooks/03_analysis/new_test_LLM_name_detect_parquet.ipynb` | Uses `articleInfo.parquet`, preserves all 16 columns, interactive display |
+
+### Additional Outputs from Notebooks
+
+| File | Source | Size | Purpose |
+|------|--------|------|---------|
+| `articleInfo.parquet` | `notebooks/02_extraction/csv_to_parquet_converter.ipynb` | 3.8GB | High-performance CSV conversion result |
+| `new_creator_sample.parquet` | `notebooks/03_analysis/new_test_LLM_name_detect_parquet.ipynb` | ~50KB | Author samples from articleInfo dataset |
+
+### Notebooks Usage Benefits
+- **Interactive Exploration**: Real-time data visualization and inspection
+- **Educational Value**: Step-by-step documentation with markdown explanations
+- **Experimentation**: Easy parameter tuning and result comparison
+- **Enhanced Output**: Rich formatting and display capabilities
+- **Complementary Workflow**: Works alongside existing scripts without conflicts

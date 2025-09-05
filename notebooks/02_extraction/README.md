@@ -1,4 +1,10 @@
-# CSV to Parquet Converter
+# 02_extraction - Data Extraction Notebooks
+
+This directory contains notebooks for data extraction and conversion tasks, mirroring the functionality of `scripts/02_extraction/` with enhanced interactive processing capabilities.
+
+## Files
+
+## CSV to Parquet Converter
 
 ## Overview
 

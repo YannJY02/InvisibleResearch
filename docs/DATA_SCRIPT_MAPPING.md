@@ -225,9 +225,11 @@ notebooks/
 - Script: `scripts/02_extraction/merge_openalex_csv_to_parquet.py`
 - Input: `data/raw/openalex_data/*.csv` (recursive discovery)
 - Output:
+  - Intermediate CSV (retained): `data/processed/openalex_merged.csv`
   - Parquet: `data/processed/openalex_merged.parquet` (compression: Snappy)
   - Stats: `data/processed/openalex_merged_stats.json` (file count, total rows, columns summary)
 - Notes:
   - Preserves all original CSV files (read-only)
-  - Validates column consistency and uses union-of-columns if differences exist
-  - Robust parsing using DuckDB CSV reader; all fields stored as string to avoid type inference issues
+  - Column union is computed and enforced; missing fields filled as empty string in CSV stage
+  - CSV stage is produced with Python csv writer for stability; Parquet conversion uses DuckDB with `VARCHAR` columns
+  - All text columns retained as string to avoid lossy inference

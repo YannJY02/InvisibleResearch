@@ -43,6 +43,8 @@ DEFAULT_OUTPUT_PARQUET = \
     "/Users/yann.jy/InvisibleResearch/data/processed/openalex_merged.parquet"
 DEFAULT_STATS_JSON = \
     "/Users/yann.jy/InvisibleResearch/data/processed/openalex_merged_stats.json"
+DEFAULT_OUTPUT_CSV = \
+    "/Users/yann.jy/InvisibleResearch/data/processed/openalex_merged.csv"
 
 
 @dataclass
@@ -98,6 +100,49 @@ def inspect_columns(files: List[str]) -> tuple[List[str], bool, List[str]]:
             differing.append(path)
 
     return sorted(union_cols), all_same, differing
+
+
+def write_union_csv(files: List[str], union_columns: List[str], output_csv_path: str) -> int:
+    """
+    Parse each CSV with Python's csv module and write a unified CSV with the union of columns.
+    Missing columns for a file are filled with empty strings. Returns total data rows written.
+    """
+    if not files:
+        raise ValueError("No CSV files provided for merge")
+
+    os.makedirs(os.path.dirname(output_csv_path), exist_ok=True)
+    total_rows = 0
+
+    with open(output_csv_path, "w", encoding="utf-8", errors="replace", newline="") as out_f:
+        writer = csv.writer(out_f, delimiter=",", quotechar='"', lineterminator="\n")
+        writer.writerow(union_columns)
+
+        for path in files:
+            with open(path, "r", encoding="utf-8", errors="replace", newline="") as in_f:
+                reader = csv.reader(
+                    in_f,
+                    delimiter=",",
+                    quotechar='"',
+                    doublequote=True,
+                    escapechar="\\",
+                )
+                header = next(reader, None)
+                if header is None:
+                    continue
+                header = [c.strip() for c in header]
+                name_to_idx = {name: i for i, name in enumerate(header)}
+
+                for row in reader:
+                    # Build output row aligned to union columns
+                    out_row: List[str] = []
+                    row_len = len(row)
+                    for col in union_columns:
+                        idx = name_to_idx.get(col)
+                        out_row.append(row[idx] if idx is not None and idx < row_len else "")
+                    writer.writerow(out_row)
+                    total_rows += 1
+
+    return total_rows
 
 
 def stream_merge_to_parquet(
@@ -201,6 +246,11 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
         help="Destination Parquet file path",
     )
     parser.add_argument(
+        "--output-csv",
+        default=DEFAULT_OUTPUT_CSV,
+        help="Destination intermediate CSV file path (will be kept)",
+    )
+    parser.add_argument(
         "--stats-json",
         default=DEFAULT_STATS_JSON,
         help="Path to write stats JSON",
@@ -221,6 +271,7 @@ def main() -> None:
     print("🚀 Starting OpenAlex CSV merge to Parquet")
     print(f"Input dir: {args.input_dir}")
     print(f"Output parquet: {args.output_parquet}")
+    print(f"Output CSV: {args.output_csv}")
     print(f"Stats JSON: {args.stats_json}")
 
     files = discover_csv_files(args.input_dir)
@@ -238,7 +289,7 @@ def main() -> None:
         if differing_files:
             print(f"Files with differing columns: {len(differing_files)}")
 
-    # Prefer robust DuckDB path for messy CSVs while preserving all data as strings
+    # Prefer robust DuckDB path for Parquet conversion; create CSV by byte-concatenation first
     try:
         import duckdb  # type: ignore
     except Exception:
@@ -248,28 +299,31 @@ def main() -> None:
 
     if os.path.exists(args.output_parquet):
         os.remove(args.output_parquet)
+    # Will overwrite CSV during rebuild
+
+    # 1) Write intermediate CSV (kept) with union-of-columns
+    print("Writing intermediate CSV with union-of-columns ...")
+    written_rows = write_union_csv(files, union_columns, args.output_csv)
+    print(f"Intermediate CSV rows: {written_rows}")
 
     conn = duckdb.connect()
     conn.execute("PRAGMA threads=4")
-    # Build a glob that matches files in the top-level input directory
-    safe_input_dir = args.input_dir.replace("'", "''")
-    safe_out = args.output_parquet.replace("'", "''")
+    safe_out_parquet = args.output_parquet.replace("'", "''")
+    safe_out_csv = args.output_csv.replace("'", "''")
 
-    # Use union_by_name and all_varchar to keep schema stable and retain all data as strings
-    # Build columns spec mapping all union columns to VARCHAR to avoid type inference issues
+    # 2) Convert CSV → Parquet
     columns_pairs = ", ".join([f"'{c}':'VARCHAR'" for c in union_columns])
     columns_spec = "{" + columns_pairs + "}"
-
-    copy_sql = (
-        f"COPY (SELECT * FROM read_csv('{safe_input_dir}/*.csv', AUTO_DETECT=FALSE, HEADER=TRUE, "
-        f"COLUMNS={columns_spec}, delim=',', quote='\"', escape='\"', strict_mode=FALSE, ignore_errors=TRUE, null_padding=TRUE, "
-        f"maximum_line_size=20000000)) TO '{safe_out}' (FORMAT 'parquet', COMPRESSION 'SNAPPY')"
+    copy_parquet_sql = (
+        f"COPY (SELECT * FROM read_csv('{safe_out_csv}', AUTO_DETECT=FALSE, HEADER=TRUE, "
+        f"COLUMNS={columns_spec}, delim=',', quote='\"', escape='\"', strict_mode=FALSE, null_padding=TRUE, "
+        f"maximum_line_size=20000000, parallel=FALSE)) TO '{safe_out_parquet}' (FORMAT 'parquet', COMPRESSION 'SNAPPY')"
     )
-    print("Writing Parquet via DuckDB COPY ...")
-    conn.execute(copy_sql)
+    print("Converting CSV to Parquet via DuckDB COPY ...")
+    conn.execute(copy_parquet_sql)
 
     # Get row count from the produced Parquet for stats
-    count_sql = f"SELECT COUNT(*) FROM read_parquet('{safe_out}')"
+    count_sql = f"SELECT COUNT(*) FROM read_parquet('{safe_out_parquet}')"
     total_rows = conn.execute(count_sql).fetchone()[0]
     conn.close()
 

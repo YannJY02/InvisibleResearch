@@ -219,3 +219,15 @@ notebooks/
 - **Experimentation**: Easy parameter tuning and result comparison
 - **Enhanced Output**: Rich formatting and display capabilities
 - **Complementary Workflow**: Works alongside existing scripts without conflicts
+
+## OpenAlex CSV Merge → Parquet
+
+- Script: `scripts/02_extraction/merge_openalex_csv_to_parquet.py`
+- Input: `data/raw/openalex_data/*.csv` (recursive discovery)
+- Output:
+  - Parquet: `data/processed/openalex_merged.parquet` (compression: Snappy)
+  - Stats: `data/processed/openalex_merged_stats.json` (file count, total rows, columns summary)
+- Notes:
+  - Preserves all original CSV files (read-only)
+  - Validates column consistency and uses union-of-columns if differences exist
+  - Robust parsing using DuckDB CSV reader; all fields stored as string to avoid type inference issues

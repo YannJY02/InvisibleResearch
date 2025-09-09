@@ -15,6 +15,7 @@
   - Test samples for LLM processing
 - **name_clean.parquet**: Author names cleaned by traditional methods (~380MB)
   - Processed using nameparser library
+- **openalex_merged.parquet**: Merged OpenAlex works CSVs (Snappy) generated from `raw/openalex_data/*.csv` via `scripts/02_extraction/merge_openalex_csv_to_parquet.py`. See `data/processed/openalex_merged_stats.json` for counts & schema notes.
 
 ### `final/` - Final Analysis Results
 - **creator_sample_clean.parquet**: Author data processed by LLM (92KB)

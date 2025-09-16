@@ -19,7 +19,7 @@ The processing pipeline follows this sequence:
 | `scripts/02_extraction/data_for_analysis_to_parquet.py` | MySQL Database | `data/processed/data_for_analysis.parquet` | Main data extraction (19GB) | MySQL Database |
 | `scripts/03_analysis/judge_creator.py` | `data/processed/data_for_analysis.parquet` | Console output | Author field analysis and statistics | - |
 | `scripts/03_analysis/test_LLM_name_detect_parquet.py` | `data/processed/data_for_analysis.parquet` | `data/processed/creator_sample.parquet` | Create author samples for LLM processing | - |
-| `scripts/03_analysis/scim_openalex_journal_coverage.py` | `data/raw/scimagojr_communication_journals.csv`, `data/processed/openalex_merged.parquet` | `outputs/reports/scim_openalex_coverage_summary.csv`, `outputs/reports/scim_openalex_unmatched_journals.csv` | Compute SCImago journal coverage in OpenAlex via ISSN (no year filter) | PyArrow (Parquet) |
+| `scripts/03_analysis/scim_openalex_journal_coverage.py` | `data/raw/scimagojr_communication_journals.csv`, `data/processed/openalex_merged.parquet` | `outputs/reports/scim_openalex_coverage_summary.csv`, `outputs/reports/scim_openalex_unmatched_journals.csv` | Compute SCImago coverage (all types) in OpenAlex via ISSN OR Title (no year filter) | PyArrow (Parquet) |
 | `scripts/04_processing/LLM_name_detect.py` | `data/processed/creator_sample.parquet` | `data/final/creator_sample_clean.parquet` | LLM-based author name parsing | OpenAI API |
 | `scripts/04_processing/result_GlotLID.py` | `data/processed/data_for_analysis.parquet` | `data/final/title_pred_lang.parquet` | Language detection on titles | GlotLID model |
 | `scripts/04_processing/ver1_nameparse.py` | `data/processed/data_for_analysis.parquet` | `data/processed/name_clean.parquet` | Traditional rule-based name parsing | - |
@@ -78,8 +78,8 @@ The processing pipeline follows this sequence:
 - **Output**:
   - `outputs/reports/scim_openalex_coverage_summary.csv`
   - `outputs/reports/scim_openalex_unmatched_journals.csv`
-- **Purpose**: Verify coverage of SCImago communication journals in OpenAlex by ISSN (ANY variant matches)
-- **Features**: Robust ISSN parsing, automatic ISSN column detection from OpenAlex, no year filtering
+- **Purpose**: Verify coverage of SCImago (all types) in OpenAlex by ISSN OR Title (ANY variant matches)
+- **Features**: Robust ISSN parsing, automatic ISSN/Title column detection from OpenAlex, title normalization (case/whitespace/punctuation-insensitive), no year filtering
 - **Dependencies**: PyArrow
 - **Execution**: `python scripts/03_analysis/scim_openalex_journal_coverage.py`
 

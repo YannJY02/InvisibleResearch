@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Compute coverage of SCImago Communication journals in the merged OpenAlex dataset using ISSN matching.
+Compute coverage of SCImago Communication items (all types) in the merged OpenAlex dataset
+using ISSN OR Title matching.
 
-Definition of coverage: A SCImago journal is considered covered if ANY of its ISSN variants
-appears in the OpenAlex merged Parquet (no publication year filtering).
+Definition of coverage: A SCImago item is considered covered if ANY of its ISSN variants
+appears in the OpenAlex merged Parquet OR if the item Title matches a venue/source title
+present in OpenAlex (case/whitespace/punctuation-insensitive). No publication year filtering.
 
 Inputs (defaults):
 - SCImago CSV: data/raw/scimagojr_communication_journals.csv (semicolon-separated)
@@ -31,7 +33,7 @@ from typing import Iterable, List, Optional, Set, Tuple
 import pandas as pd
 
 
-# ----------------------------- Utilities (ISSN parsing) -----------------------------
+# ----------------------------- Utilities (ISSN & Title parsing) -----------------------------
 
 def normalize_issn(value: str) -> Optional[str]:
     if value is None:
@@ -61,6 +63,19 @@ def split_multi_issn(raw: str) -> List[str]:
             out.append(n)
     # de-duplicate, keep order
     return list(dict.fromkeys(out))
+
+
+def normalize_title(value: str) -> Optional[str]:
+    if value is None:
+        return None
+    s = str(value).strip().lower()
+    if not s:
+        return None
+    # Remove all non-alphanumeric characters to be punctuation/whitespace-insensitive
+    s = "".join(ch for ch in s if ch.isalnum())
+    if not s:
+        return None
+    return s
 
 
 def explode_issn_columns(df: pd.DataFrame, issn_columns: List[str]) -> pd.DataFrame:
@@ -133,6 +148,77 @@ def detect_openalex_issn_columns(df_head: pd.DataFrame) -> List[str]:
     return issn_cols
 
 
+# Title detection and extraction
+def detect_openalex_title_columns(df_head: pd.DataFrame) -> List[str]:
+    """Return candidate venue/source title columns from a sample dataframe head."""
+    candidate_title_cols = [
+        "host_venue.display_name",
+        "host_venue.title",
+        "host_venue_name",
+        "primary_location.source.display_name",
+        "primary_location.source.title",
+        "primary_location_source_display_name",
+        "primary_location_source_title",
+        "source_display_name",
+        "journal_title",
+        "venue",
+        "venue_name",
+        "source_title",
+        "publication_name",
+    ]
+    title_cols = [c for c in candidate_title_cols if c in df_head.columns]
+    # Fallback: any column name containing 'display_name' or ending with '.name' or containing 'title'
+    if not title_cols:
+        for c in df_head.columns:
+            cl = c.lower()
+            if "display_name" in cl or cl.endswith(".name") or "title" in cl or "venue" in cl:
+                title_cols.append(c)
+    # Deduplicate while preserving order
+    title_cols = list(dict.fromkeys(title_cols))
+    return title_cols
+
+
+def explode_title_columns(df: pd.DataFrame, title_columns: List[str]) -> pd.DataFrame:
+    present_cols = [c for c in title_columns if c in df.columns]
+    if not present_cols:
+        return df.assign(_title_norm=pd.Series(dtype=object)).loc[[]]
+
+    def row_titles(row) -> List[str]:
+        collected: List[str] = []
+        for col in present_cols:
+            val = row[col]
+            if pd.isna(val):
+                continue
+            if isinstance(val, (list, tuple, set)):
+                for v in val:
+                    n = normalize_title(v)
+                    if n:
+                        collected.append(n)
+            else:
+                # try parse JSON/list-like strings
+                if isinstance(val, str) and val.startswith("[") and val.endswith("]"):
+                    try:
+                        parsed = ast.literal_eval(val)
+                        if isinstance(parsed, (list, tuple)):
+                            for v in parsed:
+                                n = normalize_title(v)
+                                if n:
+                                    collected.append(n)
+                            continue
+                    except Exception:
+                        pass
+                n = normalize_title(val)
+                if n:
+                    collected.append(n)
+        return list(dict.fromkeys(collected))
+
+    exploded = df.assign(_title_list=df.apply(row_titles, axis=1))
+    exploded = exploded.explode("_title_list")
+    exploded = exploded.rename(columns={"_title_list": "_title_norm"})
+    exploded = exploded.dropna(subset=["_title_norm"])  # only rows with any title
+    return exploded
+
+
 # ----------------------------- Core logic -----------------------------
 
 
@@ -140,8 +226,8 @@ def ensure_output_dir(path: str) -> None:
     os.makedirs(path, exist_ok=True)
 
 
-def load_scimago_journals(csv_path: str) -> pd.DataFrame:
-    """Load SCImago CSV and return only rows where Type == 'journal', with parsed ISSN list."""
+def load_scimago_items(csv_path: str) -> pd.DataFrame:
+    """Load SCImago CSV and return all rows (all types), with parsed ISSN list."""
     df = pd.read_csv(csv_path, sep=";", dtype=str, low_memory=False)
 
     # Normalize column names for robustness but keep originals
@@ -164,20 +250,24 @@ def load_scimago_journals(csv_path: str) -> pd.DataFrame:
     title_col = cols_lc.get("title", "Title" if "Title" in df.columns else None)
     sourceid_col = cols_lc.get("sourceid", "Sourceid" if "Sourceid" in df.columns else None)
 
-    if type_col and type_col in df.columns:
-        df = df[df[type_col].astype(str).str.lower() == "journal"].copy()
-
     # Parse ISSN list per journal
     df["_issn_list"] = df[issn_col].apply(split_multi_issn)
 
+    # Normalize title for title-based matching
+    if title_col and title_col in df.columns:
+        df["_title_norm_scim"] = df[title_col].apply(normalize_title)
+
     # Keep useful columns for outputs
     keep_cols = [c for c in [title_col, sourceid_col, type_col, issn_col, "_issn_list"] if c]
-    return df[keep_cols].rename(columns={
+    base = df[keep_cols].rename(columns={
         title_col or "Title": "Title",
         sourceid_col or "Sourceid": "Sourceid",
         type_col or "Type": "Type",
         issn_col: "Issn",
     })
+    if "_title_norm_scim" in df.columns:
+        base["_title_norm_scim"] = df["_title_norm_scim"]
+    return base
 
 
 def build_openalex_issn_set(parquet_path: str) -> Set[str]:
@@ -195,16 +285,35 @@ def build_openalex_issn_set(parquet_path: str) -> Set[str]:
     return set(exploded["_issn_norm"].astype(str).tolist())
 
 
-def compute_coverage(scim_df: pd.DataFrame, openalex_issn_set: Set[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Return (summary_df, unmatched_df)."""
-    def covered(issns: Iterable[str]) -> bool:
-        for s in issns:
+def build_openalex_title_set(parquet_path: str) -> Set[str]:
+    """Read OpenAlex Parquet minimally and return a set of normalized venue/source titles present anywhere."""
+    head = pd.read_parquet(parquet_path, columns=None, engine="pyarrow").head(5)
+    title_cols = detect_openalex_title_columns(head)
+    if not title_cols:
+        return set()
+    cols_to_read = [c for c in title_cols if c in head.columns]
+    df = pd.read_parquet(parquet_path, columns=cols_to_read, engine="pyarrow")
+    exploded = explode_title_columns(df, cols_to_read)
+    if exploded.empty:
+        return set()
+    return set(exploded["_title_norm"].astype(str).tolist())
+
+
+def compute_coverage(scim_df: pd.DataFrame, openalex_issn_set: Set[str], openalex_title_set: Set[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Return (summary_df, unmatched_df) using ISSN OR normalized Title matching."""
+    def covered_row(row) -> bool:
+        # ISSN-based
+        for s in row.get("_issn_list", []) or []:
             if s in openalex_issn_set:
                 return True
+        # Title-based
+        t = row.get("_title_norm_scim")
+        if t and t in openalex_title_set:
+            return True
         return False
 
     work_df = scim_df.copy()
-    work_df["_is_covered"] = work_df["_issn_list"].apply(covered)
+    work_df["_is_covered"] = work_df.apply(covered_row, axis=1)
 
     total = int(len(work_df))
     covered_cnt = int(work_df["_is_covered"].sum())
@@ -228,7 +337,7 @@ def compute_coverage(scim_df: pd.DataFrame, openalex_issn_set: Set[str]) -> tupl
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="SCImago vs OpenAlex journal coverage via ISSN (no year filter)")
+    parser = argparse.ArgumentParser(description="SCImago vs OpenAlex coverage via ISSN or Title (no year filter)")
     parser.add_argument("--scimago_csv", default="data/raw/scimagojr_communication_journals.csv", help="Path to SCImago CSV (semicolon-separated)")
     parser.add_argument("--openalex_parquet", default="data/processed/openalex_merged.parquet", help="Path to OpenAlex merged Parquet")
     parser.add_argument("--output_dir", default="outputs/reports", help="Directory to write outputs")
@@ -239,10 +348,11 @@ def main() -> None:
     args = parse_args()
     ensure_output_dir(args.output_dir)
 
-    scim_df = load_scimago_journals(args.scimago_csv)
+    scim_df = load_scimago_items(args.scimago_csv)
     openalex_issn = build_openalex_issn_set(args.openalex_parquet)
+    openalex_titles = build_openalex_title_set(args.openalex_parquet)
 
-    summary_df, unmatched_df = compute_coverage(scim_df, openalex_issn)
+    summary_df, unmatched_df = compute_coverage(scim_df, openalex_issn, openalex_titles)
 
     summary_path = os.path.join(args.output_dir, "scim_openalex_coverage_summary.csv")
     unmatched_path = os.path.join(args.output_dir, "scim_openalex_unmatched_journals.csv")

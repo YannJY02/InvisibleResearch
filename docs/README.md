@@ -190,3 +190,6 @@ Dublin Core Tags (http://purl.org/dc/elements/1.1/):
 | `rights`       | `Copyright (c) 2021 HIKMAH`                                                                                    |
 
 > **Note** – For container tags (`record`, `header`, `metadata`, `oai_dc:dc`) the table notes that they don’t carry literal text; the example focuses on child elements that do.
+
+### Unused Code Policy
+See the policy for handling unused but potentially reusable code: [docs/unused-code-policy.md](unused-code-policy.md).

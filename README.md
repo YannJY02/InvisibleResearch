@@ -166,3 +166,6 @@ This project is enhanced with a **protocol-driven, multi-agent research system**
 ```
 
 See `docs/` folder for detailed documentation.
+
+### Unused Code Policy
+See the policy for handling unused but potentially reusable code: [docs/unused-code-policy.md](docs/unused-code-policy.md).

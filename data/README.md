@@ -19,6 +19,7 @@
 - **openalex_merged.parquet**: Merged OpenAlex works CSVs (Snappy) generated from `raw/openalex_data/*.csv` via `scripts/02_extraction/merge_openalex_csv_to_parquet.py`. See `data/processed/openalex_merged_stats.json` for counts & schema notes.
  - **dimension_merged.csv**: Intermediate unioned CSV for Dimensions publications (2000–2025), kept for traceability. Source: `raw/dimensions_cs/publications_*.csv`.
  - **dimension_merged.parquet**: Parquet converted via DuckDB from `dimension_merged.csv` (Snappy). Produced by `notebooks/02_extraction/merge_dimension_2000_2025.ipynb`.
+ - **dimension_data_for_analysis.parquet**: Analysis-ready dataset derived by `notebooks/04_processing/dimension_create_variables.ipynb` from `dimension_merged.parquet`. Columns are ordered by conceptual blocks for clarity: [invisibility (with `times_cited`, `date`), geographic/institutional (`research_org_*`), topical (`concepts*`), disciplinary (`issn`, `isbn`, `disciplinary`), OA (`open_access`), controls (`document_type`, `type`, `authors_count`, `reference_ids`, `referenced_pubs`)]. The notebook prints QA summaries (missingness, key constraints, identifier format sanity) and writes only this final file.
 
 ### `final/` - Final Analysis Results
 - **creator_sample_clean.parquet**: Author data processed by LLM (92KB)
@@ -42,6 +43,10 @@ final/creator_sample_clean.parquet
 processed/data_for_analysis.parquet
     ↓ (scripts/04_processing/result_GlotLID.py)
 final/title_pred_lang.parquet
+
+processed/dimension_merged.parquet
+    ↓ (notebooks/04_processing/dimension_create_variables.ipynb)
+processed/dimension_data_for_analysis.parquet
 ```
 
 ## 📊 Data Statistics

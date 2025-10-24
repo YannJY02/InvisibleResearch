@@ -216,3 +216,28 @@ See the policy for handling unused but potentially reusable code: [docs/unused-c
 - How to run:
   1) Open the notebook and run all cells
   2) Inspect the "Validation and Sampling" section for integrity checks (row counts, `id` uniqueness, DOI normalization duplicates, year distribution, key field quality)
+
+---
+
+## Dimension Variables Creation (analysis-ready)
+
+- Notebook: `notebooks/04_processing/dimension_create_variables.ipynb`
+- Input: `data/processed/dimension_merged.parquet`
+- Output: `data/processed/dimension_data_for_analysis.parquet` (Snappy)
+- Method summary:
+  - Print full schema and a small preview
+  - Derive/retain variables in separate, academically documented sections; each module includes `id`
+  - Variables and column blocks:
+    - Invisibility block: `invisibility` (1 if `times_cited==0` else 0), plus `times_cited`, `date`
+    - Geographic/Institutional: `research_org_country_names`, `research_org_names`, `research_org_types`
+    - Topical: `concepts`, `concepts_scores`
+    - Disciplinary: `issn`, `isbn`, and binary `disciplinary` matched against SJR ISSN list (`data/processed/scimagojr_communication_journal_1999_2024.csv`)
+    - OA: `open_access`
+    - Controls: `document_type`, `type`, `authors_count`, `reference_ids`, `referenced_pubs`
+  - Column ordering groups the above blocks for readability; only the final Parquet is written
+- Quality checks printed by the notebook:
+  - Missingness per column; `id` uniqueness
+  - Domain sanity: `invisibility`∈{0,1}; non-negativity for `times_cited`, `authors_count`
+  - Identifier format sanity: ISSN/ISBN token length checks after normalization
+  - Base-level normalized DOI duplicates (if DOI exists upstream)
+

@@ -209,6 +209,7 @@ notebooks/
 │   ├── new_test_LLM_name_detect_parquet.ipynb → new_creator_sample.parquet
 │   └── README.md
 ├── 04_processing/         (mirrors scripts/04_processing/)
+│   └── dimension_create_variables.ipynb → data/processed/dimension_data_for_analysis.parquet
 └── 05_validation/         (mirrors scripts/05_validation/)
 ```
 
@@ -224,6 +225,7 @@ notebooks/
 |------|--------|------|---------|
 | `articleInfo.parquet` | `notebooks/02_extraction/csv_to_parquet_converter.ipynb` | 3.8GB | High-performance CSV conversion result |
 | `dimension_merged.parquet` | `notebooks/02_extraction/merge_dimension_2000_2025.ipynb` | ~695MB | Dimensions publications merged (2000–2025), DuckDB Parquet |
+| `dimension_data_for_analysis.parquet` | `notebooks/04_processing/dimension_create_variables.ipynb` | ~0.7GB | Analysis-ready variables with grouped columns and QA summaries |
 | `new_creator_sample.parquet` | `notebooks/03_analysis/new_test_LLM_name_detect_parquet.ipynb` | ~50KB | Author samples from articleInfo dataset |
 
 ### Notebooks Usage Benefits

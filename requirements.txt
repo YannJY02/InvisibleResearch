@@ -23,6 +23,11 @@ tenacity>=8.0.0
 # Environment configuration
 python-dotenv>=1.0.0
 
+# HTTP and utilities
+requests>=2.31.0
+tqdm>=4.66.0
+ipykernel>=6.29.0
+
 # Development and testing
 pytest>=7.0.0
 black>=22.0.0

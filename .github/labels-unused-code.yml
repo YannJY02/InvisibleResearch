@@ -1,0 +1,9 @@
+- name: archive
+  color: 1f6feb
+  description: Archived code or files retained for reference
+- name: deprecation
+  color: 8250df
+  description: Marked for removal; discouraged from further use
+- name: tech-debt
+  color: fbca04
+  description: Cleanup, refactor, or technical debt reduction

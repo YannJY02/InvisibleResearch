@@ -19,9 +19,10 @@ The processing pipeline follows this sequence:
 | `scripts/02_extraction/data_for_analysis_to_parquet.py` | MySQL Database | `data/processed/data_for_analysis.parquet` | Main data extraction (19GB) | MySQL Database |
 | `scripts/03_analysis/judge_creator.py` | `data/processed/data_for_analysis.parquet` | Console output | Author field analysis and statistics | - |
 | `scripts/03_analysis/test_LLM_name_detect_parquet.py` | `data/processed/data_for_analysis.parquet` | `data/processed/creator_sample.parquet` | Create author samples for LLM processing | - |
+| `scripts/03_analysis/scim_openalex_journal_coverage.py` | `data/raw/scimagojr_communication_journals.csv`, `data/processed/openalex_merged.parquet` | `outputs/reports/scim_openalex_coverage_summary.csv`, `outputs/reports/scim_openalex_unmatched_journals.csv` | Compute SCImago coverage (all types) in OpenAlex via ISSN OR Title (no year filter) | PyArrow (Parquet) |
 | `scripts/04_processing/LLM_name_detect.py` | `data/processed/creator_sample.parquet` | `data/final/creator_sample_clean.parquet` | LLM-based author name parsing | OpenAI API |
 | `scripts/04_processing/result_GlotLID.py` | `data/processed/data_for_analysis.parquet` | `data/final/title_pred_lang.parquet` | Language detection on titles | GlotLID model |
-| `scripts/04_processing/ver1_nameparse.py` | `data/processed/data_for_analysis.parquet` | `data/processed/name_clean.parquet` | Traditional name parsing approach | - |
+| `scripts/04_processing/ver1_nameparse.py` | `data/processed/data_for_analysis.parquet` | `data/processed/name_clean.parquet` | Traditional rule-based name parsing | - |
 
 ## 🔄 Detailed Processing Stages
 
@@ -71,6 +72,16 @@ The processing pipeline follows this sequence:
 - **Features**: Stratified sampling by author count
 - **Dependencies**: None
 - **Execution**: `python scripts/03_analysis/test_LLM_name_detect_parquet.py`
+
+**Script**: `scripts/03_analysis/scim_openalex_journal_coverage.py`
+- **Input**: `data/raw/scimagojr_communication_journals.csv`, `data/processed/openalex_merged.parquet`
+- **Output**:
+  - `outputs/reports/scim_openalex_coverage_summary.csv`
+  - `outputs/reports/scim_openalex_unmatched_journals.csv`
+- **Purpose**: Verify coverage of SCImago (all types) in OpenAlex by ISSN OR Title (ANY variant matches)
+- **Features**: Robust ISSN parsing, automatic ISSN/Title column detection from OpenAlex, title normalization (case/whitespace/punctuation-insensitive), no year filtering
+- **Dependencies**: PyArrow
+- **Execution**: `python scripts/03_analysis/scim_openalex_journal_coverage.py`
 
 ### Stage 4: Advanced Processing (04_processing)
 
@@ -192,11 +203,13 @@ notebooks/
 ├── 01_setup/              (mirrors scripts/01_setup/)
 ├── 02_extraction/          (data conversion notebooks)
 │   ├── csv_to_parquet_converter.ipynb → articleInfo.parquet (3.8GB)
+│   ├── merge_dimension_2000_2025.ipynb → dimension_merged.parquet (695.48MB; 358,493 rows; 76 columns)
 │   └── README.md
 ├── 03_analysis/           (interactive analysis notebooks)
 │   ├── new_test_LLM_name_detect_parquet.ipynb → new_creator_sample.parquet
 │   └── README.md
 ├── 04_processing/         (mirrors scripts/04_processing/)
+│   └── dimension_create_variables.ipynb → data/processed/dimension_data_for_analysis.parquet
 └── 05_validation/         (mirrors scripts/05_validation/)
 ```
 
@@ -211,6 +224,8 @@ notebooks/
 | File | Source | Size | Purpose |
 |------|--------|------|---------|
 | `articleInfo.parquet` | `notebooks/02_extraction/csv_to_parquet_converter.ipynb` | 3.8GB | High-performance CSV conversion result |
+| `dimension_merged.parquet` | `notebooks/02_extraction/merge_dimension_2000_2025.ipynb` | ~695MB | Dimensions publications merged (2000–2025), DuckDB Parquet |
+| `dimension_data_for_analysis.parquet` | `notebooks/04_processing/dimension_create_variables.ipynb` | ~0.7GB | Analysis-ready variables with grouped columns and QA summaries |
 | `new_creator_sample.parquet` | `notebooks/03_analysis/new_test_LLM_name_detect_parquet.ipynb` | ~50KB | Author samples from articleInfo dataset |
 
 ### Notebooks Usage Benefits
@@ -219,3 +234,17 @@ notebooks/
 - **Experimentation**: Easy parameter tuning and result comparison
 - **Enhanced Output**: Rich formatting and display capabilities
 - **Complementary Workflow**: Works alongside existing scripts without conflicts
+
+## OpenAlex CSV Merge → Parquet
+
+- Script: `scripts/02_extraction/merge_openalex_csv_to_parquet.py`
+- Input: `data/raw/openalex_data/*.csv` (recursive discovery)
+- Output:
+  - Intermediate CSV (retained): `data/processed/openalex_merged.csv`
+  - Parquet: `data/processed/openalex_merged.parquet` (compression: Snappy)
+  - Stats: `data/processed/openalex_merged_stats.json` (file count, total rows, columns summary)
+- Notes:
+  - Preserves all original CSV files (read-only)
+  - Column union is computed and enforced; missing fields filled as empty string in CSV stage
+  - CSV stage is produced with Python csv writer for stability; Parquet conversion uses DuckDB with `VARCHAR` columns
+  - All text columns retained as string to avoid lossy inference

@@ -17,6 +17,8 @@
   - Processed using nameparser library
 - **openalex_merged.csv**: Intermediate unioned CSV kept for traceability, source for the Parquet.
 - **openalex_merged.parquet**: Merged OpenAlex works CSVs (Snappy) generated from `raw/openalex_data/*.csv` via `scripts/02_extraction/merge_openalex_csv_to_parquet.py`. See `data/processed/openalex_merged_stats.json` for counts & schema notes.
+ - **dimension_merged.csv**: Intermediate unioned CSV for Dimensions publications (2000–2025), kept for traceability. Source: `raw/dimensions_cs/publications_*.csv`.
+ - **dimension_merged.parquet**: Parquet converted via DuckDB from `dimension_merged.csv` (Snappy). Produced by `notebooks/02_extraction/merge_dimension_2000_2025.ipynb`.
 
 ### `final/` - Final Analysis Results
 - **creator_sample_clean.parquet**: Author data processed by LLM (92KB)

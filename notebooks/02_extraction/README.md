@@ -15,6 +15,9 @@ This directory contains a Jupyter notebook for high-performance conversion of la
 - `csv_to_parquet_converter.ipynb` - Main conversion notebook with complete documentation
 - `README.md` - This file
 
+### Dimensions Merge (2000–2025)
+- `merge_dimension_2000_2025.ipynb` – Merge yearly Dimensions CSVs (`data/raw/dimensions_cs/publications_2000.csv … publications_2025.csv`) using union-of-columns, produce `data/processed/dimension_merged.csv`, then convert to `data/processed/dimension_merged.parquet` via DuckDB. Includes a comprehensive validation block (logical row count parity, `id` uniqueness, DOI normalization duplicates, year range/distribution, key field quality, optional exact-duplicate check).
+
 ## Features
 
 ### 🚀 High-Performance Processing

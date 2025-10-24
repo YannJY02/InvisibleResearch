@@ -193,3 +193,26 @@ Dublin Core Tags (http://purl.org/dc/elements/1.1/):
 
 ### Unused Code Policy
 See the policy for handling unused but potentially reusable code: [docs/unused-code-policy.md](unused-code-policy.md).
+
+---
+
+## Dimensions CSV Merge → Parquet
+
+- Notebook: `notebooks/02_extraction/merge_dimension_2000_2025.ipynb`
+- Inputs: `data/raw/dimensions_cs/publications_2000.csv … publications_2025.csv`
+- Outputs:
+  - Intermediate CSV (retained): `data/processed/dimension_merged.csv`
+  - Parquet (Snappy): `data/processed/dimension_merged.parquet`
+- Method:
+  - Union-of-columns across yearly CSVs; missing columns written as empty strings in the CSV stage
+  - Robust CSV parsing (handles multiline quoted fields) and BOM-safe reading (`utf-8-sig`)
+  - Parquet conversion via DuckDB `COPY ... FORMAT parquet` with explicit `VARCHAR` mapping
+- Validation (latest run):
+  - Logical CSV rows (reader-based): 358,493
+  - Parquet rows: 358,493
+  - Columns: 76; Row groups: 3
+  - Size: CSV ≈ 2268.29 MB → Parquet ≈ 695.48 MB
+  - Primary key: `id` (uniqueness validated in the notebook)
+- How to run:
+  1) Open the notebook and run all cells
+  2) Inspect the "Validation and Sampling" section for integrity checks (row counts, `id` uniqueness, DOI normalization duplicates, year distribution, key field quality)

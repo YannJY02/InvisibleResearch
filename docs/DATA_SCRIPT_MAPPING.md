@@ -203,6 +203,7 @@ notebooks/
 ├── 01_setup/              (mirrors scripts/01_setup/)
 ├── 02_extraction/          (data conversion notebooks)
 │   ├── csv_to_parquet_converter.ipynb → articleInfo.parquet (3.8GB)
+│   ├── merge_dimension_2000_2025.ipynb → dimension_merged.parquet (695.48MB; 358,493 rows; 76 columns)
 │   └── README.md
 ├── 03_analysis/           (interactive analysis notebooks)
 │   ├── new_test_LLM_name_detect_parquet.ipynb → new_creator_sample.parquet
@@ -222,6 +223,7 @@ notebooks/
 | File | Source | Size | Purpose |
 |------|--------|------|---------|
 | `articleInfo.parquet` | `notebooks/02_extraction/csv_to_parquet_converter.ipynb` | 3.8GB | High-performance CSV conversion result |
+| `dimension_merged.parquet` | `notebooks/02_extraction/merge_dimension_2000_2025.ipynb` | ~695MB | Dimensions publications merged (2000–2025), DuckDB Parquet |
 | `new_creator_sample.parquet` | `notebooks/03_analysis/new_test_LLM_name_detect_parquet.ipynb` | ~50KB | Author samples from articleInfo dataset |
 
 ### Notebooks Usage Benefits

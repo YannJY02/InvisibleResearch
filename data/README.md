@@ -20,13 +20,13 @@
  - **dimension_merged.csv**: Intermediate unioned CSV for Dimensions publications (2000–2025), kept for traceability. Source: `raw/dimensions_cs/publications_*.csv`.
  - **dimension_merged.parquet**: Parquet converted via DuckDB from `dimension_merged.csv` (Snappy). Produced by `notebooks/02_extraction/merge_dimension_2000_2025.ipynb`.
 - **dimension_data_for_analysis.parquet**: Analysis-ready dataset derived by `notebooks/04_processing/dimension_create_variables.ipynb` from `dimension_merged.parquet`. Columns are ordered by conceptual blocks for clarity: [invisibility (with `times_cited`, `date`, `first_author_experience`), geographic/institutional (`research_org_*`), topical (`concepts*`), disciplinary (`issn`, `isbn`, `disciplinary`), prestige (rank bins with matching details), OA (`open_access`), controls (`document_type`, `type`, `authors_count`, `reference_ids`, `referenced_pubs`)].
-  - `first_author_experience`: difference between a paper's publication year and the earliest publication year of its first author observed within this dataset. First-author key priority: `researchers[0].id` → `authors[0].id`; no name-based fallback to avoid collisions. Missing when keys/years unavailable. Debug-only fields (`first_author_key`, `first_author_first_year`) are used internally and not saved in the final file. The notebook prints QA summaries (missingness, key constraints, identifier format sanity) and writes only this final file.
+  - `first_author_experience`: difference between a paper's publication year and the earliest year in which the same author is listed first within this dataset. First-author key priority: `researchers[0]` → `authors[0]`; stable IDs may come from direct or nested ID metadata, with no name-based fallback. Missing when keys/years are unavailable. Debug-only fields (`first_author_key`, `first_author_first_year`) are used internally and not saved in the final file. The notebook prints QA summaries (missingness, key constraints, identifier format sanity) and writes only this final file.
 
 ### `final/` - Final Analysis Results
 - **creator_sample_clean.parquet**: Author data processed by LLM (92KB)
   - Contains original author names, cleaned names, institutional information
 - **title_pred_lang.parquet**: Title language prediction results (~1.8GB)
-  - Language labels predicted using GlotLID model
+  - Contains language labels predicted using GlotLID model
 
 ## 🔄 Data Flow
 
@@ -60,7 +60,7 @@ processed/dimension_data_for_analysis.parquet
 ## ⚠️ Important Notes
 
 1. **Large File Processing**: Main data files exceed 19GB, requiring streaming processing
-2. **Version Control**: Large data files are excluded in .gitignore
+2. **Version Control**: Large data files are excluded in `.gitignore`
 3. **Backup Strategy**: Important result files should be backed up regularly
 4. **Access Permissions**: Raw database dumps may contain sensitive information
 

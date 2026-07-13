@@ -90,3 +90,12 @@ _build/
 
 # 保留样本数据
 !data/raw/sample_records_language_title_abstract.csv
+
+# Generated validation artifacts are archived outside the repository.
+data/validation/backups/
+data/validation/reports/
+data/validation/validation_progress.json
+
+# Local workflow state and generated exports.
+.agent/
+outputs/exports/*.csv

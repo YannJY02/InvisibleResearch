@@ -237,14 +237,17 @@ notebooks/
 
 ## OpenAlex CSV Merge → Parquet
 
-- Script: `scripts/02_extraction/merge_openalex_csv_to_parquet.py`
-- Input: `data/raw/openalex_data/*.csv` (recursive discovery)
+- Shared entrypoint: `invisible_research.openalex_merge`
+- Root command: `DATA_ROOT=/path/to/data ./run_pipeline.sh openalex-merge`
+- Temporary legacy wrapper: `python scripts/02_extraction/merge_openalex_csv_to_parquet.py`
+- Input: `$DATA_ROOT/raw/openalex_data/*.csv` (recursive discovery)
 - Output:
-  - Intermediate CSV (retained): `data/processed/openalex_merged.csv`
-  - Parquet: `data/processed/openalex_merged.parquet` (compression: Snappy)
-  - Stats: `data/processed/openalex_merged_stats.json` (file count, total rows, columns summary)
+  - Intermediate CSV (retained): `$DATA_ROOT/processed/openalex_merged.csv`
+  - Parquet: `$DATA_ROOT/processed/openalex_merged.parquet` (compression: Snappy)
+  - Stats: `$DATA_ROOT/processed/openalex_merged_stats.json` (file count, total rows, columns summary)
+  - Artifact Versions: `$DATA_ROOT/processed/openalex_inputs.<sha256>.artifact.json` and `$DATA_ROOT/processed/openalex_merged.artifact.json`
 - Notes:
   - Preserves all original CSV files (read-only)
   - Column union is computed and enforced; missing fields filled as empty string in CSV stage
-  - CSV stage is produced with Python csv writer for stability; Parquet conversion uses DuckDB with `VARCHAR` columns
+  - CSV stage is produced with Python csv writer for stability; Parquet conversion uses PyArrow string columns
   - All text columns retained as string to avoid lossy inference

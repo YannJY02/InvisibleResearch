@@ -16,7 +16,7 @@
 - **name_clean.parquet**: Author names cleaned by traditional methods (~380MB)
   - Processed using nameparser library
 - **openalex_merged.csv**: Intermediate unioned CSV kept for traceability, source for the Parquet.
-- **openalex_merged.parquet**: Merged OpenAlex works CSVs (Snappy) generated from `raw/openalex_data/*.csv` via `scripts/02_extraction/merge_openalex_csv_to_parquet.py`. See `data/processed/openalex_merged_stats.json` for counts & schema notes.
+- **openalex_merged.parquet**: Merged OpenAlex works CSVs (Snappy) generated from `raw/openalex_data/*.csv` via `DATA_ROOT=/path/to/data ./run_pipeline.sh openalex-merge`. See `processed/openalex_merged_stats.json` for counts and schema notes.
  - **dimension_merged.csv**: Intermediate unioned CSV for Dimensions publications (2000–2025), kept for traceability. Source: `raw/dimensions_cs/publications_*.csv`.
  - **dimension_merged.parquet**: Parquet converted via DuckDB from `dimension_merged.csv` (Snappy). Produced by `notebooks/02_extraction/merge_dimension_2000_2025.ipynb`.
 - **dimension_data_for_analysis.parquet**: Analysis-ready dataset derived by `notebooks/04_processing/dimension_create_variables.ipynb` from `dimension_merged.parquet`. Columns are ordered by conceptual blocks for clarity: [invisibility (with `times_cited`, `date`, `first_author_experience`), geographic/institutional (`research_org_*`), topical (`concepts*`), disciplinary (`issn`, `isbn`, `disciplinary`), prestige (rank bins with matching details), OA (`open_access`), controls (`document_type`, `type`, `authors_count`, `reference_ids`, `referenced_pubs`)].

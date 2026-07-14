@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e  # Exit on error
 
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ "${1:-}" == "openalex-merge" ]]; then
+    shift
+    export PYTHONPATH="$PROJECT_ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+    exec python -m invisible_research.openalex_merge "$@"
+fi
+
 echo "=== Invisible Research Data Processing Pipeline ==="
 echo "Start time: $(date)"
 

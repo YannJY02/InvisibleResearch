@@ -16,6 +16,9 @@ The copy selected as current when duplicate or diverging sources exist. It ident
 **Generated Artifact**:
 A file produced from data, code, or a document build. Being generated, tracked, or placed beside a paper does not authorize it to support a paper claim.
 
+**Artifact Version**:
+An immutable version of research data or a generated output, identified by its exact content rather than its filename or storage location. Changing its bytes or component manifest creates a new version; moving the same content does not.
+
 **Intake Inbox**:
 A local-only drop zone for unstandardized research communications, papers, and thoughts awaiting AI classification. AI may index and derive normalized records, but may not move, rename, or delete originals without explicit approval.
 

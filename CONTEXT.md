@@ -4,6 +4,15 @@ This glossary distinguishes exploratory research work from analyses authorized t
 
 ## Language
 
+**Shared Workspace**:
+Project assets reused across research questions or publication compendia and organized by artifact role and lifecycle. Membership does not authorize an analysis to support a paper claim.
+
+**Source Authority**:
+The copy selected as current when duplicate or diverging sources exist. It identifies what to preserve and edit but does not grant scientific authority.
+
+**Generated Artifact**:
+A file produced from data, code, or a document build. Being generated, tracked, or placed beside a paper does not authorize it to support a paper claim.
+
 **Exploratory Analysis**:
 Analysis used to investigate data, methods, or hypotheses. Its outputs do not support a paper claim unless the analysis is later designated as Paper Analysis.
 

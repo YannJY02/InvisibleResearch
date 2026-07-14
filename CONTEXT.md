@@ -7,6 +7,9 @@ This glossary distinguishes exploratory research work from analyses authorized t
 **Shared Workspace**:
 Project assets reused across research questions or publication compendia and organized by artifact role and lifecycle. Membership does not authorize an analysis to support a paper claim.
 
+**Publication Compendium**:
+A publication-specific collection of manuscript sources, executable analysis, environment evidence, generated artifacts, and governance records needed to reproduce a paper. Membership does not designate an analysis as Paper Analysis.
+
 **Source Authority**:
 The copy selected as current when duplicate or diverging sources exist. It identifies what to preserve and edit but does not grant scientific authority.
 

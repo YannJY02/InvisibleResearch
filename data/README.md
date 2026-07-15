@@ -21,6 +21,17 @@
  - **dimension_merged.parquet**: Parquet converted via DuckDB from `dimension_merged.csv` (Snappy). Produced by `research/dimensions-dataset-construction/analysis/merge_dimensions.py`.
 - **dimension_data_for_analysis.parquet**: Analysis-ready dataset derived by `research/dimensions-dataset-construction/analysis/create_variables.py` from `dimension_merged.parquet`. Columns are ordered by conceptual blocks for clarity: [invisibility (with `times_cited`, `date`, `first_author_experience`), geographic/institutional (`research_org_*`), topical (`concepts*`), disciplinary (`issn`, `isbn`, `disciplinary`), prestige (rank bins with matching details), OA (`open_access`), controls (`document_type`, `type`, `authors_count`, `reference_ids`, `referenced_pubs`)].
   - `first_author_experience`: difference between a paper's publication year and the earliest year in which the same author is listed first within this dataset. First-author key priority: `researchers[0]` → `authors[0]`; stable IDs may come from direct or nested ID metadata, with no name-based fallback. Missing when keys/years are unavailable. Debug-only fields (`first_author_key`, `first_author_first_year`) are used internally and not saved in the final file. The notebook prints QA summaries (missingness, key constraints, identifier format sanity) and writes only this final file.
+- **dimensions_april2025_consolidated.csv**: 2,583,327,244-byte external
+  Dimensions-derived input retained for the Invisible Communication Science
+  Publication Compendium. Its content identity and unresolved upstream
+  provenance are recorded under `artifact-versions/`; the CSV is never stored
+  in Git.
+
+### `artifact-versions/` - External Content Identities
+
+Tracked four-field records (`id`, `sha256`, `location`, `source`) point to
+large inputs and shared derived data under `DATA_ROOT` without copying their
+bytes into the repository.
 
 ### `final/` - Final Analysis Results
 - **creator_sample_clean.parquet**: Author data processed by LLM (92KB)

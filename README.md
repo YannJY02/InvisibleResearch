@@ -90,10 +90,14 @@ research/              # Question- and experiment-owned Exploratory Analysis
 ├── dimensions-dataset-construction/
 ├── openalex-dataset-construction/
 └── scimago-openalex-coverage/
+papers/                # Publication Compendia; placement grants no authority
+└── invisible-communication-science/
+inbox/                 # Local-only, non-authoritative raw intake
 data/raw/             # Raw data
 data/processed/       # Intermediate results
 data/final/           # Final outputs
 data/validation/      # Validation data and reports
+data/artifact-versions/ # Portable records for external content identities
 ```
 
 ### 🔄 Shared capabilities vs research owners
@@ -101,6 +105,11 @@ data/validation/      # Validation data and reports
 - **Research owners**: Question-specific orchestration and instructions under `research/`
 - **Notebooks**: Interactive adapters over the analysis command owned by the same lane
 - **Artifacts**: Regenerable owner outputs stay ignored under `research/*/artifacts/`
+- **Publication Compendium**: Active paper sources and governance boundaries live under `papers/`
+- **Intake Inbox**: Raw communications and papers remain ignored under `inbox/`
+
+The current paper-facing source and its external input verification command are
+documented in [`papers/invisible-communication-science/`](papers/invisible-communication-science/README.md).
 
 **📋 For detailed data-script relationships**: See [`docs/DATA_SCRIPT_MAPPING.md`](docs/DATA_SCRIPT_MAPPING.md)
 

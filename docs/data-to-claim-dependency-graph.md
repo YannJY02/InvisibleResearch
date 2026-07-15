@@ -1,6 +1,6 @@
 # Current Data-to-Claim Dependency Graph
 
-This trace resolves [Trace the current data-to-claim dependency graph](https://github.com/YannJY02/InvisibleResearch/issues/47). It documents the latest researcher-supplied analysis without rerunning or changing the research.
+This trace resolves [Trace the current data-to-claim dependency graph](https://github.com/YannJY02/InvisibleResearch/issues/47). It documents the latest researcher-supplied analysis without rerunning or changing the research. The Publication Compendium migration changed locators, not evidence: the Source Authority hash is unchanged and the large CSV now has a four-field external Artifact Version record.
 
 ## Decision
 
@@ -22,7 +22,7 @@ flowchart LR
 
 | Input | Identity currently available | Used for | Missing link |
 |---|---|---|---|
-| `Writing Report/Slides/material/consolidated.csv` | 2,583,327,244 bytes; 565,391 data rows plus header; 78 columns; SHA-256 `9361454fd9e9c6479181dd60d98d44038aa4b346bb74654f7750345db6f27ab2` | Sole tabular input to the latest analysis family | No export query, source snapshot date, Dimensions dataset/version, license record, or generating code. The source-authoritative R Markdown requests `data/cs/dimensions_april2025/consolidated.csv`, not this stored path. |
+| `$DATA_ROOT/processed/dimensions_april2025_consolidated.csv` | 2,583,327,244 bytes; 565,391 data rows plus header; 78 columns; SHA-256 `9361454fd9e9c6479181dd60d98d44038aa4b346bb74654f7750345db6f27ab2`; record at `data/artifact-versions/dimensions-april2025-consolidated.json` | Sole tabular input to the latest analysis family | No export query, source snapshot date, Dimensions dataset/version, license record, or generating code. The unchanged source-authoritative R Markdown still requests `data/cs/dimensions_april2025/consolidated.csv`, not this external locator. |
 | World Bank WDI indicator `NY.GDP.PCAP.CD`, year 2022 | Live `WDI(...)` call | GDP-per-capita country plot | No cached response, retrieval date, checksum, or API/version metadata. |
 | `data/TM_WORLD_BORDERS_SIMPL-0.3.shp` | No matching local or tracked file | Choropleth branch | Missing. The console transcript records a file-not-found error. This branch has no presentation figure. |
 | CSV columns used directly | `type`, `year`, `times_cited`, `research_org_countries`, `language`, `concepts`, `category_for`, identifiers and descriptive fields | Filtering, invisibility flag, country/language/topic summaries | Upstream derivation of `language`, field membership, citation snapshot, and organization-country metadata is absent. |
@@ -32,7 +32,7 @@ The tracked Python/OpenAlex/SCImago pipeline is not upstream of this analysis in
 
 ## Transformations actually present
 
-The source-authoritative file is `Writing Report/Slides/material/analyze.Rmd`, SHA-256 `42395d4f28ddaf3d1f062d74d215e68fc93b691d47f2e6632943f976c65797b5`. It performs these transformations:
+The source-authoritative file is `papers/invisible-communication-science/analysis/analyze.Rmd`, SHA-256 `42395d4f28ddaf3d1f062d74d215e68fc93b691d47f2e6632943f976c65797b5`. It performs these transformations:
 
 1. load the CSV, normalize column names, and coerce six numeric columns;
 2. keep `article`, `book`, and `chapter` rows;
@@ -63,7 +63,7 @@ No durable result table is produced. `tabyl(type)` and `count(invisible)` are in
 | 95% CI | Default `geom_smooth()` behavior on several plots | Partial | Plot bands may be 95% intervals, but the level is not declared and no interval values or model assumptions are stored. |
 | Controls, regularized/LASSO regression, interactions, odds ratios, AUC, calibration, and 10-fold CV | Presentation methods and appendix text only | Orphan claim | No corresponding implementation, fitted object, result table, or package call exists in the analysis source. `estimatr` and `texreg` are loaded but unused. |
 
-The six PNGs are consumed directly by `Writing Report/Slides/etmaal2026_presentation.Rmd`; its setup chunk renders slides but does not run the analysis. Their SHA-256 identities are:
+The six ignored local PNGs are consumed by `papers/invisible-communication-science/manuscript/etmaal2026_presentation.Rmd`; its setup chunk renders slides but does not run the analysis. Their SHA-256 identities are:
 
 | Figure | SHA-256 |
 |---|---|
@@ -76,7 +76,7 @@ The six PNGs are consumed directly by `Writing Report/Slides/etmaal2026_presenta
 
 ## Execution evidence and breaks
 
-`Writing Report/Slides/material/output.md`, SHA-256 `b64190b0e599d3c962b020e641b9bdf102f541626dc797793d16acc536ce043a`, is a console transcript, not a clean end-to-end render. It:
+The transcript retained at `GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Slides/material/output.md`, SHA-256 `b64190b0e599d3c962b020e641b9bdf102f541626dc797793d16acc536ce043a`, is not a clean end-to-end render. It:
 
 - executes the archived `analyze_v2.Rmd` path variant rather than the source-authoritative CSV path;
 - installs missing packages interactively and restarts R;

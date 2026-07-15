@@ -102,3 +102,13 @@ outputs/exports/*.csv
 
 # Regenerable outputs owned by Exploratory Analysis lanes.
 research/*/artifacts/
+
+# Raw Intake Inbox bytes are local-only and non-authoritative.
+inbox/*
+!inbox/README.md
+
+# Publication outputs stay local unless Candidate Version governance records hashes.
+papers/*/artifacts/*
+!papers/*/artifacts/README.md
+papers/*/manuscript/libs/
+papers/*/manuscript/*_files/

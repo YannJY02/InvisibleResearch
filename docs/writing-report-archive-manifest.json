@@ -1,0 +1,62 @@
+[
+  {
+    "source": "Writing Report/Report/draft/draft1.md",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Report/draft/draft1.md",
+    "sha256": "cf2d9fc95416b35c1ccb9320196b2a08a18373e46f2902e1acaee9701e24c533"
+  },
+  {
+    "source": "Writing Report/Report/generate_report.js",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Report/generate_report.js",
+    "sha256": "9202f40d7ed757412d7c22a0e6432254c2e1a103d0225ad5e2995c14d98fe960"
+  },
+  {
+    "source": "Writing Report/Report/package.json",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Report/package.json",
+    "sha256": "e901426e5ceed183d349ef5a271ee41c32ef33609f79ac56f83306e22937c75c"
+  },
+  {
+    "source": "Writing Report/Slides/analyze_v2.Rmd",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Slides/analyze_v2.Rmd",
+    "sha256": "49b4853493c44024fd36a676560880f60ccb893a3f4db386121a19b85bd03d9b"
+  },
+  {
+    "source": "Writing Report/Slides/ascorthemes_tutorial.md",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Slides/ascorthemes_tutorial.md",
+    "sha256": "e8955db7cd0f2036ffa5f30e72e53bb3be817630643d044a0d0bf18eaf5a064b"
+  },
+  {
+    "source": "Writing Report/Slides/backup_note.md",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Slides/backup_note.md",
+    "sha256": "c71fc5f2b789df79be86b0aa39eb1219054fdad212704dbf29638d39a9cd2302"
+  },
+  {
+    "source": "Writing Report/Slides/extract_stats.R",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Slides/extract_stats.R",
+    "sha256": "126a8d1399da7f74479e95befb22b05894d6f63fd38cf2403a9958919771a2f0"
+  },
+  {
+    "source": "Writing Report/Slides/material/output.md",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Slides/material/output.md",
+    "sha256": "b64190b0e599d3c962b020e641b9bdf102f541626dc797793d16acc536ce043a"
+  },
+  {
+    "source": "Writing Report/Slides/skeleton.Rmd",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Slides/skeleton.Rmd",
+    "sha256": "cc3422878a65e226ca947b0804d68f4e8809339512bcd0e7227350d372f769c5"
+  },
+  {
+    "source": "Writing Report/Slides/speaker_notes.md",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Slides/speaker_notes.md",
+    "sha256": "74f2e2749534dad76d2532e103d7bb0c51fb5a4af65da9fd7912b302872e6a36"
+  },
+  {
+    "source": "Writing Report/Support Doc/activity_summary.md",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Support Doc/activity_summary.md",
+    "sha256": "cbcf3a613ea71a8ba0104e01ac2a3e4902fecee6db72e82638de7daa1b5f630f"
+  },
+  {
+    "source": "Writing Report/Support Doc/template/template_content.md",
+    "archive_location": "GoogleDrive:InvisibleResearch/archive/writing-report-legacy/Support Doc/template/template_content.md",
+    "sha256": "78f696e8a4bd11fb086d2805ca2360d436b627db2bd5b9983d5f8574866c1fa6"
+  }
+]

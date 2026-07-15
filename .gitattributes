@@ -1,0 +1,4 @@
+# Preserve imported authored-source bytes and Markdown hard line breaks.
+papers/invisible-communication-science/analysis/analyze.Rmd -text -whitespace
+papers/invisible-communication-science/manuscript/ascor.css -whitespace
+papers/invisible-communication-science/manuscript/etmaal2026_presentation.Rmd -whitespace

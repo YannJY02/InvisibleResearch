@@ -8,6 +8,36 @@ from pathlib import Path
 from typing import Iterable
 
 
+ARTIFACT_VERSION_FIELDS = {"id", "sha256", "location", "source"}
+
+
+def validate_artifact_record(record: dict[str, object]) -> dict[str, object]:
+    """Validate the minimal Artifact Version shape and content identity."""
+    if set(record) != ARTIFACT_VERSION_FIELDS:
+        raise ValueError(
+            "Artifact Version must contain exactly "
+            f"{sorted(ARTIFACT_VERSION_FIELDS)}"
+        )
+    sha256 = record["sha256"]
+    if not isinstance(sha256, str) or len(sha256) != 64:
+        raise ValueError("Artifact Version sha256 must be a 64-character string")
+    try:
+        int(sha256, 16)
+    except ValueError as exc:
+        raise ValueError("Artifact Version sha256 must be hexadecimal") from exc
+    artifact_id = record["id"]
+    if not isinstance(artifact_id, str) or not artifact_id.endswith(
+        f"@sha256:{sha256}"
+    ):
+        raise ValueError("Artifact Version id does not match its sha256")
+    if not isinstance(record["location"], str) or not record["location"]:
+        raise ValueError("Artifact Version location must be a non-empty string")
+    source = record["source"]
+    if not isinstance(source, list) or not all(isinstance(item, str) for item in source):
+        raise ValueError("Artifact Version source must be a list of strings")
+    return record
+
+
 def sha256_file(path: str | Path) -> str:
     """Calculate the SHA-256 identity of a file's content."""
     digest = hashlib.sha256()
@@ -51,12 +81,13 @@ def build_artifact_version(
     """Build the workspace's four-field Artifact Version record."""
     artifact_path = Path(location).expanduser().resolve()
     sha256 = sha256_location(artifact_path)
-    return {
+    record: dict[str, object] = {
         "id": f"{artifact_name}@sha256:{sha256}",
         "sha256": sha256,
         "location": str(artifact_path),
         "source": list(source),
     }
+    return validate_artifact_record(record)
 
 
 def write_artifact_record(
@@ -64,6 +95,7 @@ def write_artifact_record(
     record: dict[str, object],
 ) -> None:
     """Write a previously built Artifact Version record."""
+    validate_artifact_record(record)
     destination = Path(record_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(

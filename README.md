@@ -97,6 +97,7 @@ research/              # Question- and experiment-owned Exploratory Analysis
 └── scimago-openalex-coverage/
 papers/                # Publication Compendia; placement grants no authority
 └── invisible-communication-science/
+meeting-reports/       # Project-wide Supervisor Meeting Reports
 inbox/                 # Local-only, non-authoritative raw intake
 $DATA_ROOT/raw/         # External raw data
 $DATA_ROOT/processed/   # External intermediate results
@@ -111,10 +112,14 @@ data/artifact-versions/ # Tracked portable records for external content identiti
 - **Notebooks**: Interactive adapters over the analysis command owned by the same lane
 - **Artifacts**: Regenerable owner outputs stay ignored under `research/*/artifacts/`
 - **Publication Compendium**: Active paper sources and governance boundaries live under `papers/`
+- **Supervisor Meeting Reports**: Date-named project updates live under `meeting-reports/`
 - **Intake Inbox**: Raw communications and papers remain ignored under `inbox/`
 
 The current paper-facing source and its external input verification command are
 documented in [`papers/invisible-communication-science/`](papers/invisible-communication-science/README.md).
+
+Project-level supervisor and group-meeting updates are indexed in
+[`meeting-reports/`](meeting-reports/README.md).
 
 **📋 For detailed data-script relationships**: See [`docs/DATA_SCRIPT_MAPPING.md`](docs/DATA_SCRIPT_MAPPING.md)
 

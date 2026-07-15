@@ -195,3 +195,28 @@ def test_retired_top_level_paths_are_absent() -> None:
     )
 
     assert not [path for path in retired_paths if (PROJECT_ROOT / path).exists()]
+
+
+def test_supervisor_meeting_reports_are_discoverable_and_non_authoritative() -> None:
+    root_readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    context = (PROJECT_ROOT / "CONTEXT.md").read_text(encoding="utf-8")
+    meeting_readme = PROJECT_ROOT / "meeting-reports/README.md"
+
+    assert "[`meeting-reports/`](meeting-reports/README.md)" in root_readme
+    assert "**Supervisor Meeting Report**:" in context
+    assert meeting_readme.is_file()
+
+    guidance = meeting_readme.read_text(encoding="utf-8")
+    assert "YYYY-MM-DD-short-topic.md" in guidance
+    assert "communication records" in guidance
+    assert "Paper Analysis" in guidance
+    assert "Designation Event" in guidance
+
+    for target in (
+        "../research/README.md",
+        "../papers/README.md",
+        "../inbox/README.md",
+        "../CONTEXT.md",
+    ):
+        assert target in guidance
+        assert (meeting_readme.parent / target).is_file()

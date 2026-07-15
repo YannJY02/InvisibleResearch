@@ -22,6 +22,9 @@ An immutable version of research data or a generated output, identified by its e
 **Intake Inbox**:
 A local-only drop zone for unstandardized research communications, papers, and thoughts awaiting AI classification. AI may index and derive normalized records, but may not move, rename, or delete originals without explicit approval.
 
+**Supervisor Meeting Report**:
+A project-wide communication record prepared for a supervisor or research-group meeting. It may link to research or publication material but does not grant Paper Analysis status or create a Designation Event.
+
 **Exploratory Analysis**:
 Analysis used to investigate data, methods, or hypotheses. Its outputs do not support a paper claim unless the analysis is later designated as Paper Analysis.
 

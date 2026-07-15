@@ -5,8 +5,8 @@ Stream‑read titles from a large Parquet file, predict their language
 with GlotLID, and save a new Parquet with columns
 [id, title, language_db, language_pred].
 
-Input : /Users/yann.jy/InvisibleResearch/data_for_analysis.parquet
-Output: /Users/yann.jy/InvisibleResearch/title_pred_lang.parquet
+Input : $DATA_ROOT/processed/data_for_analysis.parquet
+Output: $DATA_ROOT/final/title_pred_lang.parquet
 """
 
 import os
@@ -16,13 +16,17 @@ import pyarrow.parquet as pq
 from huggingface_hub import hf_hub_download
 import fasttext
 
+from ..data import resolve_data_root
+
 # ------------------------------------------------------------------
-PARQUET_IN  = "/Users/yann.jy/InvisibleResearch/data_for_analysis.parquet"
-PARQUET_OUT = "/Users/yann.jy/InvisibleResearch/title_pred_lang.parquet"
 BATCH_SIZE  = 50_000   # adjust to available RAM
 # ------------------------------------------------------------------
 
 def main():
+    data_root = resolve_data_root()
+    parquet_in = data_root / "processed" / "data_for_analysis.parquet"
+    parquet_out = data_root / "final" / "title_pred_lang.parquet"
+    parquet_out.parent.mkdir(parents=True, exist_ok=True)
     # Locate or download GlotLID model from Hugging Face cache
     model_path = hf_hub_download(repo_id="cis-lmu/glotlid", filename="model.bin")
     model = fasttext.load_model(model_path)
@@ -43,7 +47,7 @@ def main():
             for lst in label_lists
         ]
 
-    dataset = ds.dataset(PARQUET_IN, format="parquet")
+    dataset = ds.dataset(parquet_in, format="parquet")
 
     # prepare Parquet writer lazily
     writer = None
@@ -67,7 +71,7 @@ def main():
 
         if writer is None:
             writer = pq.ParquetWriter(
-                PARQUET_OUT, out_tbl.schema, compression="snappy"
+                parquet_out, out_tbl.schema, compression="snappy"
             )
         writer.write_table(out_tbl)
         total += len(df)
@@ -75,7 +79,7 @@ def main():
 
     if writer:
         writer.close()
-    print(f"✅ Saved to {PARQUET_OUT}  (rows: {total:,})")
+    print(f"✅ Saved to {parquet_out}  (rows: {total:,})")
 
 if __name__ == "__main__":
     main()

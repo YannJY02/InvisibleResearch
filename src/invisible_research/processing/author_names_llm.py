@@ -19,7 +19,7 @@ Configuration:
     BATCH_SIZE=20                                       # Optional: Batch size (default: 20)
 
 Run:
-    python LLM_name_detect.py
+    DATA_ROOT=/path/to/data ./run_pipeline.sh author-names-llm
 """
 from __future__ import annotations
 
@@ -39,6 +39,8 @@ from nameparser import HumanName
 
 import openai
 from tenacity import retry, wait_random_exponential, stop_after_attempt
+
+from ..data import resolve_data_root
 
 # Try to load .env file if available
 try:
@@ -93,8 +95,6 @@ def _get_openai_client() -> openai.OpenAI:
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
-SRC_PARQUET = Path(__file__).parent.parent.parent / "data/processed/creator_sample.parquet"
-DST_PARQUET = Path(__file__).parent.parent.parent / "data/final/creator_sample_clean_v2.parquet"
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")  # Default to official model name, can be overridden
 BATCH = int(os.getenv("BATCH_SIZE", "20"))   # Configurable batch size
 
@@ -256,10 +256,13 @@ def call_llm(text: str) -> dict:
 # Main pipeline
 # -----------------------------------------------------------------------------
 def main() -> None:
-    if not SRC_PARQUET.exists():
-        raise SystemExit(f"Parquet not found: {SRC_PARQUET}")
+    data_root = resolve_data_root()
+    src_parquet = data_root / "processed" / "creator_sample.parquet"
+    dst_parquet = data_root / "final" / "creator_sample_clean_v2.parquet"
+    if not src_parquet.exists():
+        raise SystemExit(f"Parquet not found: {src_parquet}")
 
-    df = pq.read_table(SRC_PARQUET).to_pandas()
+    df = pq.read_table(src_parquet).to_pandas()
 
     n = len(df)
     authors_clean: List[str] = [""] * n
@@ -314,8 +317,9 @@ def main() -> None:
     df["affiliations"] = affil_out
 
     # Write back to Parquet
-    pq.write_table(pa.Table.from_pandas(df), DST_PARQUET)
-    print(f"✅ Clean parquet written to {DST_PARQUET} ({len(df)} rows)")
+    dst_parquet.parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.Table.from_pandas(df), dst_parquet)
+    print(f"✅ Clean parquet written to {dst_parquet} ({len(df)} rows)")
 
 
 if __name__ == "__main__":

@@ -32,17 +32,17 @@
 
 ```
 raw/sample_records_language_title_abstract.csv
-    ↓ (scripts/01_setup/read_database.py)
+    ↓ (`./run_pipeline.sh database-sample`)
 raw/database.sql.gz → MySQL Database
-    ↓ (scripts/02_extraction/data_for_analysis_to_parquet.py)
+    ↓ (`./run_pipeline.sh database-extract`)
 processed/data_for_analysis.parquet
     ↓ (scripts/03_analysis/test_LLM_name_detect_parquet.py)
 processed/creator_sample.parquet
-    ↓ (scripts/04_processing/LLM_name_detect.py)
+    ↓ (`./run_pipeline.sh author-names-llm`)
 final/creator_sample_clean.parquet
 
 processed/data_for_analysis.parquet
-    ↓ (scripts/04_processing/result_GlotLID.py)
+    ↓ (`./run_pipeline.sh title-language`)
 final/title_pred_lang.parquet
 
 processed/dimension_merged.parquet

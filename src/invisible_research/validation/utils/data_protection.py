@@ -14,6 +14,9 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 import logging
 
+from ...data import resolve_data_root
+from .. import DEFAULT_CONFIG_PATH
+
 # 设置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -281,7 +284,7 @@ class DataProtectionManager:
         return "unknown"
 
 
-def create_protection_manager(config_path: str = "scripts/05_validation/validation_config.yaml") -> DataProtectionManager:
+def create_protection_manager(config_path: str | Path | None = None) -> DataProtectionManager:
     """
     创建数据保护管理器实例
     
@@ -294,16 +297,18 @@ def create_protection_manager(config_path: str = "scripts/05_validation/validati
     import yaml
     
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
+        config_file = Path(config_path) if config_path else DEFAULT_CONFIG_PATH
+        with open(config_file, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
         
-        progress_file_path = config['data_paths']['validation_progress']
+        configured_path = Path(config['data_paths']['validation_progress'])
+        progress_file_path = resolve_data_root().joinpath(*configured_path.parts[1:])
         return DataProtectionManager(progress_file_path)
         
     except Exception as e:
         # 回退到默认路径
         logger.warning(f"无法加载配置文件，使用默认路径: {e}")
-        return DataProtectionManager("data/validation/validation_progress.json")
+        return DataProtectionManager(resolve_data_root() / "validation" / "validation_progress.json")
 
 
 if __name__ == "__main__":

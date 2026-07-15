@@ -12,7 +12,7 @@ from pathlib import Path
 from datetime import datetime
 import json
 
-from utils.data_protection import create_protection_manager
+from invisible_research.validation.utils.data_protection import create_protection_manager
 
 
 def main():

@@ -1,6 +1,6 @@
 # Current Artifact Role and Authority Inventory
 
-This inventory resolves [Classify current artifacts by scholarly role and authority](https://github.com/YannJY02/InvisibleResearch/issues/46). It classifies the current tree; it does not prescribe or execute the migration.
+This inventory resolves [Classify current artifacts by scholarly role and authority](https://github.com/YannJY02/InvisibleResearch/issues/46). It classified the pre-migration tree and now records the equivalent role after the Shared Workspace migration. See [`hybrid-workspace-migration.md`](hybrid-workspace-migration.md) for current commands.
 
 ## Decision
 
@@ -18,15 +18,15 @@ Each path receives one primary role based on its current evidence, not its inten
 
 ## Tracked inventory
 
-The repository currently tracks 97 files.
+At classification time, the repository tracked 97 files. The role assignments below remain authoritative even where the migration changed paths.
 
 | Paths | Primary role | Evidence and handling consequence |
 |---|---|---|
-| `config/**`, `data/README.md`, `data/raw/sample_records_language_title_abstract.csv`, `requirements.txt`, `run_pipeline.sh`, `notebooks/02_extraction/download_openalex_by_year.py`, `scripts/01_setup/**`, `scripts/02_extraction/**`, `scripts/04_processing/**`, `scripts/05_validation/**`, `scripts/utils/**`, `tests/**` | Shared Workspace | Reusable configuration, sample input, acquisition/processing/validation code, runner, and checks. Some scripts still contain machine-specific defaults, but that is a reproducibility defect rather than a different scholarly role. |
+| `src/invisible_research/acquisition/**`, `src/invisible_research/processing/**`, `src/invisible_research/validation/**`, `config/**`, `data/README.md`, `data/raw/sample_records_language_title_abstract.csv`, `requirements.txt`, `run_pipeline.sh`, `scripts/utils/**`, `tests/**` | Shared Workspace | Reusable configuration, sample input, acquisition/processing/validation code, runner, and checks. Owner commands resolve external artifacts through `DATA_ROOT`. |
 | `docs/ARTICLEINFO_DATABASE.md`, `docs/DATA_SCRIPT_MAPPING.md`, `docs/README.md`, `docs/TableRelation.png` | Shared Workspace | Describe shared data schemas and transformations rather than a single claim. |
 | Source `*.ipynb` files under `notebooks/**`, except `openalex_by_year_to_parquet.executed.ipynb`; `scripts/03_analysis/**` | Exploratory Analysis | They investigate acquisition, matching, variable construction, coverage, or validation. They have useful repeatable fragments, but no complete input/environment/output record and no collaborator designation. |
 | `notebooks/02_extraction/openalex_by_year_to_parquet.executed.ipynb`, `outputs/reports/**` | Generated Artifact | The executed notebook captures a run. Ten report files name their generators in scripts/notebooks; `prestige_distribution.json` is likewise output data but has no explicit generator reference. These files are evidence about past runs, not authorized paper results. |
-| `.cursor/**`, `.github/**`, `.gitignore`, `AGENTS.md`, `CITATION.cff`, `CONTEXT.md`, `README.md`, `notebooks/02_extraction/README.md`, `notebooks/03_analysis/README.md`, `docs/agents/**`, `docs/PROJECT_ISSUES.md`, `docs/SECURITY_GUIDE.md`, `docs/academic-repository-structure-research.md`, `docs/issues/**`, `docs/unused-code-policy.md`, `utils.md` | Administrative or support material | Repository operation, governance, planning, citation, and developer documentation. They do not enter the data-to-claim chain. |
+| `.cursor/**`, `.github/**`, `.gitignore`, `AGENTS.md`, `CITATION.cff`, `CONTEXT.md`, `README.md`, `notebooks/02_extraction/README.md`, `notebooks/03_analysis/README.md`, `scripts/05_validation/*.md`, `docs/agents/**`, `docs/PROJECT_ISSUES.md`, `docs/SECURITY_GUIDE.md`, `docs/academic-repository-structure-research.md`, `docs/issues/**`, `docs/unused-code-policy.md`, `utils.md` | Administrative or support material | Repository operation, governance, planning, citation, and developer documentation. They do not enter the data-to-claim chain. |
 | `archive/**`, `archive.md`, `backup/**` | Archive | Explicit archive markers and superseded code copies; retain as history until the migration ticket decides retirement. |
 | None | Paper Analysis Candidate | No tracked analysis meets the reproducibility gate defined in `CONTEXT.md`. |
 | None | Paper Analysis | No tracked joint designation record exists. |

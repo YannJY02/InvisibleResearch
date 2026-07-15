@@ -6,6 +6,8 @@ os.environ["MODIN_ENGINE"] = "python"
 from lxml import etree
 from huggingface_hub import hf_hub_download
 import fasttext
+
+from ..data import resolve_data_root
 # Configure Pandas/Modin to display all columns without truncation
 pd.set_option('display.max_columns', None)    # No limit on displayed columns
 pd.set_option('display.width', 1000)         # Adjust based on terminal width
@@ -15,7 +17,10 @@ pd.set_option('display.max_colwidth', None)  # Display full cell content
 N = 10
 
 engine = create_engine(
-    "mysql+pymysql://root:secret@127.0.0.1:3306/invisible_research"
+    os.getenv(
+        "MYSQL_URI",
+        "mysql+pymysql://root:secret@127.0.0.1:3306/invisible_research",
+    )
 )
 
 # view all tables in the database
@@ -135,5 +140,7 @@ output_cols = [
     'title',
     'abstract',
 ]
-df_meta[output_cols].to_csv("sample_records_language_title_abstract.csv", index=False)
-print("✅ CSV file 'sample_records_language_title_abstract.csv' has been written.")
+output_path = resolve_data_root() / "raw" / "sample_records_language_title_abstract.csv"
+output_path.parent.mkdir(parents=True, exist_ok=True)
+df_meta[output_cols].to_csv(output_path, index=False)
+print(f"✅ CSV file '{output_path}' has been written.")

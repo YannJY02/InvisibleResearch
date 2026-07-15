@@ -6,7 +6,6 @@ Web Interface for LLM Validation Suite
 提供交互式界面进行人工验证和统计分析
 """
 
-import sys
 import time
 from pathlib import Path
 
@@ -14,15 +13,12 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 设置路径
-current_dir = Path(__file__).parent
-sys.path.append(str(current_dir))
-sys.path.append(str(current_dir / "utils"))
-
-from utils.data_manager import DataManager, ValidationRecord
-from utils.search_tools import ExternalValidator
-from utils.report_generator import ReportGenerator
-from llm_validator import LLMValidator
+from invisible_research.data import resolve_data_root
+from invisible_research.validation.llm_validator import LLMValidator
+from invisible_research.validation.utils.data_manager import DataManager, ValidationRecord
+from invisible_research.validation.utils.report_generator import ReportGenerator
+from invisible_research.validation.utils.search_tools import ExternalValidator
+from invisible_research.validation.utils.data_protection import create_protection_manager
 
 
 class ValidationApp:
@@ -271,7 +267,6 @@ class ValidationApp:
             
             # 执行自动备份（如果需要）
             try:
-                from utils.data_protection import create_protection_manager
                 protection = create_protection_manager()
                 if protection.auto_backup_if_needed():
                     print("🔒 自动备份已创建")
@@ -380,7 +375,6 @@ class ValidationApp:
                 st.sidebar.success(self.get_text('saved_successfully'))
                 # 手动保存后创建备份
                 try:
-                    from utils.data_protection import create_protection_manager
                     protection = create_protection_manager()
                     backup_path = protection.create_backup("manual")
                     if backup_path:
@@ -390,7 +384,6 @@ class ValidationApp:
         
         # 数据保护状态显示
         try:
-            from utils.data_protection import create_protection_manager
             protection = create_protection_manager()
             stats = protection.get_data_statistics()
             
@@ -729,7 +722,6 @@ class ValidationApp:
         
         # 报告生成前创建数据备份
         try:
-            from utils.data_protection import create_protection_manager
             protection = create_protection_manager()
             backup_path = protection.create_backup("pre_report")
             if backup_path:
@@ -739,7 +731,7 @@ class ValidationApp:
         
         with st.spinner(self.get_text('generating_report')):
             try:
-                output_dir = Path("data/validation/reports")
+                output_dir = resolve_data_root() / "validation" / "reports"
                 report_files = self.report_generator.generate_all_reports(
                     st.session_state.records, output_dir, report_language
                 )

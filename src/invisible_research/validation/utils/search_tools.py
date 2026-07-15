@@ -18,6 +18,8 @@ from datetime import datetime
 
 import yaml
 
+from .. import DEFAULT_CONFIG_PATH
+
 
 @dataclass
 class SearchResult:
@@ -36,21 +38,8 @@ class SearchResult:
 class ExternalValidator:
     """外部验证工具类"""
     
-    def __init__(self, config_path: str = "scripts/05_validation/validation_config.yaml"):
-        # 如果是相对路径，从项目根目录开始查找
-        if not os.path.isabs(config_path):
-            # 尝试从当前目录、父目录、项目根目录查找
-            possible_paths = [
-                Path(config_path),
-                Path("../") / config_path,
-                Path("../../") / config_path,
-                Path("../../../") / config_path
-            ]
-            
-            for path in possible_paths:
-                if path.exists():
-                    config_path = str(path)
-                    break
+    def __init__(self, config_path: str | Path | None = None):
+        config_path = config_path or DEFAULT_CONFIG_PATH
         
         self.config = self._load_config(config_path)
         self.validation_config = self.config['external_validation']

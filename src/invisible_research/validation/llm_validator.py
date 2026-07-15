@@ -11,14 +11,14 @@ from typing import Dict, List, Tuple, Optional, Any
 from datetime import datetime
 from dataclasses import asdict
 
-from utils.data_manager import ValidationRecord, DataManager
-from utils.search_tools import ExternalValidator
+from .utils.data_manager import ValidationRecord, DataManager
+from .utils.search_tools import ExternalValidator
 
 
 class LLMValidator:
     """LLM验证器主类"""
     
-    def __init__(self, config_path: str = "scripts/05_validation/validation_config.yaml"):
+    def __init__(self, config_path: str | None = None):
         self.data_manager = DataManager(config_path)
         self.external_validator = ExternalValidator(config_path)
         self.config = self.data_manager.config

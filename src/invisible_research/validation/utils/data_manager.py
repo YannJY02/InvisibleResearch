@@ -20,6 +20,9 @@ import pyarrow as pa
 import yaml
 import numpy as np
 
+from ...data import resolve_data_root
+from .. import DEFAULT_CONFIG_PATH
+
 
 @dataclass
 class ValidationRecord:
@@ -48,28 +51,17 @@ class ValidationRecord:
 class DataManager:
     """数据管理器类"""
     
-    def __init__(self, config_path: str = "scripts/05_validation/validation_config.yaml"):
-        # 如果是相对路径，从项目根目录开始查找
-        if not os.path.isabs(config_path):
-            # 尝试从当前目录、父目录、项目根目录查找
-            possible_paths = [
-                Path(config_path),
-                Path("../") / config_path,
-                Path("../../") / config_path,
-                Path("../../../") / config_path
-            ]
-            
-            for path in possible_paths:
-                if path.exists():
-                    self.config_path = path
-                    break
-            else:
-                self.config_path = Path(config_path)
-        else:
-            self.config_path = Path(config_path)
+    def __init__(self, config_path: str | Path | None = None):
+        self.config_path = Path(config_path) if config_path else DEFAULT_CONFIG_PATH
             
         self.config = self._load_config()
-        self.data_paths = self.config['data_paths']
+        data_root = resolve_data_root()
+        self.data_paths = {
+            name: str(data_root.joinpath(*Path(value).parts[1:]))
+            if Path(value).parts[:1] == ("data",)
+            else value
+            for name, value in self.config['data_paths'].items()
+        }
         
         # 确保数据目录存在
         Path(self.data_paths['validation_results']).parent.mkdir(parents=True, exist_ok=True)

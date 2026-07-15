@@ -12,6 +12,9 @@ import subprocess
 from pathlib import Path
 import importlib.util
 
+from ..data import resolve_data_root
+from . import DEFAULT_CONFIG_PATH
+
 
 def check_dependencies():
     """检查必需的依赖包"""
@@ -49,9 +52,10 @@ def check_dependencies():
 
 def check_data_files():
     """检查必需的数据文件"""
+    data_root = resolve_data_root()
     required_files = [
-        "data/processed/creator_sample.parquet",
-        "data/final/creator_sample_clean_v2.parquet"
+        data_root / "processed" / "creator_sample.parquet",
+        data_root / "final" / "creator_sample_clean_v2.parquet",
     ]
     
     missing_files = []
@@ -72,7 +76,7 @@ def check_data_files():
 
 def check_config():
     """检查配置文件"""
-    config_file = Path("scripts/05_validation/validation_config.yaml")
+    config_file = DEFAULT_CONFIG_PATH
     
     if not config_file.exists():
         print(f"❌ 配置文件不存在: {config_file}")
@@ -84,10 +88,11 @@ def check_config():
 
 def create_directories():
     """创建必需的目录"""
+    data_root = resolve_data_root()
     directories = [
-        "data/validation",
-        "data/validation/reports",
-        "logs"
+        data_root / "validation",
+        data_root / "validation" / "reports",
+        data_root / "logs",
     ]
     
     for directory in directories:
@@ -132,7 +137,7 @@ def run_system_check():
 
 def start_streamlit():
     """启动Streamlit应用"""
-    script_path = Path(__file__).parent / "web_interface.py"
+    script_path = Path(__file__).with_name("web.py")
     
     print(f"🚀 启动验证系统...")
     print(f"📁 工作目录: {Path.cwd()}")
@@ -169,7 +174,7 @@ def show_usage():
 ==================
 
 使用方法:
-  python start_validation.py [选项]
+  ./run_pipeline.sh validation [选项]
 
 选项:
   --check    仅运行系统检查，不启动Web界面

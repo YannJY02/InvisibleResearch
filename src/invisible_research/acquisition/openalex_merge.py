@@ -31,12 +31,12 @@ import pyarrow as pa
 import pyarrow.csv as pacsv
 import pyarrow.parquet as pq
 
-from .artifacts import (
+from ..artifacts import (
     build_artifact_version,
     write_artifact_record,
     write_artifact_version,
 )
-from .data import resolve_data_root
+from ..data import resolve_data_root
 
 
 @dataclass

@@ -9,32 +9,8 @@ Data Recovery Utility for LLM Validation Suite
 import pandas as pd
 import json
 from pathlib import Path
-import sys
 
-# 确保可以从项目根目录运行
-# Get the absolute path of the script's directory
-script_dir = Path(__file__).parent.resolve()
-# Add the 'scripts/05_validation' directory to sys.path to find 'utils'
-project_root = script_dir.parent.parent
-sys.path.insert(0, str(project_root))
-# Also add the scripts directory
-sys.path.insert(0, str(project_root / "scripts"))
-
-
-try:
-    # This might be the correct import statement
-    from o5_validation.utils.data_manager import DataManager, ValidationRecord
-except (ModuleNotFoundError, ImportError) as e:
-    print(f"Initial import failed: {e}. Adjusting path...")
-    # Add the 'scripts/05_validation' directory to sys.path
-    validation_script_dir = project_root / "scripts" / "05_validation"
-    sys.path.insert(0, str(validation_script_dir))
-    try:
-         from utils.data_manager import DataManager, ValidationRecord
-    except (ModuleNotFoundError, ImportError) as e2:
-        print(f"Second import attempt failed: {e2}")
-        print("Please run this script from the project root directory.")
-        sys.exit(1)
+from .data_manager import DataManager, ValidationRecord
 
 
 def recover_progress():

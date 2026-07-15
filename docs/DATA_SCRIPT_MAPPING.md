@@ -1,5 +1,10 @@
 # Data-Script Mapping and Dependencies
 
+> The migration branch's current Shared Workspace commands are listed in
+> [`hybrid-workspace-migration.md`](hybrid-workspace-migration.md). The detailed
+> phase-first paths below describe the pre-migration dependency graph and remain
+> until the final cutover audit.
+
 This document provides a comprehensive mapping between data files and scripts, showing the complete data processing pipeline with inputs, outputs, and dependencies.
 
 ## 📊 Complete Data Flow Diagram

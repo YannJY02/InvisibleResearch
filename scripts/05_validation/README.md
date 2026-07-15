@@ -1,5 +1,8 @@
 # 🔍 LLM验证审核系统
 
+> 共享验证代码已迁移到 `src/invisible_research/validation/`。本文保留为功能说明；
+> 当前入口请使用 `DATA_ROOT=/path/to/data ./run_pipeline.sh validation`。
+
 一个专业的Web界面工具，用于人工审核和验证LLM名称提取工作流的准确性。
 
 ## ✨ 功能特性
@@ -45,10 +48,10 @@ pip install streamlit pandas pyarrow requests pyyaml matplotlib seaborn plotly j
 ### 3. 启动系统
 ```bash
 # 方法1: 使用启动脚本（推荐）
-python scripts/05_validation/start_validation.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh validation
 
 # 方法2: 直接启动Streamlit
-streamlit run scripts/05_validation/web_interface.py
+DATA_ROOT=/path/to/data PYTHONPATH=src streamlit run src/invisible_research/validation/web.py
 ```
 
 ### 4. 访问Web界面
@@ -57,10 +60,10 @@ streamlit run scripts/05_validation/web_interface.py
 ## 📁 目录结构
 
 ```
-scripts/05_validation/
-├── web_interface.py           # Streamlit Web界面
+src/invisible_research/validation/
+├── web.py                     # Streamlit Web界面
 ├── llm_validator.py          # 核心验证逻辑
-├── start_validation.py       # 启动脚本
+├── start.py                  # 启动脚本
 ├── validation_config.yaml    # 配置文件
 ├── utils/
 │   ├── data_manager.py       # 数据管理
@@ -191,7 +194,7 @@ external_validation:
 ### 开发环境设置
 ```bash
 # 克隆项目
-cd InvisibleResearch/scripts/05_validation
+cd InvisibleResearch
 
 # 安装开发依赖
 pip install -r requirements-dev.txt
@@ -204,7 +207,7 @@ python -m pytest tests/
 - 新增验证维度: 修改`llm_validator.py`
 - 新增外部验证源: 修改`search_tools.py`
 - 自定义报告格式: 修改`report_generator.py`
-- 优化用户界面: 修改`web_interface.py`
+- 优化用户界面: 修改`web.py`
 
 ## 📝 更新日志
 

@@ -22,12 +22,11 @@ import pyarrow as pa
 
 from nameparser import HumanName
 
+from ..data import resolve_data_root
+
 # --------------------------------------------------------------------------- #
 # Configuration
 # --------------------------------------------------------------------------- #
-DATA_PATH = Path(__file__).resolve().parent / "data_for_analysis.parquet"
-CLEAN_PATH = Path(__file__).resolve().parent / "name_clean.parquet"
-
 NAME_DELIM_REGEX = re.compile(r",\s+")
 
 
@@ -79,14 +78,14 @@ def _canonical_field(field: str | None) -> str:
     return ", ".join(canons)
 
 
-def _write_clean_parquet(pf: pq.ParquetFile) -> None:
+def _write_clean_parquet(pf: pq.ParquetFile, clean_path: Path) -> None:
     """
     Create a new Parquet file at *CLEAN_PATH* containing a single column
     'creator_clean', row‑for‑row aligned with the original dataset.
     """
     # Overwrite if it already exists
-    if CLEAN_PATH.exists():
-        CLEAN_PATH.unlink()
+    if clean_path.exists():
+        clean_path.unlink()
 
     writer: pq.ParquetWriter | None = None
     try:
@@ -99,7 +98,7 @@ def _write_clean_parquet(pf: pq.ParquetFile) -> None:
             clean_table = pa.Table.from_arrays([canon_array], names=["creator_clean"])
 
             if writer is None:
-                writer = pq.ParquetWriter(CLEAN_PATH, clean_table.schema)
+                writer = pq.ParquetWriter(clean_path, clean_table.schema)
             writer.write_table(clean_table)
     finally:
         if writer is not None:
@@ -137,16 +136,20 @@ def _extract_unique_authors_arrow(pf: pq.ParquetFile, column_name: str) -> set[s
 # --------------------------------------------------------------------------- #
 def main() -> None:
     """Load Parquet, compute, and print the total number of unique authors."""
-    if not DATA_PATH.exists():
-        raise SystemExit(f"❌ Parquet file not found: {DATA_PATH}")
+    data_root = resolve_data_root()
+    data_path = data_root / "processed" / "data_for_analysis.parquet"
+    clean_path = data_root / "processed" / "name_clean.parquet"
+    if not data_path.exists():
+        raise SystemExit(f"❌ Parquet file not found: {data_path}")
 
-    print(f"📖 Reading Parquet in streaming mode: {DATA_PATH}")
-    pf = pq.ParquetFile(DATA_PATH)
+    print(f"📖 Reading Parquet in streaming mode: {data_path}")
+    pf = pq.ParquetFile(data_path)
 
-    print(f"🛠  Writing cleaned names to: {CLEAN_PATH}")
-    _write_clean_parquet(pf)
+    clean_path.parent.mkdir(parents=True, exist_ok=True)
+    print(f"🛠  Writing cleaned names to: {clean_path}")
+    _write_clean_parquet(pf, clean_path)
 
-    pf_clean = pq.ParquetFile(CLEAN_PATH)
+    pf_clean = pq.ParquetFile(clean_path)
     authors = _extract_unique_authors_arrow(pf_clean, "creator_clean")
     print(f"✅ Total unique authors: {len(authors):,}")
 

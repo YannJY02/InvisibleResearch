@@ -17,18 +17,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from jinja2 import Template
 
-try:
-    from .data_manager import ValidationRecord
-except ImportError:
-    from data_manager import ValidationRecord
+from ...data import resolve_data_root
+from .. import DEFAULT_CONFIG_PATH
+from .data_manager import ValidationRecord
 
 
 class ReportGenerator:
     """报告生成器类"""
     
-    def __init__(self, config_path: str = "scripts/05_validation/validation_config.yaml"):
+    def __init__(self, config_path: str | Path | None = None):
         import yaml
-        with open(config_path, 'r', encoding='utf-8') as f:
+        config_file = Path(config_path) if config_path else DEFAULT_CONFIG_PATH
+        with open(config_file, 'r', encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
         
         self.report_settings = self.config['report_settings']
@@ -468,10 +468,7 @@ class ReportGenerator:
 
 def main():
     """测试报告生成器"""
-    try:
-        from .data_manager import DataManager
-    except ImportError:
-        from data_manager import DataManager
+    from .data_manager import DataManager
     
     # 准备测试数据
     dm = DataManager()
@@ -490,7 +487,7 @@ def main():
     
     # 生成报告
     generator = ReportGenerator()
-    output_dir = Path("data/validation/test_reports")
+    output_dir = resolve_data_root() / "validation" / "test_reports"
     
     print("📊 生成中文测试报告...")
     report_files_zh = generator.generate_all_reports(records, output_dir, 'zh')

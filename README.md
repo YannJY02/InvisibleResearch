@@ -37,20 +37,20 @@ cp config/env.template .env
 ### Run Pipeline
 ```bash
 # Data extraction
-python scripts/02_extraction/data_for_analysis_to_parquet.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh database-extract
 
 # Author analysis  
 python scripts/03_analysis/judge_creator.py
 python scripts/03_analysis/test_LLM_name_detect_parquet.py
 
 # Intelligent processing (requires API configuration)
-python scripts/04_processing/LLM_name_detect.py
+DATA_ROOT=/path/to/data OPENAI_API_KEY=your_key ./run_pipeline.sh author-names-llm
 
 # Language detection
-python scripts/04_processing/result_GlotLID.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh title-language
 
 # LLM validation (optional - for accuracy assessment)
-python scripts/05_validation/start_validation.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh validation
 ```
 
 ## 📊 Data Sources
@@ -81,11 +81,10 @@ python scripts/05_validation/start_validation.py
 ## 🛠️ Project Structure
 
 ```
-scripts/01_setup/      # Environment setup
-scripts/02_extraction/ # Data extraction
+src/invisible_research/acquisition/ # Shared acquisition
 scripts/03_analysis/   # Data analysis  
-scripts/04_processing/ # Advanced processing
-scripts/05_validation/ # LLM validation suite
+src/invisible_research/processing/  # Shared processing
+src/invisible_research/validation/  # Shared validation
 notebooks/             # Interactive Jupyter notebooks (mirrors scripts structure)
 ├── 01_setup/          # Database setup and exploration notebooks
 ├── 02_extraction/     # Data extraction and conversion notebooks
@@ -120,11 +119,11 @@ The project includes a comprehensive validation system for assessing the accurac
 ### Quick Start
 ```bash
 # Launch validation interface
-python scripts/05_validation/start_validation.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh validation
 # Access: http://localhost:8501
 
 # Launch data protection dashboard
-python -m streamlit run scripts/05_validation/data_protection_dashboard.py --server.port 8502
+DATA_ROOT=/path/to/data PYTHONPATH=src python -m streamlit run src/invisible_research/validation/protection_dashboard.py --server.port 8502
 # Access: http://localhost:8502
 ```
 

@@ -1,5 +1,8 @@
 # 🚀 LLM验证审核系统部署指南
 
+> 共享验证代码已迁移到 `src/invisible_research/validation/`。当前启动入口为
+> `DATA_ROOT=/path/to/data ./run_pipeline.sh validation`。
+
 ## ✅ 系统已完全部署完成！
 
 ### 📊 部署概览
@@ -8,10 +11,10 @@
 - ✅ 数据管理模块 (`utils/data_manager.py`)
 - ✅ 外部验证工具 (`utils/search_tools.py`) 
 - ✅ 核心验证逻辑 (`llm_validator.py`)
-- ✅ Web用户界面 (`web_interface.py`)
+- ✅ Web用户界面 (`web.py`)
 - ✅ 报告生成系统 (`utils/report_generator.py`)
 - ✅ 配置管理 (`validation_config.yaml`)
-- ✅ 启动脚本 (`start_validation.py`)
+- ✅ 启动脚本 (`start.py`)
 
 **数据规模:**
 - 📊 **178条记录** 可供全量审核
@@ -75,7 +78,7 @@
 ### 启动系统
 ```bash
 # 在项目根目录运行
-python scripts/05_validation/start_validation.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh validation
 ```
 
 系统将自动：
@@ -140,4 +143,4 @@ python scripts/05_validation/start_validation.py
 
 您的LLM验证审核系统已完全准备就绪，可以立即开始对178条记录进行全面的人工审核。
 
-**下一步**: 运行 `python scripts/05_validation/start_validation.py` 开始您的第一次验证会话！
+**下一步**: 运行 `DATA_ROOT=/path/to/data ./run_pipeline.sh validation` 开始您的第一次验证会话！

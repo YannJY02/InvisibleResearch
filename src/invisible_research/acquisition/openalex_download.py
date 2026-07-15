@@ -31,15 +31,14 @@ Key features of this script include:
 Usage
 -----
 
-Run the script from a terminal with Python 3 installed.  You can adjust
+Run the shared command from a terminal with Python 3 installed. You can adjust
 ``START_YEAR``, ``END_YEAR`` or the ``SUBFIELD_ID`` constants to suit your
-needs.  By default, it will create a folder named ``openalex_communication``
-in the current working directory and populate it with ``communication_works_<year>.jsonl``
-files.
+needs. It creates ``raw/openalex_communication`` under ``DATA_ROOT`` and
+populates it with ``communication_works_<year>.jsonl`` files.
 
 Example::
 
-    python download_openalex_by_year.py
+    DATA_ROOT=/path/to/data ./run_pipeline.sh openalex-download
 
 Note: depending on your internet connection and the number of records per
 year, downloading all data from 2000–2025 can take a significant amount of
@@ -57,13 +56,15 @@ from typing import Iterator, Dict, Any
 
 import requests
 
+from ..data import resolve_data_root
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 # Replace this with your actual email address.  OpenAlex uses it to contact
 # you if needed.  Supplying the ``mailto`` parameter is considered good
 # etiquette when making large numbers of API requests.
-CONTACT_EMAIL = "jinyi.yang@student.uva.nl"
+CONTACT_EMAIL = os.getenv("OPENALEX_CONTACT_EMAIL", "jinyi.yang@student.uva.nl")
 
 # The OpenAlex subfield identifier for Communication.  See
 # https://openalex.org/subfields/3315 for details.
@@ -78,9 +79,6 @@ END_YEAR = 2025
 PER_PAGE = 200
 
 # Directory where output files will be saved
-OUTPUT_DIR = "openalex_communication"
-
-
 # ---------------------------------------------------------------------------
 # Helper Functions
 # ---------------------------------------------------------------------------
@@ -166,7 +164,8 @@ def save_year_data(year: int, directory: str) -> None:
 
 
 def main() -> None:
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    output_dir = resolve_data_root() / "raw" / "openalex_communication"
+    output_dir.mkdir(parents=True, exist_ok=True)
     print(
         f"Downloading works for subfield {SUBFIELD_ID} "
         f"from {START_YEAR} through {END_YEAR}..."
@@ -174,7 +173,7 @@ def main() -> None:
     start_time = datetime.now()
     for year in range(START_YEAR, END_YEAR + 1):
         try:
-            save_year_data(year, OUTPUT_DIR)
+            save_year_data(year, str(output_dir))
         except Exception as exc:
             print(f"Error downloading data for {year}: {exc}")
     elapsed = datetime.now() - start_time

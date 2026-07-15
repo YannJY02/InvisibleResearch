@@ -3,10 +3,28 @@ set -e  # Exit on error
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ "${1:-}" == "openalex-merge" ]]; then
+if [[ -n "${1:-}" ]]; then
+    if [[ "$1" == "database-stage" ]]; then
+        shift
+        exec bash "$PROJECT_ROOT/src/invisible_research/acquisition/database_stage.bash" "$@"
+    fi
+    case "$1" in
+        openalex-merge) module="invisible_research.acquisition.openalex_merge" ;;
+        database-sample) module="invisible_research.acquisition.database_sample" ;;
+        database-extract) module="invisible_research.acquisition.database_extract" ;;
+        openalex-download) module="invisible_research.acquisition.openalex_download" ;;
+        author-names-llm) module="invisible_research.processing.author_names_llm" ;;
+        author-names-rules) module="invisible_research.processing.author_names_rules" ;;
+        title-language) module="invisible_research.processing.title_language" ;;
+        validation) module="invisible_research.validation.start" ;;
+        *) module="" ;;
+    esac
+fi
+
+if [[ -n "${module:-}" ]]; then
     shift
     export PYTHONPATH="$PROJECT_ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
-    exec python -m invisible_research.openalex_merge "$@"
+    exec python -m "$module" "$@"
 fi
 
 echo "=== Invisible Research Data Processing Pipeline ==="
@@ -27,18 +45,19 @@ python -c "import pandas, openai, fasttext; print('✅ Core dependencies check p
 }
 
 # 2. Database connection test (optional)
-if python scripts/01_setup/read_database.py 2>/dev/null; then
+export PYTHONPATH="$PROJECT_ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+if python -m invisible_research.acquisition.database_sample 2>/dev/null; then
     echo "✅ Database connection successful"
 else
     echo "⚠️  Database connection failed, will skip data extraction step"
 fi
 
 # 3. Data extraction
-if [ -f "data/processed/data_for_analysis.parquet" ]; then
+if [ -f "${DATA_ROOT:?Set DATA_ROOT to the external InvisibleResearch data directory}/processed/data_for_analysis.parquet" ]; then
     echo "Step 2: Main data file exists, skipping extraction"
 else
     echo "Step 2: Data extraction..."
-    python scripts/02_extraction/data_for_analysis_to_parquet.py
+    python -m invisible_research.acquisition.database_extract
 fi
 
 # 4. Author analysis
@@ -53,12 +72,12 @@ if [ -z "$OPENAI_API_KEY" ]; then
     echo "⚠️  OPENAI_API_KEY not set, skipping LLM processing"
 else
     echo "Step 5: LLM author name parsing..."
-    python scripts/04_processing/LLM_name_detect.py
+    python -m invisible_research.processing.author_names_llm
 fi
 
 # 6. Language detection
 echo "Step 6: Language detection..."
-python scripts/04_processing/result_GlotLID.py
+python -m invisible_research.processing.title_language
 
 echo "✅ Pipeline completed! End time: $(date)"
-echo "📊 Result files are located in data/final/ folder"
+echo "📊 Result files are located in $DATA_ROOT/final/ folder"

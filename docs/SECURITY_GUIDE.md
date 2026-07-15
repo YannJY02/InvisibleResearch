@@ -34,7 +34,7 @@ BATCH_SIZE=20                              # 批处理大小
 
 ### 步骤 3: 验证配置
 ```bash
-python scripts/04_processing/LLM_name_detect.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh author-names-llm
 ```
 
 ## 🔒 安全特性

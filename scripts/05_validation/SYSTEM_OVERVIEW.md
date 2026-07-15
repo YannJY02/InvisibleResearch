@@ -1,5 +1,8 @@
 # 🔍 LLM验证审核系统 - 项目概览
 
+> 共享验证代码已迁移到 `src/invisible_research/validation/`。当前启动入口为
+> `DATA_ROOT=/path/to/data ./run_pipeline.sh validation`。
+
 ## 🎯 项目目标实现
 
 基于您的需求，我们成功构建了一个专业的人工审核系统来评估GPT-4O在命名实体提取方面的准确性。
@@ -13,7 +16,7 @@
 | **3. 外部验证灵活性** | ✅ 完全实现 | 5+验证源，支持自定义搜索模板 |
 | **4. 详细报告** | ✅ 完全实现 | HTML/CSV/JSON多格式，含统计面板 |
 | **5. 持续使用** | ✅ 完全实现 | 模块化设计，支持扩展和多人使用 |
-| **6. 合适文件位置** | ✅ 完全实现 | 规范的目录结构在scripts/05_validation/ |
+| **6. 合适文件位置** | ✅ 完全实现 | 规范的目录结构在src/invisible_research/validation/ |
 | **7. 外部人员使用** | ✅ 完全实现 | Web界面，完整文档，一键启动 |
 
 ## 🏗️ 系统架构
@@ -137,7 +140,7 @@ Web界面        身份追踪      智能分层     原始vs处理对比
 ### 开箱即用
 ```bash
 # 一键启动，无需额外配置
-python scripts/05_validation/start_validation.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh validation
 ```
 
 ### 智能检查
@@ -195,4 +198,4 @@ python scripts/05_validation/start_validation.py
 
 🚀 **准备开始您的第一次验证会话吗？**
 
-运行: `python scripts/05_validation/start_validation.py`
+运行: `DATA_ROOT=/path/to/data ./run_pipeline.sh validation`

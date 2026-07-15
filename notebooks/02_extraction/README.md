@@ -81,13 +81,13 @@ The converted Parquet file integrates seamlessly with existing InvisibleResearch
 ```python
 # Data exploration
 python scripts/03_analysis/judge_creator.py
-python scripts/04_processing/result_GlotLID.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh title-language
 
 # Advanced processing (requires API setup)
-python scripts/04_processing/LLM_name_detect.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh author-names-llm
 
 # Validation
-python scripts/05_validation/start_validation.py
+DATA_ROOT=/path/to/data ./run_pipeline.sh validation
 ```
 
 ## File Management
@@ -139,4 +139,3 @@ For technical issues or questions:
 ---
 
 **Created for InvisibleResearch Project - Academic Data Processing Pipeline**
-

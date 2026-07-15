@@ -17,7 +17,7 @@ using multiple CPU cores, and appends results to a single Parquet
 file (`data_for_analysis.parquet`) with Snappy compression.
 
 Run:
-    python data_for_analysis_to_parquet.py
+    DATA_ROOT=/path/to/data ./run_pipeline.sh database-extract
 """
 
 import os
@@ -31,13 +31,17 @@ from lxml import etree
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from ..data import resolve_data_root
+
 # ---------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------
-MYSQL_URI = "mysql+pymysql://root:secret@127.0.0.1:3306/invisible_research"
+MYSQL_URI = os.getenv(
+    "MYSQL_URI",
+    "mysql+pymysql://root:secret@127.0.0.1:3306/invisible_research",
+)
 CHUNK_SIZE = 100_000                       # rows per chunk
 MAX_WORKERS = 6                           # parallel XML parsers
-OUT_FILE = "data_for_analysis.parquet"    # output file
 # ---------------------------------------------------------------------
 
 TARGET_COLS = [
@@ -93,6 +97,8 @@ def parse_xml(record: Tuple[Any, str, Any]) -> Dict[str, Any]:
 def main() -> None:
     start = time.time()
     engine = create_engine(MYSQL_URI)
+    out_file = resolve_data_root() / "processed" / "data_for_analysis.parquet"
+    out_file.parent.mkdir(parents=True, exist_ok=True)
 
     writer = None
     total_rows = 0
@@ -127,7 +133,7 @@ def main() -> None:
 
             if writer is None:
                 writer = pq.ParquetWriter(
-                    OUT_FILE,
+                    out_file,
                     table.schema,
                     compression="snappy",
                 )
@@ -142,7 +148,7 @@ def main() -> None:
     if writer:
         writer.close()
 
-    print(f"\n✅ Completed. {total_rows:,} rows saved to {OUT_FILE}. "
+    print(f"\n✅ Completed. {total_rows:,} rows saved to {out_file}. "
           f"Total time: {(time.time()-start)/60:.1f} min.")
 
 

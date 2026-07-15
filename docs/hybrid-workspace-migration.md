@@ -23,5 +23,18 @@ export DATA_ROOT=/path/to/invisible-research-data
 | Title language detection | `./run_pipeline.sh title-language` |
 | Validation suite | `./run_pipeline.sh validation` |
 
-Question-specific analysis and notebooks are not shared capabilities; their
-owner migration is tracked separately.
+## Exploratory Analysis owners
+
+| Owner | Canonical command or adapter |
+|---|---|
+| Article metadata conversion | `research/article-metadata-conversion/analysis/convert_article_info.py` |
+| Author-name sampling | `research/author-name-sampling/analysis/sample_creators.py` |
+| Dimensions dataset construction | `research/dimensions-dataset-construction/analysis/merge_dimensions.py` |
+| OpenAlex dataset construction | `research/openalex-dataset-construction/analysis/openalex_to_parquet.py` |
+| SCImago/OpenAlex coverage | `research/scimago-openalex-coverage/analysis/coverage.py` |
+
+Each owner README records its question, referenced inputs, and complete run
+commands. Notebook files are presentation/exploration adapters over the owner
+analysis commands. Regenerable reports are written to ignored owner-local
+`artifacts/` directories; the prior tracked reports and executed notebook are
+retained only in Git history.

@@ -62,10 +62,10 @@ fi
 
 # 4. Author analysis
 echo "Step 3: Author field analysis..."
-python scripts/03_analysis/judge_creator.py
+python research/author-name-sampling/analysis/inspect_creators.py
 
 echo "Step 4: Creating author samples..."
-python scripts/03_analysis/test_LLM_name_detect_parquet.py
+python research/author-name-sampling/analysis/sample_creators.py
 
 # 5. Intelligent processing (requires API key)
 if [ -z "$OPENAI_API_KEY" ]; then

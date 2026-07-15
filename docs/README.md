@@ -198,7 +198,8 @@ See the policy for handling unused but potentially reusable code: [docs/unused-c
 
 ## Dimensions CSV Merge → Parquet
 
-- Notebook: `notebooks/02_extraction/merge_dimension_2000_2025.ipynb`
+- Owner analysis: `research/dimensions-dataset-construction/analysis/merge_dimensions.py`
+- Notebook adapter: `research/dimensions-dataset-construction/notebooks/merge_dimension_2000_2025.ipynb`
 - Inputs: `data/raw/dimensions_cs/publications_2000.csv … publications_2025.csv`
 - Outputs:
   - Intermediate CSV (retained): `data/processed/dimension_merged.csv`
@@ -221,7 +222,8 @@ See the policy for handling unused but potentially reusable code: [docs/unused-c
 
 ## Dimension Variables Creation (analysis-ready)
 
-- Notebook: `notebooks/04_processing/dimension_create_variables.ipynb`
+- Owner analysis: `research/dimensions-dataset-construction/analysis/create_variables.py`
+- Notebook adapter: `research/dimensions-dataset-construction/notebooks/dimension_create_variables.ipynb`
 - Input: `data/processed/dimension_merged.parquet`
 - Output: `data/processed/dimension_data_for_analysis.parquet` (Snappy)
 - Method summary:
@@ -240,4 +242,3 @@ See the policy for handling unused but potentially reusable code: [docs/unused-c
   - Domain sanity: `invisibility`∈{0,1}; non-negativity for `times_cited`, `authors_count`
   - Identifier format sanity: ISSN/ISBN token length checks after normalization
   - Base-level normalized DOI duplicates (if DOI exists upstream)
-

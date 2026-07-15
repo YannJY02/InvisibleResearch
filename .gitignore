@@ -99,3 +99,6 @@ data/validation/validation_progress.json
 # Local workflow state and generated exports.
 .agent/
 outputs/exports/*.csv
+
+# Regenerable outputs owned by Exploratory Analysis lanes.
+research/*/artifacts/

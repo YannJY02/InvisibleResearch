@@ -71,7 +71,7 @@ def inspect_columns(files: List[str]) -> tuple[List[str], bool, List[str]]:
 
     for path in files:
         try:
-            with open(path, "r", encoding="utf-8", errors="replace", newline="") as f:
+            with open(path, "r", encoding="utf-8-sig", errors="replace", newline="") as f:
                 reader = csv.reader(
                     f,
                     delimiter=",",
@@ -113,7 +113,7 @@ def write_union_csv(files: List[str], union_columns: List[str], output_csv_path:
         writer.writerow(union_columns)
 
         for path in files:
-            with open(path, "r", encoding="utf-8", errors="replace", newline="") as in_f:
+            with open(path, "r", encoding="utf-8-sig", errors="replace", newline="") as in_f:
                 reader = csv.reader(
                     in_f,
                     delimiter=",",

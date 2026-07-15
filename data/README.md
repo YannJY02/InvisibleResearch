@@ -18,8 +18,8 @@
 - **openalex_merged.csv**: Intermediate unioned CSV kept for traceability, source for the Parquet.
 - **openalex_merged.parquet**: Merged OpenAlex works CSVs (Snappy) generated from `raw/openalex_data/*.csv` via `DATA_ROOT=/path/to/data ./run_pipeline.sh openalex-merge`. See `processed/openalex_merged_stats.json` for counts and schema notes.
  - **dimension_merged.csv**: Intermediate unioned CSV for Dimensions publications (2000–2025), kept for traceability. Source: `raw/dimensions_cs/publications_*.csv`.
- - **dimension_merged.parquet**: Parquet converted via DuckDB from `dimension_merged.csv` (Snappy). Produced by `notebooks/02_extraction/merge_dimension_2000_2025.ipynb`.
-- **dimension_data_for_analysis.parquet**: Analysis-ready dataset derived by `notebooks/04_processing/dimension_create_variables.ipynb` from `dimension_merged.parquet`. Columns are ordered by conceptual blocks for clarity: [invisibility (with `times_cited`, `date`, `first_author_experience`), geographic/institutional (`research_org_*`), topical (`concepts*`), disciplinary (`issn`, `isbn`, `disciplinary`), prestige (rank bins with matching details), OA (`open_access`), controls (`document_type`, `type`, `authors_count`, `reference_ids`, `referenced_pubs`)].
+ - **dimension_merged.parquet**: Parquet converted via DuckDB from `dimension_merged.csv` (Snappy). Produced by `research/dimensions-dataset-construction/analysis/merge_dimensions.py`.
+- **dimension_data_for_analysis.parquet**: Analysis-ready dataset derived by `research/dimensions-dataset-construction/analysis/create_variables.py` from `dimension_merged.parquet`. Columns are ordered by conceptual blocks for clarity: [invisibility (with `times_cited`, `date`, `first_author_experience`), geographic/institutional (`research_org_*`), topical (`concepts*`), disciplinary (`issn`, `isbn`, `disciplinary`), prestige (rank bins with matching details), OA (`open_access`), controls (`document_type`, `type`, `authors_count`, `reference_ids`, `referenced_pubs`)].
   - `first_author_experience`: difference between a paper's publication year and the earliest year in which the same author is listed first within this dataset. First-author key priority: `researchers[0]` → `authors[0]`; stable IDs may come from direct or nested ID metadata, with no name-based fallback. Missing when keys/years are unavailable. Debug-only fields (`first_author_key`, `first_author_first_year`) are used internally and not saved in the final file. The notebook prints QA summaries (missingness, key constraints, identifier format sanity) and writes only this final file.
 
 ### `final/` - Final Analysis Results
@@ -36,7 +36,7 @@ raw/sample_records_language_title_abstract.csv
 raw/database.sql.gz → MySQL Database
     ↓ (`./run_pipeline.sh database-extract`)
 processed/data_for_analysis.parquet
-    ↓ (scripts/03_analysis/test_LLM_name_detect_parquet.py)
+    ↓ (`research/author-name-sampling/analysis/sample_creators.py`)
 processed/creator_sample.parquet
     ↓ (`./run_pipeline.sh author-names-llm`)
 final/creator_sample_clean.parquet
@@ -46,7 +46,7 @@ processed/data_for_analysis.parquet
 final/title_pred_lang.parquet
 
 processed/dimension_merged.parquet
-    ↓ (notebooks/04_processing/dimension_create_variables.ipynb)
+    ↓ (`research/dimensions-dataset-construction/analysis/create_variables.py`)
 processed/dimension_data_for_analysis.parquet
 ```
 

@@ -48,6 +48,6 @@ LANGUAGE_CONFIG = {
 SCRIPT_PATHS = {
     'setup': PROJECT_ROOT / 'scripts/01_setup',
     'extraction': PROJECT_ROOT / 'scripts/02_extraction', 
-    'analysis': PROJECT_ROOT / 'scripts/03_analysis',
+    'analysis': PROJECT_ROOT / 'research',
     'processing': PROJECT_ROOT / 'scripts/04_processing'
 }

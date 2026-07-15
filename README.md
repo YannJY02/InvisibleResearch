@@ -39,9 +39,9 @@ cp config/env.template .env
 # Data extraction
 DATA_ROOT=/path/to/data ./run_pipeline.sh database-extract
 
-# Author analysis  
-python scripts/03_analysis/judge_creator.py
-python scripts/03_analysis/test_LLM_name_detect_parquet.py
+# Author analysis
+DATA_ROOT=/path/to/data PYTHONPATH=src python research/author-name-sampling/analysis/inspect_creators.py
+DATA_ROOT=/path/to/data PYTHONPATH=src python research/author-name-sampling/analysis/sample_creators.py
 
 # Intelligent processing (requires API configuration)
 DATA_ROOT=/path/to/data OPENAI_API_KEY=your_key ./run_pipeline.sh author-names-llm
@@ -82,26 +82,25 @@ DATA_ROOT=/path/to/data ./run_pipeline.sh validation
 
 ```
 src/invisible_research/acquisition/ # Shared acquisition
-scripts/03_analysis/   # Data analysis  
 src/invisible_research/processing/  # Shared processing
 src/invisible_research/validation/  # Shared validation
-notebooks/             # Interactive Jupyter notebooks (mirrors scripts structure)
-├── 01_setup/          # Database setup and exploration notebooks
-├── 02_extraction/     # Data extraction and conversion notebooks
-├── 03_analysis/       # Interactive data analysis notebooks
-├── 04_processing/     # Advanced processing notebooks
-└── 05_validation/     # Data validation notebooks
+research/              # Question- and experiment-owned Exploratory Analysis
+├── article-metadata-conversion/
+├── author-name-sampling/
+├── dimensions-dataset-construction/
+├── openalex-dataset-construction/
+└── scimago-openalex-coverage/
 data/raw/             # Raw data
 data/processed/       # Intermediate results
 data/final/           # Final outputs
 data/validation/      # Validation data and reports
 ```
 
-### 🔄 Scripts vs Notebooks
-- **Scripts**: Production-ready, automated processing
-- **Notebooks**: Interactive exploration, documentation, and experimentation
-- **Structure**: Notebooks mirror scripts directory structure for consistency
-- **Complementary**: Both can be used together without conflicts
+### 🔄 Shared capabilities vs research owners
+- **Shared capabilities**: Reusable acquisition, processing, and validation under `src/`
+- **Research owners**: Question-specific orchestration and instructions under `research/`
+- **Notebooks**: Interactive adapters over the analysis command owned by the same lane
+- **Artifacts**: Regenerable owner outputs stay ignored under `research/*/artifacts/`
 
 **📋 For detailed data-script relationships**: See [`docs/DATA_SCRIPT_MAPPING.md`](docs/DATA_SCRIPT_MAPPING.md)
 

@@ -262,8 +262,8 @@ final_result = pd.concat(results, ignore_index=True)
 
 ### Version Control
 - **Creation Date**: 2024-12-24
-- **Data Source**: `/Users/yann.jy/InvisibleResearch/data/raw/articleInfo.csv`
-- **Conversion Pipeline**: `notebooks/01_data_conversion/csv_to_parquet_converter.ipynb`
+- **Data Source**: `$DATA_ROOT/raw/articleInfo.csv`
+- **Conversion Pipeline**: `research/article-metadata-conversion/analysis/convert_article_info.py`
 - **Git Branch**: `feature/csv-parquet-conversion`
 - **Issue Tracking**: GitHub Issue #21
 

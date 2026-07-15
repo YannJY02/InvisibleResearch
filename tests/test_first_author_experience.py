@@ -7,13 +7,11 @@ import pandas as pd
 
 
 def test_first_author_id_extraction_and_experience() -> None:
-    notebook = json.loads(
-        (Path(__file__).parents[1] / 'notebooks/04_processing/dimension_create_variables.ipynb').read_text()
-    )
-    source = next(
-        ''.join(cell['source'])
-        for cell in notebook['cells']
-        if cell['cell_type'] == 'code' and 'Build first_author_experience' in ''.join(cell['source'])
+    source = (
+        Path(__file__).parents[1]
+        / 'research/dimensions-dataset-construction/analysis/create_variables.py'
+    ).read_text(
+        encoding='utf-8'
     )
     helpers = source[source.index('# Helpers'):source.index('# Output frames')]
     namespace = {'ast': ast, 'json': json, 'pd': pd, 're': re}

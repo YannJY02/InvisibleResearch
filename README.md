@@ -23,7 +23,7 @@ For LLM-based author processing, configure your API credentials:
 
 ```bash
 # 1. Copy the configuration template
-cp config/env.template .env
+cp .env.example .env
 
 # 2. Edit .env with your actual API key
 # OPENAI_API_KEY=your_api_key_here
@@ -34,23 +34,28 @@ cp config/env.template .env
 
 📋 **See [Security Guide](docs/SECURITY_GUIDE.md) for detailed configuration instructions and best practices.**
 
-### Run Pipeline
+### Run Shared Capabilities
 ```bash
-# Data extraction
-python scripts/02_extraction/data_for_analysis_to_parquet.py
+# Point commands at the external data workspace
+export DATA_ROOT=/path/to/data
+export PYTHONPATH=src
 
-# Author analysis  
-python scripts/03_analysis/judge_creator.py
-python scripts/03_analysis/test_LLM_name_detect_parquet.py
+# Data extraction
+export MYSQL_URI=mysql+pymysql://user:password@host/database
+python -m invisible_research.acquisition.database_extract
+
+# Author analysis
+python research/author-name-sampling/analysis/inspect_creators.py
+python research/author-name-sampling/analysis/sample_creators.py
 
 # Intelligent processing (requires API configuration)
-python scripts/04_processing/LLM_name_detect.py
+OPENAI_API_KEY=your_key python -m invisible_research.processing.author_names_llm
 
 # Language detection
-python scripts/04_processing/result_GlotLID.py
+python -m invisible_research.processing.title_language
 
 # LLM validation (optional - for accuracy assessment)
-python scripts/05_validation/start_validation.py
+python -m invisible_research.validation.start
 ```
 
 ## 📊 Data Sources
@@ -81,28 +86,35 @@ python scripts/05_validation/start_validation.py
 ## 🛠️ Project Structure
 
 ```
-scripts/01_setup/      # Environment setup
-scripts/02_extraction/ # Data extraction
-scripts/03_analysis/   # Data analysis  
-scripts/04_processing/ # Advanced processing
-scripts/05_validation/ # LLM validation suite
-notebooks/             # Interactive Jupyter notebooks (mirrors scripts structure)
-├── 01_setup/          # Database setup and exploration notebooks
-├── 02_extraction/     # Data extraction and conversion notebooks
-├── 03_analysis/       # Interactive data analysis notebooks
-├── 04_processing/     # Advanced processing notebooks
-└── 05_validation/     # Data validation notebooks
-data/raw/             # Raw data
-data/processed/       # Intermediate results
-data/final/           # Final outputs
-data/validation/      # Validation data and reports
+src/invisible_research/acquisition/ # Shared acquisition
+src/invisible_research/processing/  # Shared processing
+src/invisible_research/validation/  # Shared validation
+research/              # Question- and experiment-owned Exploratory Analysis
+├── article-metadata-conversion/
+├── author-name-sampling/
+├── dimensions-dataset-construction/
+├── openalex-dataset-construction/
+└── scimago-openalex-coverage/
+papers/                # Publication Compendia; placement grants no authority
+└── invisible-communication-science/
+inbox/                 # Local-only, non-authoritative raw intake
+$DATA_ROOT/raw/         # External raw data
+$DATA_ROOT/processed/   # External intermediate results
+$DATA_ROOT/derived/     # External derived outputs
+$DATA_ROOT/validation/  # External validation data and reports
+data/artifact-versions/ # Tracked portable records for external content identities
 ```
 
-### 🔄 Scripts vs Notebooks
-- **Scripts**: Production-ready, automated processing
-- **Notebooks**: Interactive exploration, documentation, and experimentation
-- **Structure**: Notebooks mirror scripts directory structure for consistency
-- **Complementary**: Both can be used together without conflicts
+### 🔄 Shared capabilities vs research owners
+- **Shared capabilities**: Reusable acquisition, processing, and validation under `src/`
+- **Research owners**: Question-specific orchestration and instructions under `research/`
+- **Notebooks**: Interactive adapters over the analysis command owned by the same lane
+- **Artifacts**: Regenerable owner outputs stay ignored under `research/*/artifacts/`
+- **Publication Compendium**: Active paper sources and governance boundaries live under `papers/`
+- **Intake Inbox**: Raw communications and papers remain ignored under `inbox/`
+
+The current paper-facing source and its external input verification command are
+documented in [`papers/invisible-communication-science/`](papers/invisible-communication-science/README.md).
 
 **📋 For detailed data-script relationships**: See [`docs/DATA_SCRIPT_MAPPING.md`](docs/DATA_SCRIPT_MAPPING.md)
 
@@ -120,11 +132,11 @@ The project includes a comprehensive validation system for assessing the accurac
 ### Quick Start
 ```bash
 # Launch validation interface
-python scripts/05_validation/start_validation.py
+DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.validation.start
 # Access: http://localhost:8501
 
 # Launch data protection dashboard
-python -m streamlit run scripts/05_validation/data_protection_dashboard.py --server.port 8502
+DATA_ROOT=/path/to/data PYTHONPATH=src python -m streamlit run src/invisible_research/validation/protection_dashboard.py --server.port 8502
 # Access: http://localhost:8502
 ```
 

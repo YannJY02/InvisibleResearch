@@ -44,7 +44,7 @@ This is the unified reference guide for all Agent system components. It consolid
 **[📊 Analysis Agent Activated]**
 - **Task**: Exploratory Data Analysis of language patterns
 - **Objective**: Identify and visualize distribution patterns
-- **Inputs**: `data/final/title_pred_lang.parquet`
+- **Inputs**: `$DATA_ROOT/derived/title_pred_lang.parquet`
 - **Deliverables**: Summary statistics, visualizations, interpretation
 ```
 

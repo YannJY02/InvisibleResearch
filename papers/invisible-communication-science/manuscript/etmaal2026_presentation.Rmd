@@ -1,0 +1,704 @@
+---
+title: "Who Stays Invisible in Communication Science?"
+author: "Jinyi Yang & Saurabh Khanna"
+date: "Etmaal van de Communicatiewetenschap 2026 | February 5-6, 2026"
+output:
+  xaringan::moon_reader:
+    css: [ascor.css, default]
+    lib_dir: libs
+    nature:
+      titleSlideClass: [bottom, left]
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "%current%"
+      ratio: "16:9"
+---
+
+layout: true
+
+<div class="logo"></div>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  fig.retina = 3,
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+```
+
+---
+
+class: middle
+
+# The Hidden Problem
+
+.pull-left[
+### A provocative question:
+
+> *How much of what we publish actually gets attention?*
+
+In communication science, **48%** of research receives zero citations within 3 years — completely invisible.
+
+### The Matthew Effect
+
+Advantage accumulates; disadvantage compounds *(Merton, 1968)*.
+
+]
+
+.pull-right[
+
+### Why This Matters
+
+- We study **communication**, yet face our own barriers
+
+- **Global South** scholarship systematically marginalized
+
+- Non-English research faces structural barriers
+
+**The paradox**: We analyze how communication creates hierarchies — while maintaining them through citation practices.
+
+]
+
+???
+
+**[0:00 - 1:15]**
+
+"How much of what we publish actually gets read?
+
+As scholars, we invest months into research. We navigate peer review, celebrate acceptance. But what happens next?
+
+Today I want to discuss **invisible research** — work that receives zero citations within three years. In our field, **48%** of scholarship fits this definition.
+
+This connects to the Matthew Effect: advantage accumulates. If your first paper gets attention, your second one benefits. But if your work stays invisible, you're stuck in a cycle.
+
+More importantly, this is about **global knowledge inequality**. Research from the Global South, non-English work, non-mainstream topics — these face systematic barriers.
+
+Here's the paradox: We study how communication creates hierarchies. Yet through citation practices, we may maintain those same hierarchies."
+
+---
+
+# Theoretical Framework & Research Questions
+
+.pull-left[
+
+### Core Framework
+*Cumulative Advantage & Center-Periphery Dynamics*
+
+Disadvantages don't simply add up — they **compound**:
+
+- Periphery location → higher invisibility
+- Non-English venue → higher invisibility
+- Non-mainstream topics → higher invisibility
+
+]
+
+.pull-right[
+
+### Research Questions
+
+.center[
+
+**RQ1**: What is the **magnitude** of invisibility in communication research?
+
+**RQ2**: what factors predict this invisibility?
+
+]
+
+]
+
+???
+
+**[1:15 - 1:45]**
+
+"Our framework draws on cumulative advantage and center-periphery dynamics.
+
+The key insight: disadvantages compound. Periphery country — higher invisibility. Non-English venue — higher again. Non-mainstream topic — even higher.
+
+This leads to two research questions:
+
+First, what is the actual magnitude of invisibility?
+
+Second, what factors predict this invisibility?"
+
+---
+
+# Data & Methods
+
+.pull-left[
+
+### Data Source
+
+**Dimensions Database**
+- Broader global coverage than WoS/Scopus
+- Includes journals often excluded from traditional indices
+
+**Sample**
+- Field: Communication & Media Studies
+- Period: 2000-2022
+- Types: Articles, books, chapters
+- N = **378,388**
+
+**Invisible** = Zero citations even 3 years after publication
+
+]
+
+.pull-right[
+
+### Key Predictors
+
+| Factor | Operationalization |
+|--------|-------------------|
+| **Geographic location** | First author's country |
+| **Language** | English vs. non-English |
+| **Publication type** | Article / Book / Chapter |
+
+### Controls
+
+Year, author count, reference counts, open access status
+
+### Analytical Approach
+
+Descriptive analysis with 95% CI + regularized regression models
+
+]
+
+???
+
+**[1:45 - 2:30]**
+
+"We use the Dimensions database, which has broader global coverage than Web of Science or Scopus.
+
+Our sample covers Communication and Media Studies from 2000 to 2022 — 378,000 publications total.
+
+We define invisible simply: zero citations within three years.
+
+Our key predictors are geographic location, language, and publication type. We control for year, collaboration, references, and open access.
+
+We use descriptive analysis and regularized regression to identify predictors of invisibility."
+
+---
+
+class: white
+
+# Finding 1: The Scale of Invisibility
+
+.center[
+<img src="../artifacts/fig1_invisible_volume.png" height="380px" />
+]
+
+.footnote[
+**48%** of communication research receives zero citations within 3 years after publication. Total output has grown steeply since 2010, and invisible volume has risen with it.
+]
+
+???
+
+**[2:30 - 3:30]**
+
+"Here's what we found.
+
+This shows total publications over time. Gray is all publications; pink is invisible research.
+
+Two things stand out:
+
+First, our field has grown exponentially.
+
+Second — and this is sobering — the absolute volume of invisible research has also grown.
+
+Overall, **48%** stays invisible. That's nearly half of our field's output."
+
+---
+
+class: white
+
+# Finding 2: Publication Type Matters
+
+.center[
+<img src="../artifacts/fig2_by_type.png" height="380px" />
+]
+
+.footnote[
+**Book chapters** face highest invisibility (~50%). **Articles** intermediate. **Books** lowest — yet all three show recent worsening.
+]
+
+???
+
+**[3:30 - 4:15]**
+
+"Publication type matters significantly.
+
+Book chapters face the highest invisibility — around 55%. Articles are in the middle. Books have the lowest.
+
+Why? Likely discoverability. Articles are indexed and searchable. Books get publisher marketing. But chapters? Often buried in volumes that aren't widely distributed.
+
+This is a structural issue, not a quality issue."
+
+---
+
+class: white
+
+# Finding 3: Geographic Inequality
+
+.center[
+<img src="../artifacts/fig3_gdp_invisibility.png" height="380px" />
+]
+
+.footnote[
+Countries with higher **GDP per capita** tend to have lower invisibility. Many lower-income economies show substantially higher rates.
+]
+
+???
+
+**[4:15 - 5:15]**
+
+"Now geography.
+
+This shows each country's invisibility rate against GDP per capita. Larger dots mean more publications.
+
+The pattern is clear: strong negative correlation between wealth and invisibility.
+
+High invisibility countries — over 60%: Kazakhstan, Armenia, Brazil. These researchers face resource constraints and network disadvantages.
+
+Low invisibility: US, UK, Germany, Australia. The Anglo-American core of our discipline.
+
+This isn't just about language or quality. It's about systematic structural advantages at the center."
+
+---
+
+class: white
+
+# Finding 4: The Language Barrier
+
+.center[
+<img src="../artifacts/fig4_language.png" height="380px" />
+]
+
+.footnote[
+**Non-English** research has consistently higher invisibility. The gap narrows — not because non-English improves, but because **English-language invisibility worsens** in the late 2010s.
+]
+
+???
+
+**[5:15 - 5:45]**
+
+"Language is critical. Non-English research consistently faces higher invisibility.
+
+Interestingly, the gap has been narrowing — but not because non-English improved. It's because English-language invisibility has been worsening.
+
+Let me show you the details."
+
+---
+
+class: white
+
+# The Language Gap
+
+.center[
+<img src="../artifacts/fig5_language_gap.png" height="300px" />
+]
+
+.footnote[
+Y-axis = English invisibility **minus** Non-English. Negative = Non-English worse.  
+Gap narrowed (-25% → -5%) **not because Non-English improved**, but because **English worsened**.
+]
+
+???
+
+**[5:45 - 6:00]**
+
+"This shows the gap over time. It narrowed from 25 to 5 percentage points — but that's bad news, not good."
+
+---
+
+class: white
+
+# Volume Explains the Trend
+
+.center[
+<img src="../artifacts/fig6_pub_volume.png" height="300px" />
+]
+
+.pull-left[
+**English**: 2,500 → 25,000/year (exponential)  
+**Non-English**: ~1,000/year (flat)
+]
+
+.pull-right[
+Small increases in **English invisibility rates** drive most invisible volume.  
+Gap narrows because **English worsens**, not Non-English improves.
+]
+
+???
+
+**[6:00 - 6:15]**
+
+"Why? Volume. English publications grew tenfold; non-English stayed flat. So small increases in English invisibility drive most of the field's invisible research.
+
+I think this was because we are seeing a very high volume of English research produced each year, so higher chances of invisibility for an individual English work.
+
+The reducing invisibility for non-English work in the early 2000s could be because of a lot of open access research published in Spanish (South America) and Indonesian (Indonesia)."
+
+---
+
+# What This Means
+
+.pull-left[
+
+### Theoretical Implications
+
+- Reflects on our self-image as a **"global discipline"**
+
+- Reveals power structures in knowledge production
+
+**Ethical Contradiction**: We analyze how communication creates hierarchies — while maintaining them through citation practices.
+
+]
+
+.pull-right[
+
+### What Can We Do?
+
+**Researchers**: Diversify reading lists, cite broadly
+
+**Journals**: Expand reviewer pools globally
+
+**Databases**: Improve Global South coverage
+
+]
+
+???
+
+**[6:15 - 7:00]**
+
+"What does this mean?
+
+Theoretically, it challenges our self-image as a global discipline. If we exclude voices from most of the world, our theories may be more parochial than we realize.
+
+There's an ethical contradiction: We study how communication creates hierarchies. Yet we reproduce them through citations.
+
+Practically, we can act at every level: diversify our reading, expand reviewer pools, advocate for better database coverage."
+
+---
+
+class: middle, center
+
+# Conclusion
+
+### Almost half of communication research consistently stays invisible
+
+### Invisibility varies significantly by **geography**, **language**, and **publication type**
+
+### Patterns suggest **structural barriers** — not just quality issues
+
+.footnote[
+*Limitations include citation as imperfect impact measure and 3-year window constraints — happy to discuss.*
+]
+
+???
+
+**[7:00 - 7:30]**
+
+"Let me conclude.
+
+48% of communication research remains invisible within three years. Rates vary by geography, language, and publication type.
+
+These patterns suggest structural barriers, not quality issues. By making visible the architecture of invisibility, we take the first step toward addressing it."
+
+still, our reseaech have some limitations. 
+
+- Citations imperfectly capture impact. A paper might influence policy or practice without being cited. 
+- Our three-year window may disadvantage some subfields.
+- Geographic classification by first author only
+
+---
+
+class: middle, center
+
+# Thank You
+
+**Questions?**
+
+.pull-left[
+📧 jinyi.yang@student.uva.nl  
+📧 s.khanna@uva.nl
+]
+
+.pull-right[
+🏛 Amsterdam School of Communication Research
+]
+
+.footnote[
+Data access provided by **Dimensions**
+]
+
+???
+
+**[7:30 - 7:40]**
+
+"Thank you. I'm happy to take questions."
+
+---
+
+class: middle, center
+
+# Appendix
+
+Additional details for reference
+
+???
+
+This is the appendix section with additional details for Q&A or deeper discussion.
+
+---
+
+# Appendix: Defining "Invisible" Research
+
+.pull-left[
+### Definition
+
+**"Invisible"** = **0 citations** within **3 years**
+
+Captures a **qualitative difference**:
+- Total exclusion from scholarly conversation
+- vs. Some level of engagement
+
+**Absence of citations** = failure to enter academic discourse entirely
+]
+
+.pull-right[
+### Why 3 Years?
+
+| Phase | Duration |
+|-------|----------|
+| Publication lag | 6-12 mo |
+| Database indexing | 3-6 mo |
+| Discovery | variable |
+| Incorporation | 12+ mo |
+
+Papers uncited after 3 years face **exponentially decreasing citation probability**.
+
+### Not a Quality Issue
+
+Our dataset = **peer-reviewed papers** that passed editorial gates.  
+Invisibility results from **structural factors**, not quality.
+]
+
+???
+
+We define invisibility strictly: zero citations within three years. This is a binary measure capturing complete exclusion from scholarly discourse.
+
+The three-year window is standard in scientometric research. After 3 years, uncited papers face exponentially decreasing citation probability — what some researchers call "citation death."
+
+Importantly, this is not about quality. These are peer-reviewed papers that passed editorial review. The patterns we see reflect structural barriers to discovery, not research quality.
+
+---
+
+class: middle
+
+# Appendix: The Matthew Effect
+
+.pull-left[
+### Origin (Merton, 1968)
+
+> "For unto every one that hath shall be given..."  
+> — Matthew 25:29
+
+Scientists who are already successful receive **more recognition for equivalent work**.
+
+### Mechanism in Academia
+
+- **Inherited networks**: Citation networks pass from advisors to students
+- **Assumed credibility**: Institutional affiliation creates halo effects
+- **Resource accumulation**: More citations → more resources → more visibility
+
+]
+
+.pull-right[
+### Evidence from Research
+
+**Clauset et al. (2015)**:
+- 25% of institutions produce >70% of tenure-track faculty
+- Creates citation advantages through inherited networks
+
+**Way et al. (2019)**:
+- Institutional advantages compound over careers
+- Identical work receives different assessment based on author affiliation
+]
+
+???
+
+The Matthew Effect, named after a biblical passage, describes how advantage accumulates in science. Merton identified this in 1968.
+
+Recent research quantifies this: Clauset and colleagues found that just 25% of institutions produce over 70% of tenure-track faculty. This concentration creates inherited citation networks.
+
+For invisibility specifically: if your early work stays invisible, you're caught in a cycle. Less visibility leads to fewer citations, which leads to even less visibility. This is "citation death."
+
+---
+
+# Appendix: Understanding "Flat" Growth Rates
+
+.pull-left[
+
+### The Finding
+
+While the **absolute volume** of invisible research has grown, the **proportion** of invisible research has remained relatively stable over time.
+
+In other words:
+- More research is being produced overall
+- More invisible research exists in absolute terms
+- But the **rate** of invisibility (~48%) hasn't dramatically worsened
+
+]
+
+.pull-right[
+
+### What This Means
+
+**Not worsening, but not improving either:**
+
+The problem hasn't gotten proportionally worse — but it also hasn't gotten better despite decades of technological advances.
+
+**Systemic persistence:**
+
+Flat rates suggest **embedded structural factors** that resist change, not random bad luck.
+
+
+]
+
+???
+
+A potential question about Finding 1: What does "flat" growth rate mean?
+
+While the absolute number of invisible papers has grown (because the field is publishing more), the **proportion** of invisible research — around 48% — has remained relatively stable.
+
+This means the problem hasn't gotten proportionally worse, but it also hasn't improved. Despite decades of technological advances in discoverability, indexing, and access, the same proportion of research stays invisible.
+
+This persistence suggests embedded structural factors that resist change. Without deliberate intervention, we should expect the status quo to continue indefinitely.
+
+---
+
+# Appendix: Three Mechanisms of Multiplicative Effects
+
+.pull-left[
+
+### 1. Cascade Effects
+
+Each marginalization **reduces visibility** → reduces **future visibility**
+
+.small[
+Low-prestige institution → less attention → poor indexing → low algorithmic ranking → invisibility
+]
+
+### 2. Threshold Effects
+
+Engaging multiply-marginal work requires crossing **multiple barriers** at once.
+
+Cumulative **cost > benefit** → engagement ≈ **zero**
+
+]
+
+.pull-right[
+
+### 3. Stereotyping Effects
+
+Multiple marginal traits trigger **stronger negative assumptions**.
+
+.small[
+Low-prestige + Global South + non-English + marginal topic → dismissed without reading
+]
+
+### Key Insight
+
+Disadvantages **multiply**, not simply add:
+
+$$1 + 1 \neq 2 \quad \text{but} \quad 1 + 1 > 2$$
+
+]
+
+???
+
+**Cascade Effects**: Each layer of marginalization creates a visibility deficit that compounds. A paper from a peripheral institution gets less attention, leading to lower database visibility and reduced algorithmic recommendation. Multiple marginalizations create multiple reinforcing cascades.
+
+**Threshold Effects**: Engaging with multiply-marginal work means crossing multiple barriers — unfamiliar contexts, linguistic frameworks, theoretical approaches. When cumulative cost exceeds perceived benefits, engagement drops to near zero.
+
+**Stereotyping Effects**: Multiple marginal characteristics trigger stronger negative quality assumptions. Research may be dismissed without evaluation. These stereotypes become self-fulfilling prophecies.
+
+---
+
+# Appendix: Statistical Approach — LASSO Logistic Regression
+
+.pull-left[
+
+### Why LASSO?
+
+Many predictors + interactions → risk of **overfitting**
+
+**LASSO** adds penalty: $\lambda \sum |\beta|$
+
+- Shrinks weak coefficients → **zero**
+- Automatic **variable selection**
+- Handles **multicollinearity**
+
+]
+
+.pull-right[
+
+### Model Structure
+
+$$\log\frac{p}{1-p} = \beta_0 + \sum_j \beta_j X_{j} + \sum_{k<l} \gamma_{kl} X_k X_l$$
+
+| Term | Meaning |
+|------|---------|
+| $\beta_j$ | Main effects (single dimensions) |
+| $\gamma_{kl}$ | Interaction effects (compound) |
+
+If $\gamma > 0$ → **multiplicative effects confirmed**
+
+]
+
+???
+
+**Why LASSO?** With many predictors and interactions, standard regression overfits. LASSO adds a penalty that shrinks unimportant coefficients to zero — automatic variable selection.
+
+**Model**: Main effects capture individual dimensions. Interaction terms test our hypothesis — if positive and significant, disadvantages compound rather than add.
+
+---
+
+# Appendix: Model Evaluation
+
+.pull-left[
+
+### Evaluation Metrics
+
+| Metric | Purpose |
+|--------|---------|
+| **AUC** | How well model separates visible/invisible |
+| **Calibration** | Predicted vs. actual probabilities |
+| **10-fold CV** | Selects optimal penalty λ |
+
+]
+
+.pull-right[
+
+### Interpreting Results
+
+**Odds Ratios** (OR = $e^\beta$):
+- OR = 2 → doubles odds of invisibility
+- OR = 0.5 → halves odds
+
+**Interaction terms** ($\gamma$):
+- Positive → compound disadvantage
+- Confirms **multiplicative** nature
+
+]
+
+???
+
+**AUC**: Measures how well the model distinguishes invisible from visible papers. Closer to 1 is better.
+
+**Calibration**: Checks if predicted probabilities match observed rates.
+
+**Cross-validation**: Ten-fold CV selects the optimal penalty parameter, balancing fit and parsimony.
+
+**Interpretation**: Coefficients convert to odds ratios. An OR of 2 means that characteristic doubles invisibility odds. Positive interaction terms confirm multiplicative compound marginalization.

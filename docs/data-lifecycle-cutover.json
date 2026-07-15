@@ -1,0 +1,35 @@
+{
+  "verified_at": "2026-07-15T01:18:25Z",
+  "operation": "rename external data/final to data/derived",
+  "hash_algorithm": "md5",
+  "hash_source": "Google Drive content checksum from local DriveFS metadata",
+  "artifacts": [
+    {
+      "name": "creator_sample_clean.parquet",
+      "byte_size": 92097,
+      "item_id": "1VQqfyK6G6Hh6A9bBW9sLQ8NcCqcvPX-g",
+      "before_location": "$DATA_ROOT/final/creator_sample_clean.parquet",
+      "after_location": "$DATA_ROOT/derived/creator_sample_clean.parquet",
+      "before_md5": "69ddb96967a33ee93da94d4cf06ba964",
+      "after_md5": "69ddb96967a33ee93da94d4cf06ba964"
+    },
+    {
+      "name": "creator_sample_clean_v2.parquet",
+      "byte_size": 77430,
+      "item_id": "1EsahDfzGb1WW-CWTCN98P5Rw0kayOS2w",
+      "before_location": "$DATA_ROOT/final/creator_sample_clean_v2.parquet",
+      "after_location": "$DATA_ROOT/derived/creator_sample_clean_v2.parquet",
+      "before_md5": "7ae269796d99c3d074a1554e74f2314e",
+      "after_md5": "7ae269796d99c3d074a1554e74f2314e"
+    },
+    {
+      "name": "title_pred_lang.parquet",
+      "byte_size": 1958232112,
+      "item_id": "1WYGPyEZsMCNCwbK7OFVZnrqCSa5gdnJf",
+      "before_location": "$DATA_ROOT/final/title_pred_lang.parquet",
+      "after_location": "$DATA_ROOT/derived/title_pred_lang.parquet",
+      "before_md5": "80da3b2f42fdd6bdf82e4405366c6cc1",
+      "after_md5": "80da3b2f42fdd6bdf82e4405366c6cc1"
+    }
+  ]
+}

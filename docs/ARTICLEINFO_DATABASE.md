@@ -214,7 +214,7 @@ final_result = pd.concat(results, ignore_index=True)
 
 3. **Author Name Variations**:
    - Mixed name formats and separators
-   - Requires additional processing with `LLM_name_detect.py`
+   - Requires additional processing with `DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.processing.author_names_llm`
    - Integration point for author disambiguation
 
 4. **Encoding Issues**:
@@ -228,8 +228,8 @@ final_result = pd.concat(results, ignore_index=True)
 ### Recommended Workflow
 
 1. **Data Exploration** → Use `articleInfo.parquet` for fast exploratory analysis
-2. **Author Analysis** → Process authors with `scripts/04_processing/LLM_name_detect.py`
-3. **Language Detection** → Run `scripts/04_processing/result_GlotLID.py` on titles
+2. **Author Analysis** → Run `DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.processing.author_names_llm`
+3. **Language Detection** → Run `DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.processing.title_language`
 4. **Temporal Analysis** → Use optimized date/year columns for time-series analysis
 5. **Cross-Reference** → Link back to raw MySQL data via `context_id` when needed
 
@@ -262,8 +262,8 @@ final_result = pd.concat(results, ignore_index=True)
 
 ### Version Control
 - **Creation Date**: 2024-12-24
-- **Data Source**: `/Users/yann.jy/InvisibleResearch/data/raw/articleInfo.csv`
-- **Conversion Pipeline**: `notebooks/01_data_conversion/csv_to_parquet_converter.ipynb`
+- **Data Source**: `$DATA_ROOT/raw/articleInfo.csv`
+- **Conversion Pipeline**: `research/article-metadata-conversion/analysis/convert_article_info.py`
 - **Git Branch**: `feature/csv-parquet-conversion`
 - **Issue Tracking**: GitHub Issue #21
 

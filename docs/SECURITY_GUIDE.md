@@ -17,7 +17,7 @@
 
 ### 步骤 1: 复制配置模板
 ```bash
-cp config/env.template .env
+cp .env.example .env
 ```
 
 ### 步骤 2: 编辑配置文件
@@ -34,7 +34,7 @@ BATCH_SIZE=20                              # 批处理大小
 
 ### 步骤 3: 验证配置
 ```bash
-python scripts/04_processing/LLM_name_detect.py
+DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.processing.author_names_llm
 ```
 
 ## 🔒 安全特性

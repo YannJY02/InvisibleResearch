@@ -1,0 +1,17 @@
+{
+  "schema_version": "external-component-manifest/v1",
+  "component": {
+    "location": "$DATA_ROOT/derived/title_pred_lang.parquet",
+    "byte_size": 1958232112,
+    "google_drive_file_id": "1WYGPyEZsMCNCwbK7OFVZnrqCSa5gdnJf",
+    "google_drive_revision_id": "0B8zIKKIUgUeeYUtodVBna3Z0VyttSkYzRGZNc3lBMFFrUFZBPQ",
+    "modified_time": "2025-07-03T08:59:59.448Z",
+    "checksum": {
+      "algorithm": "md5",
+      "value": "80da3b2f42fdd6bdf82e4405366c6cc1"
+    }
+  },
+  "source": [
+    "data-for-analysis-manifest@sha256:9f0a96eba65f899911ce1e030f55143cc3bca229cb541493618b94c8229c31a3"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "creator-sample-manifest@sha256:e3abd28e0db6aab5d8140f24c8b5313a474fe3fb4cbda98e5b811dbd448ee0b1",
+  "sha256": "e3abd28e0db6aab5d8140f24c8b5313a474fe3fb4cbda98e5b811dbd448ee0b1",
+  "location": "data/component-manifests/creator-sample.json",
+  "source": [
+    "data-for-analysis-manifest@sha256:9f0a96eba65f899911ce1e030f55143cc3bca229cb541493618b94c8229c31a3"
+  ]
+}

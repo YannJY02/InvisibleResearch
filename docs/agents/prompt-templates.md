@@ -76,7 +76,7 @@ When an agent is activated, you **must** use the corresponding template below. F
 ```markdown
 **[📊 Analysis Agent Activated]**
 - **Task**: Exploratory Data Analysis (EDA)
-- **Dataset**: [Full path to the dataset file, e.g., `data/final/title_pred_lang.parquet`]
+- **Dataset**: [Full path to the dataset file, e.g., `$DATA_ROOT/derived/title_pred_lang.parquet`]
 - **Objective**: To uncover initial patterns, distributions, and relationships within the data.
 
 ---
@@ -93,7 +93,7 @@ When an agent is activated, you **must** use the corresponding template below. F
 
 **3. Deliverables:**
    - **EDA Summary Report**: A markdown report detailing the findings from steps 1 & 2.
-   - **Visualizations**: Generate and save key plots (histograms, bar charts, heatmap) to the `outputs/visualizations/` directory with descriptive filenames.
+   - **Visualizations**: Generate and save key plots (histograms, bar charts, heatmap) to the owning lane's ignored `research/<owner>/artifacts/visualizations/` directory with descriptive filenames.
    - **Initial Insights**: A bulleted list of 3-5 key observations or patterns (e.g., "The 'language' column is heavily skewed towards English," "A moderate positive correlation exists between variable X and Y").
 ```
 
@@ -163,14 +163,14 @@ When an agent is activated, you **must** use the corresponding template below. F
 ```markdown
 **[🔧 Automation Agent Activated]**
 - **Task**: Organize project files.
-- **Scope**: [e.g., "The entire project directory", "The `outputs/` folder"]
+- **Scope**: [e.g., "The entire project directory", "A research owner's `artifacts/` folder"]
 - **Standard**: Adhere to the project's established file structure (as defined in `README.md` or other documentation).
 
 ---
 **1. Assessment of Current State:**
    - **Scan**: Recursively list files in the target scope.
    - **Categorize**: Classify files by type (e.g., `.py`, `.ipynb`, `.csv`, `.png`, `.md`).
-   - **Identify Misplaced Files**: Find files that are not in their conventional locations (e.g., data files outside `data/`, plots outside `outputs/visualizations/`).
+   - **Identify Misplaced Files**: Find files that are not in their conventional locations (e.g., large data bytes in Git, plots outside their owner's ignored `artifacts/` directory).
    - **Identify Temporary Files**: Find and list files to be deleted (e.g., `__pycache__`, `*.tmp`, `.DS_Store`).
 
 **2. Proposed Action Plan (Requires User Confirmation):**

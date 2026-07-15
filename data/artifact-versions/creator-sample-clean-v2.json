@@ -1,0 +1,8 @@
+{
+  "id": "creator-sample-clean-v2@sha256:8ae8705b7589722f510e0861ea9247ab19cff316459b829487c61f56c8095397",
+  "sha256": "8ae8705b7589722f510e0861ea9247ab19cff316459b829487c61f56c8095397",
+  "location": "$DATA_ROOT/derived/creator_sample_clean_v2.parquet",
+  "source": [
+    "creator-sample-manifest@sha256:e3abd28e0db6aab5d8140f24c8b5313a474fe3fb4cbda98e5b811dbd448ee0b1"
+  ]
+}

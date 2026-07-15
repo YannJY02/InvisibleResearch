@@ -1,0 +1,460 @@
+---
+title: "Invisible Communication Science"
+author: "Saurabh Khanna, Jinyi Yang"
+date: "Updated: `r format(Sys.Date(), format='%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 6
+    number_sections: yes
+    df_print: paged
+    code_folding: show
+---
+
+<br/>
+
+```{r setup, include=FALSE}
+## knitr options
+knitr::opts_chunk$set(echo = T, message = FALSE, warning = FALSE, fig.retina = 4)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+## Libraries
+pacman::p_load(tidyverse, janitor, skimr, estimatr, texreg, countrycode, WDI, cld3, progressr, ggrepel, jsonlite, sf)
+```
+
+
+```{r}
+## Define a safe JSON parsing function
+safe_fromJSON <- possibly(function(x) {
+  x <- str_replace_all(x, "'", "\"")
+  fromJSON(x)
+}, otherwise = NULL)
+```
+
+
+# The data
+
+We consier peer-reviewed publications with ANZSRC field marked as "Communication and Media Studies". We restrict data to year 2000 and later in order to prevent biases from poorer data quality in older publications. We consider articles, book chapters, and books only in terms of the type of literature, and exclude conferences, preprints, etc.
+
+```{r}
+df <- 
+  read_csv(here::here("data/cs/dimensions_april2025/consolidated.csv")) %>% 
+  clean_names() %>%
+  mutate_at(c("year", "times_cited", "recent_citations", "field_citation_ratio", "relative_citation_ratio", "authors_count"), ~ as.numeric(.)) %>% 
+  filter(type %in% c("article", "book", "chapter")) %>% 
+  mutate(
+    invisible = if_else(times_cited == 0, 1L, 0L) %>% replace_na(1L),
+    type = str_to_title(type),
+  ) %>%
+  remove_empty() %>% 
+  remove_constant() %>% 
+  relocate(id, title, abstract, journal_title, authors_count, authors, type, category_for, times_cited, altmetric, concepts, concepts_scores, date, document_type, open_access, publisher, research_orgs, reference_ids)
+
+glimpse(df %>% arrange(year, -times_cited))
+```
+
+```{r}
+df %>% tabyl(type) %>% as_tibble() %>% arrange(-n) %>% mutate(percent = round(percent, 4))
+```
+
+```{r}
+df %>% count(invisible)
+```
+
+
+# Analysis
+
+## Figure 1
+
+Exponential growth in research published per year:
+
+```{r}
+df %>% 
+  count(type, year) %>% 
+  filter(year < 2025) %>% 
+  ggplot(aes(year, n, color = type)) +
+  geom_line(size=0.8) +
+  scale_x_continuous(breaks = scales::breaks_width(10), minor_breaks = NULL) +
+  scale_y_continuous(breaks = scales::breaks_width(5000), minor_breaks = NULL) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(x = "Year", y = "Articles published per year", color="")
+```
+
+
+And now we show what % of it stays invisible (no citations even 3 years after publication):
+
+```{r}
+# plot year on x axis, and total articles and total invisible articles on y axis,
+
+df %>% 
+  filter(year >= 2000 & year <= 2022) %>%
+  group_by(year) %>%
+  summarise(
+    all_articles = n(),
+    Invisible = sum(invisible, na.rm = T)
+  ) %>% 
+  ungroup() %>% 
+  mutate(Visible = all_articles - Invisible) %>%
+  select(-all_articles) %>% 
+  pivot_longer(cols = c(Visible, Invisible), names_to = "type", values_to = "n") %>% 
+  mutate(type = factor(type, levels = c("Visible", "Invisible"))) %>%
+  ggplot(aes(x = year, y = n, fill = type, color = type, linetype = type)) +
+  geom_area(position = "stack") +
+  scale_fill_manual(values = c("Visible" = "gray80", "Invisible" = "#FBB4AE")) +
+  scale_color_manual(values = c("Visible" = "gray50", "Invisible" = "#E31A1C")) +
+  scale_linetype_manual(values = c("Visible" = "solid", "Invisible" = "dashed")) +
+  scale_y_continuous(breaks = scales::breaks_width(4000), minor_breaks = NULL) +
+  scale_x_continuous(breaks = scales::breaks_width(2), minor_breaks = NULL) +
+  annotate("text", x = 2017.5, y = 2250, label = "Research that stays invisible", size = 4, color = "#E31A1C") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(x = "Year", y = "Peer-reviewed publications per year")
+
+ggsave(here::here("figures/fig1.png"), dpi = "retina")
+```
+
+
+## Figure 2
+
+Check invisibility by publication type:
+
+```{r}
+df %>% 
+  filter(year >= 2000 & year <= 2022) %>%
+  group_by(year, type) %>% 
+  summarise(perc_invisible = mean(invisible, na.rm = T)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = year, y = perc_invisible)) +
+  geom_smooth(method = "loess", aes(color = type), span=1.5) +
+  geom_smooth(method = "loess", color = "black", se = F, span = 1.5, linetype = "dotted") +
+  scale_color_brewer(palette = "Set1", direction = -1) +
+  scale_x_continuous(breaks = scales::breaks_width(3), minor_breaks = NULL) +
+  scale_y_continuous(breaks = scales::breaks_width(0.1), minor_breaks = NULL, labels = scales::percent_format(accuracy = 1)) +
+  theme_minimal() +
+  labs(x = "Year", y = "Proportion of invisible publications", color = "")
+```
+
+## Figure 3
+
+Checks by country
+
+```{r}
+temp <-
+  df %>%
+  filter(year >= 2000 & year <= 2022) %>% 
+  drop_na(research_org_countries) %>% 
+  transmute(
+    year, invisible,
+    countries = str_extract_all(research_org_countries, "'id':\\s*'([A-Z]{2})'"),
+    countries = map(countries, ~str_extract_all(.x, "[A-Z]{2}") %>% unlist())
+  ) %>%
+  unnest(countries) %>%
+  group_by(countries) %>% 
+  summarise(
+    perc_invisible = mean(invisible, na.rm = T),
+    n = n()
+  ) %>%
+  ungroup() %>%
+  left_join(
+    WDI(indicator = "NY.GDP.PCAP.CD", start = 2022, end = 2022, extra = TRUE) %>%
+      select(countries = iso2c, gdp_per_capita = NY.GDP.PCAP.CD, country)
+  ) %>% 
+  arrange(-n) %>%
+  filter(n >= 50) 
+
+temp %>%
+  ggplot(aes(x = gdp_per_capita, y = perc_invisible)) +
+  geom_point(aes(size = n), alpha = 0.7, show.legend = F) +
+  geom_smooth(method = "lm") +
+  geom_label_repel(aes(label = country), data = temp %>% filter(perc_invisible > 0.4, gdp_per_capita < 40000), max.overlaps = 6, nudge_x = 10000, nudge_y = 0.1) +
+  geom_label_repel(aes(label = country), data = temp %>% filter(perc_invisible < 0.4, gdp_per_capita > 40000, n > 5000), nudge_y = 0.1, nudge_x = 20000) +
+  scale_x_continuous(labels = scales::dollar_format(prefix = "$", big.mark = ",", accuracy = 1)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_size_continuous(range = c(1, 20)) +
+  theme_minimal() +
+  labs(x = "National wealth (GDP per capita)", y = "Proportion of invisible publications")
+```
+
+
+```{r}
+# choropleth map
+df_world <-
+  df %>%
+  filter(year >= 2000 & year <= 2022) %>% 
+  drop_na(research_org_countries) %>% 
+  transmute(
+    year, invisible,
+    countries = str_extract_all(research_org_countries, "'id':\\s*'([A-Z]{2})'"),
+    countries = map(countries, ~str_extract_all(.x, "[A-Z]{2}") %>% unlist())
+  ) %>%
+  unnest(countries) %>%
+  group_by(countries) %>% 
+  summarise(
+    perc_invisible = mean(invisible, na.rm = T),
+    n = n()
+  ) %>%
+  ungroup() %>%
+  transmute(country = countries, total = n)
+
+# world map shapefile
+shapefile <-
+  read_sf(here::here("data/TM_WORLD_BORDERS_SIMPL-0.3.shp")) %>%
+  clean_names() %>%
+  filter(name %in% c("Western Sahara", "Morocco")) %>% # handling boundary issues for morocco and western sahara
+  mutate(name = if_else(name == "Western Sahara", "Morocco", name)) %>%
+  arrange(name) %>%
+  group_by(name) %>%
+  summarize(
+    geometry = st_union(geometry),
+    lat = first(lat),
+    lon = first(lon),
+    region = first(region),
+    subregion = first(subregion)
+  ) %>%
+  st_cast("MULTIPOLYGON") %>% 
+  bind_rows(
+    read_sf(here::here("data/TM_WORLD_BORDERS_SIMPL-0.3.shp")) %>%
+      clean_names() %>%
+      filter(!(name %in% c("Western Sahara", "Morocco")))
+  )
+
+labels <- function(x) {
+  if_else(x < 10000, as.character(x), "10000+")
+}
+
+shapefile %>% 
+  clean_names() %>%
+  rename(country = iso2) %>%
+  left_join(df_world, by = "country") %>%
+  filter(total > 0 | area > 1000) %>% 
+  filter(country != "Antarctica") %>% 
+  mutate(
+    total = replace_na(total, 0),
+    total = pmin(total, 10000)
+  ) %>%
+  ggplot() +
+  geom_sf(aes(fill = total), lwd = 0, color = "gray", show.legend = T) +
+  scale_fill_gradientn(
+    #breaks = seq(0, 500, 100),
+    labels = labels,
+    colors = RColorBrewer::brewer.pal(n = 9, name = "Blues")
+  ) +
+  guides(
+    fill =
+      guide_colorbar(
+        barheight = 0.5,
+        barwidth = 15,
+        title = "CS Publications",
+        title.vjust = 1,
+      )
+  ) +
+  theme_void() +
+  theme(legend.position = "bottom")
+```
+
+
+## Figure 4
+
+By language (english vs non-english)
+
+```{r}
+df %>%
+  filter(year >= 2000 & year <= 2022) %>% 
+  drop_na(language) %>% 
+  mutate(non_english = if_else(language == "en", "English", "Non-English")) %>%
+  group_by(year, non_english) %>%
+  summarise(perc_invisible = mean(invisible, na.rm = T)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = year, y = perc_invisible, color = non_english)) +
+  geom_smooth(method = "loess", span = 1.5) +
+  scale_color_brewer(palette = "Set1", direction = 1) +
+  scale_x_continuous(breaks = scales::breaks_width(2), minor_breaks = NULL) +
+  scale_y_continuous(breaks = scales::breaks_width(0.05), minor_breaks = NULL, labels = scales::percent_format(accuracy = 1)) +
+  theme_minimal() +
+  labs(x = "Year", y = "Proportion of invisible publications", color = "")
+```
+
+Reducing gaps in visbility rate between English and Non-English publications over time:
+
+```{r}
+df %>%
+  filter(year >= 2000 & year <= 2022) %>% 
+  drop_na(language) %>% 
+  mutate(non_english = if_else(language == "en", "English", "Non-English")) %>%
+  group_by(year, non_english) %>%
+  summarise(perc_invisible = mean(invisible)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = non_english, values_from = perc_invisible) %>%
+  mutate(gap = English - `Non-English`) %>%
+  ggplot(aes(x = year, y = gap)) +
+  geom_smooth(method = "loess", span = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  scale_x_continuous(breaks = scales::breaks_width(2), minor_breaks = NULL) +
+  scale_y_continuous(breaks = scales::breaks_width(0.05), minor_breaks = NULL, labels = scales::percent_format(accuracy = 1)) +
+  theme_minimal() +
+  labs(x = "Year", y = "Gap in invisibility (English - Non-English)")
+```
+
+Reduction might be because of higher volume of English publications, whereas similar volume of non-English publications:
+
+```{r}
+df %>% 
+  filter(year >= 2000 & year <= 2022) %>%
+  drop_na(language) %>% 
+  mutate(non_english = if_else(language == "en", "English", "Non-English")) %>%
+  count(year, non_english) %>% 
+  ggplot(aes(x = year, y = n, color = non_english)) +
+  geom_line() +
+  scale_color_brewer(palette = "Set1", direction = 1) +
+  scale_x_continuous(breaks = scales::breaks_width(2), minor_breaks = NULL) +
+  scale_y_continuous(breaks = scales::breaks_width(4000), minor_breaks = NULL) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(x = "Year", y = "Number of publications", color = "")
+```
+
+
+## Figure 5
+
+By mainstream vs non-mainstream topic
+
+```{r}
+# mainstream_concepts as top 20%
+
+mainstream_concepts <- 
+  df %>% 
+  select(concepts, id) %>%
+  mutate(concepts = str_remove_all(concepts, "[\\[\\]']")) %>%
+  separate_rows(concepts, sep = ", ") %>%
+  drop_na(concepts) %>%
+  group_by(id) %>% 
+  slice_head(n = 1) %>% 
+  ungroup() %>%
+  count(concepts, sort = TRUE) %>%
+  slice_head(prop = 0.2) %>%
+  pull(concepts)
+
+df %>%
+  filter(year >= 2000 & year <= 2022) %>%
+  select(concepts, id, year, invisible) %>%
+  mutate(concepts = str_remove_all(concepts, "[\\[\\]']")) %>%
+  separate_rows(concepts, sep = ", ") %>%
+  drop_na(concepts) %>%
+  group_by(id, year, invisible) %>% 
+  slice_head(n = 1) %>% 
+  ungroup() %>% 
+  mutate(mainstream = if_else(concepts %in% mainstream_concepts, "Mainstream", "Non-Mainstream")) %>%
+  group_by(year, mainstream) %>%
+  summarise(perc_invisible = mean(invisible, na.rm = T)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = year, y = perc_invisible, color = mainstream)) +
+  geom_smooth(method = "loess", span = 1.5) +
+  scale_color_brewer(palette = "Set1", direction = 1) +
+  scale_x_continuous(breaks = scales::breaks_width(2), minor_breaks = NULL) +
+  scale_y_continuous(breaks = scales::breaks_width(0.05), minor_breaks = NULL, labels = scales::percent_format(accuracy = 1)) +
+  theme_minimal() +
+  labs(x = "Year", y = "Proportion of invisible publications", color = "")
+```
+
+```{r}
+temp1 <-
+  df %>%
+  filter(year >= 2000 & year <= 2022, invisible == 0) %>%
+  select(concepts, id) %>%
+  mutate(concepts = str_remove_all(concepts, "[\\[\\]']")) %>%
+  separate_rows(concepts, sep = ", ") %>%
+  drop_na(concepts) %>%
+  group_by(id) %>% 
+  slice_head(n = 1) %>% 
+  ungroup() %>%
+  count(concepts, sort = TRUE, name = "visible_n")
+
+temp2 <-
+  df %>%
+  filter(year >= 2000 & year <= 2022, invisible == 1) %>%
+  select(concepts, id) %>%
+  mutate(concepts = str_remove_all(concepts, "[\\[\\]']")) %>%
+  separate_rows(concepts, sep = ", ") %>%
+  drop_na(concepts) %>%
+  group_by(id) %>% 
+  slice_head(n = 1) %>% 
+  ungroup() %>%
+  count(concepts, sort = TRUE, name = "invisible_n")
+
+anti_join(temp2, temp1)
+```
+
+```{r}
+anti_join(temp1, temp2)
+```
+
+```{r}
+df %>%
+  filter(year >= 2000 & year <= 2022) %>%
+  sample_n(50) %>% 
+  select(contains("category_for_2020")) %>% 
+  view()
+```
+
+
+```{r}
+temp <-
+  df %>% 
+  filter(year >= 2000 & year <= 2022, invisible == 1) %>%
+  transmute(id, category_for = str_replace_all(category_for, "'", "\"")) %>% 
+  mutate(category_for = map(category_for, ~ fromJSON(.) %>% as_tibble())) %>%
+  unnest(id, category_for) %>% 
+  mutate(
+    category_code = str_extract(name, "^\\d+") %>% as.integer(),
+    category_name = str_remove(name, "^\\d+\\s+")
+  ) %>% 
+  filter(category_code != 4701, category_code >= 100) %>% 
+  count(category_name, sort = TRUE) %>%
+  transmute(category_name, perc_invisible = n/sum(n) %>% replace_na(0)) %>%
+  full_join(
+    df %>% 
+      filter(year >= 2000 & year <= 2022, invisible == 0) %>%
+      transmute(id, category_for = str_replace_all(category_for, "'", "\"")) %>% 
+      mutate(category_for = map(category_for, ~ fromJSON(.) %>% as_tibble())) %>%
+      unnest(id, category_for) %>% 
+      mutate(
+        category_code = str_extract(name, "^\\d+") %>% as.integer(),
+        category_name = str_remove(name, "^\\d+\\s+")
+      ) %>% 
+      filter(category_code != 4701, category_code >= 100) %>% 
+      count(category_name, sort = TRUE) %>%
+      transmute(category_name, perc_visible = n/sum(n) %>% replace_na(0))
+  )
+
+temp %>%
+  filter(!(category_name %in% c("Screen and Digital Media", "Cultural Studies"))) %>%
+  mutate_if(is.numeric, ~ round(. * 100, 2)) %>%
+  mutate(diff = perc_invisible - perc_visible) %>% 
+  arrange(diff)
+```
+
+```{r}
+df %>%
+  filter(year >= 2000 & year <= 2022) %>%
+  transmute(invisible, category_for = str_replace_all(category_for, "'", "\"")) %>% 
+  mutate(category_for = map(category_for, ~ fromJSON(.) %>% as_tibble())) %>%
+  unnest(invisible, category_for) %>% 
+  mutate(
+    category_code = str_extract(name, "^\\d+") %>% as.integer(),
+    category_name = str_remove(name, "^\\d+\\s+")
+  ) %>% 
+  filter(category_code != 4701, category_code >= 100) %>% 
+  transmute(invisible, category_name) %>%
+  mutate(category_name = factor(category_name))
+```
+
+
+## Figure 6
+
+By institutional prestige
+
+

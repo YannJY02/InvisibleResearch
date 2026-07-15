@@ -15,8 +15,9 @@ If these files don't exist, proceed silently. Don't suggest creating them upfron
 /
 ├── CONTEXT.md
 ├── docs/adr/
-├── scripts/
-└── notebooks/
+├── src/invisible_research/
+├── research/<owner>/
+└── papers/<compendium>/
 ```
 
 ## Use the glossary's vocabulary

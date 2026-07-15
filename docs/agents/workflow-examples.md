@@ -74,7 +74,7 @@ Expected AI Response:
 
 ### Dataset Analysis Request
 ```
-User: "Analyze the data/final/title_pred_lang.parquet file to understand language patterns in academic titles"
+User: "Analyze the $DATA_ROOT/derived/title_pred_lang.parquet file to understand language patterns in academic titles"
 
 Expected AI Response:
 📊 ANALYSIS AGENT: Exploratory Data Analysis
@@ -146,18 +146,12 @@ Expected AI Response:
 **Organization Strategy**:
 ```
 InvisibleResearch/
-├── data/
-│   ├── raw/              # 3 original datasets moved here
-│   ├── processed/        # 12 intermediate files organized
-│   └── final/            # 5 analysis-ready datasets
-├── scripts/
-│   ├── 01_setup/         # 2 setup scripts
-│   ├── 02_extraction/    # 1 main extraction script
-│   ├── 03_analysis/      # 4 analysis scripts
-│   └── 04_processing/    # 3 advanced processing scripts
-├── docs/                 # 8 documentation files
-├── outputs/              # 15 result files organized by type
-└── archive/              # 23 old/backup files moved here
+├── src/invisible_research/ # Reusable capabilities
+├── research/               # Question-owned exploratory analysis
+├── papers/                 # Publication Compendia
+├── data/artifact-versions/ # External content identities
+├── docs/                    # Governance and technical documentation
+└── archive.md            # Index of external archived material
 ```
 
 **Actions Completed**:
@@ -183,7 +177,7 @@ This example demonstrates the complete workflow from user dialogue to final inte
 ### Phase 1: User Dialogue & Issue Creation
 
 **User Request**:
-> "I want to analyze the language patterns in our `data/final/title_pred_lang.parquet` dataset. Specifically, I need to identify the top 10 most frequent languages, create visualizations, and write a Results section for our paper. This should include statistical analysis and proper academic formatting."
+> "I want to analyze the language patterns in our `$DATA_ROOT/derived/title_pred_lang.parquet` dataset. Specifically, I need to identify the top 10 most frequent languages, create visualizations, and write a Results section for our paper. This should include statistical analysis and proper academic formatting."
 
 **AI Coordinator Response**:
 

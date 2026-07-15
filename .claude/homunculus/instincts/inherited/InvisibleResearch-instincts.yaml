@@ -1,0 +1,499 @@
+# Instincts generated from https://github.com/YannJY02/InvisibleResearch
+# Generated: 2026-07-15T01:49:32.453Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: InvisibleResearch-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: refactor, feat
+
+## Evidence
+
+- 5 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat: expand hybrid workspace seam, refactor: migrate shared research capabilities
+
+---
+id: InvisibleResearch-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Commit Length
+
+## Action
+
+Keep commit messages concise (~41 characters)
+
+## Evidence
+
+- Average commit message length: 41 chars
+- Based on 5 commits
+
+---
+id: InvisibleResearch-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Naming Files
+
+## Action
+
+Use snake_case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: snake_case
+
+---
+id: InvisibleResearch-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: InvisibleResearch-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: InvisibleResearch-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: InvisibleResearch-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: InvisibleResearch-workflow-refactoring
+trigger: "when refactoring code"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Workflow Refactoring
+
+## Action
+
+Follow the refactoring workflow:
+1. Ensure tests pass before refactor
+2. Refactor code structure
+3. Verify tests still pass
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~24x per month
+- Files: src/**/*
+
+---
+id: InvisibleResearch-workflow-migrate-or-refactor-major-workspace-component
+trigger: "when doing migrate or refactor major workspace component"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Workflow Migrate Or Refactor Major Workspace Component
+
+## Action
+
+Follow the migrate-or-refactor-major-workspace-component workflow:
+1. Update or add multiple README.md files across root, data, docs, research, and submodules.
+2. Modify or add scripts in scripts/ or src/invisible_research/ subdirectories.
+3. Update or add Jupyter notebooks in notebooks/ or research/*/notebooks/.
+4. Update or add documentation in docs/ and research/*/README.md.
+5. Update or add test files in tests/.
+6. Update run_pipeline.sh if pipeline steps are affected.
+7. Update or add artifact/component manifest files in data/artifact-versions/ or data/component-manifests/.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: README.md, data/README.md, docs/*.md
+
+---
+id: InvisibleResearch-workflow-hybrid-workspace-cutover-or-expansion
+trigger: "when doing hybrid workspace cutover or expansion"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/YannJY02/InvisibleResearch
+---
+
+# InvisibleResearch Workflow Hybrid Workspace Cutover Or Expansion
+
+## Action
+
+Follow the hybrid-workspace-cutover-or-expansion workflow:
+1. Update or add configuration files (e.g., .env.example, config/env.template, config/settings.py).
+2. Update or add documentation in docs/ and data/README.md.
+3. Modify or add scripts in scripts/02_extraction/ and scripts/05_validation/.
+4. Update or add code in src/invisible_research/ (especially acquisition, processing, validation modules).
+5. Update or add test files in tests/.
+6. Update run_pipeline.sh.
+7. Update or add artifact/component manifest files in data/artifact-versions/ or data/component-manifests/.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: .env.example, config/env.template, config/settings.py
+
+---
+id: invisibleresearch-instinct-file-naming
+trigger: "When creating or renaming a file in the codebase"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct File Naming
+
+## Action
+
+Use snake_case for all file names
+
+## Evidence
+
+- Pattern in src/invisible_research/
+- Architecture analysis: namingConventions.files = snake_case
+
+---
+id: invisibleresearch-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Function Naming
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.functions = camelCase
+
+---
+id: invisibleresearch-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Class Naming
+
+## Action
+
+Use PascalCase for class names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.classes = PascalCase
+
+---
+id: invisibleresearch-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.constants = SCREAMING_SNAKE_CASE
+
+---
+id: invisibleresearch-instinct-import-style
+trigger: "When importing modules within the codebase"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Import Style
+
+## Action
+
+Use relative imports
+
+## Evidence
+
+- Pattern in codeStyle.importStyle = relative
+
+---
+id: invisibleresearch-instinct-export-style
+trigger: "When exporting functions or classes from a module"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle = named
+
+---
+id: invisibleresearch-instinct-test-location
+trigger: "When adding or updating tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Test Location
+
+## Action
+
+Place test files in the separate 'tests/' directory
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation = separate
+- Pattern in tests/*.py
+
+---
+id: invisibleresearch-instinct-test-type
+trigger: "When writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Test Type
+
+## Action
+
+Write unit tests as the primary test type
+
+## Evidence
+
+- Pattern in testing.testTypes = unit
+
+---
+id: invisibleresearch-instinct-test-coverage-config
+trigger: "When configuring tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Test Coverage Config
+
+## Action
+
+Ensure test coverage is configured
+
+## Evidence
+
+- Pattern in testing.coverageConfig = true
+
+---
+id: invisibleresearch-instinct-git-commit-format
+trigger: "When making a git commit"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Git Commit Format
+
+## Action
+
+Use conventional commit prefixes (e.g., 'refactor:', 'feat:') followed by a short description
+
+## Evidence
+
+- Pattern in commits.type = conventional
+- Examples: 'feat: expand hybrid workspace seam', 'refactor: migrate shared research capabilities'
+
+---
+id: invisibleresearch-instinct-git-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Git Commit Length
+
+## Action
+
+Keep the commit message concise (around 40 characters)
+
+## Evidence
+
+- Pattern in commits.averageLength = 41
+
+---
+id: invisibleresearch-instinct-refactoring-workflow
+trigger: "When planning to refactor code"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Refactoring Workflow
+
+## Action
+
+Ensure tests pass before refactor, refactor code structure, then verify tests still pass
+
+## Evidence
+
+- Workflow: refactoring
+- Commit sequence: Ensure tests pass before refactor → Refactor code structure → Verify tests still pass
+
+---
+id: invisibleresearch-instinct-migrate-workspace-component
+trigger: "When migrating or refactoring a major workspace component"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Migrate Workspace Component
+
+## Action
+
+Update READMEs, scripts, notebooks, documentation, tests, pipeline scripts, and manifest files as part of the migration
+
+## Evidence
+
+- Workflow: migrate-or-refactor-major-workspace-component
+- Files involved: README.md, data/README.md, docs/*.md, notebooks/**/*.ipynb, research/**/README.md, research/**/*.py, research/**/*.ipynb, scripts/**/*.py, src/invisible_research/**/*.py, tests/*.py, run_pipeline.sh, data/artifact-versions/*.json, data/component-manifests/*.json
+
+---
+id: invisibleresearch-instinct-hybrid-workspace-cutover
+trigger: "When implementing or expanding a hybrid workspace seam"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: YannJY02/InvisibleResearch
+---
+
+# Invisibleresearch Instinct Hybrid Workspace Cutover
+
+## Action
+
+Update configuration files, documentation, scripts, code (acquisition, processing, validation), tests, pipeline scripts, and manifest files
+
+## Evidence
+
+- Workflow: hybrid-workspace-cutover-or-expansion
+- Files involved: .env.example, config/env.template, config/settings.py, data/README.md, docs/*.md, scripts/02_extraction/*.py, scripts/05_validation/*.md, src/invisible_research/acquisition/*.py, src/invisible_research/processing/*.py, src/invisible_research/validation/*.py, tests/*.py, run_pipeline.sh, data/artifact-versions/*.json, data/component-manifests/*.json
+

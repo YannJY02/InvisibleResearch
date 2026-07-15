@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pyarrow as pa
@@ -11,17 +12,42 @@ import pyarrow.parquet as pq
 PROJECT_ROOT = Path(__file__).parents[1]
 
 
-def run_shared_command(data_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def run_shared_module(
+    data_root: Path, module: str, *args: str
+) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["DATA_ROOT"] = str(data_root)
+    env["PYTHONPATH"] = str(PROJECT_ROOT / "src")
     return subprocess.run(
-        [str(PROJECT_ROOT / "run_pipeline.sh"), *args],
+        [sys.executable, "-m", module, *args],
         cwd=PROJECT_ROOT,
         env=env,
         text=True,
         capture_output=True,
         check=False,
     )
+
+
+def test_database_commands_require_explicit_mysql_uri(tmp_path: Path) -> None:
+    env = os.environ.copy()
+    env.pop("MYSQL_URI", None)
+    env["DATA_ROOT"] = str(tmp_path)
+    env["PYTHONPATH"] = str(PROJECT_ROOT / "src")
+
+    for module in (
+        "invisible_research.acquisition.database_sample",
+        "invisible_research.acquisition.database_extract",
+    ):
+        result = subprocess.run(
+            [sys.executable, "-m", module],
+            cwd=PROJECT_ROOT,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        assert result.returncode != 0
+        assert "MYSQL_URI is required" in result.stderr
 
 
 def test_rule_based_name_processing_runs_through_shared_command(
@@ -34,7 +60,9 @@ def test_rule_based_name_processing_runs_through_shared_command(
         processed / "data_for_analysis.parquet",
     )
 
-    result = run_shared_command(tmp_path, "author-names-rules")
+    result = run_shared_module(
+        tmp_path, "invisible_research.processing.author_names_rules"
+    )
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert pq.read_table(processed / "name_clean.parquet").to_pylist() == [
@@ -45,13 +73,15 @@ def test_rule_based_name_processing_runs_through_shared_command(
 
 def test_validation_check_uses_data_root(tmp_path: Path) -> None:
     processed = tmp_path / "processed"
-    final = tmp_path / "final"
+    derived = tmp_path / "derived"
     processed.mkdir()
-    final.mkdir()
+    derived.mkdir()
     (processed / "creator_sample.parquet").write_bytes(b"fixture")
-    (final / "creator_sample_clean_v2.parquet").write_bytes(b"fixture")
+    (derived / "creator_sample_clean_v2.parquet").write_bytes(b"fixture")
 
-    result = run_shared_command(tmp_path, "validation", "--check")
+    result = run_shared_module(
+        tmp_path, "invisible_research.validation.start", "--check"
+    )
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert "系统检查通过" in result.stdout

@@ -55,7 +55,7 @@ def check_data_files():
     data_root = resolve_data_root()
     required_files = [
         data_root / "processed" / "creator_sample.parquet",
-        data_root / "final" / "creator_sample_clean_v2.parquet",
+        data_root / "derived" / "creator_sample_clean_v2.parquet",
     ]
     
     missing_files = []
@@ -174,7 +174,7 @@ def show_usage():
 ==================
 
 使用方法:
-  ./run_pipeline.sh validation [选项]
+  DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.validation.start [选项]
 
 选项:
   --check    仅运行系统检查，不启动Web界面

@@ -1,0 +1,8 @@
+{
+  "id": "data-for-analysis-manifest@sha256:9f0a96eba65f899911ce1e030f55143cc3bca229cb541493618b94c8229c31a3",
+  "sha256": "9f0a96eba65f899911ce1e030f55143cc3bca229cb541493618b94c8229c31a3",
+  "location": "data/component-manifests/data-for-analysis.json",
+  "source": [
+    "unregistered MySQL database snapshot; extraction source provenance unresolved"
+  ]
+}

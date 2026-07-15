@@ -1,0 +1,17 @@
+{
+  "schema_version": "external-component-manifest/v1",
+  "component": {
+    "location": "$DATA_ROOT/processed/data_for_analysis.parquet",
+    "byte_size": 19903969472,
+    "google_drive_file_id": "190tP3QRNOjmGDR2AW29u7uUEf10neHas",
+    "google_drive_revision_id": "0B8zIKKIUgUeeMFAxZEdVZ0U1WTJsYmlRV2dqSi9haDRYdmRZPQ",
+    "modified_time": "2025-07-03T04:21:23.438Z",
+    "checksum": {
+      "algorithm": "md5",
+      "value": "4528cf32ce94718dbf637bb69763925f"
+    }
+  },
+  "source": [
+    "unregistered MySQL database snapshot; extraction source provenance unresolved"
+  ]
+}

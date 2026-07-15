@@ -19,7 +19,7 @@ Configuration:
     BATCH_SIZE=20                                       # Optional: Batch size (default: 20)
 
 Run:
-    DATA_ROOT=/path/to/data ./run_pipeline.sh author-names-llm
+    DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.processing.author_names_llm
 """
 from __future__ import annotations
 
@@ -258,7 +258,8 @@ def call_llm(text: str) -> dict:
 def main() -> None:
     data_root = resolve_data_root()
     src_parquet = data_root / "processed" / "creator_sample.parquet"
-    dst_parquet = data_root / "final" / "creator_sample_clean_v2.parquet"
+    dst_parquet = data_root / "derived" / "creator_sample_clean_v2.parquet"
+    dst_parquet.parent.mkdir(parents=True, exist_ok=True)
     if not src_parquet.exists():
         raise SystemExit(f"Parquet not found: {src_parquet}")
 

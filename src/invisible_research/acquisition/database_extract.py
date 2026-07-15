@@ -17,7 +17,7 @@ using multiple CPU cores, and appends results to a single Parquet
 file (`data_for_analysis.parquet`) with Snappy compression.
 
 Run:
-    DATA_ROOT=/path/to/data ./run_pipeline.sh database-extract
+    DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.acquisition.database_extract
 """
 
 import os
@@ -33,16 +33,8 @@ import pyarrow.parquet as pq
 
 from ..data import resolve_data_root
 
-# ---------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------
-MYSQL_URI = os.getenv(
-    "MYSQL_URI",
-    "mysql+pymysql://root:secret@127.0.0.1:3306/invisible_research",
-)
 CHUNK_SIZE = 100_000                       # rows per chunk
 MAX_WORKERS = 6                           # parallel XML parsers
-# ---------------------------------------------------------------------
 
 TARGET_COLS = [
     "id",
@@ -96,7 +88,10 @@ def parse_xml(record: Tuple[Any, str, Any]) -> Dict[str, Any]:
 
 def main() -> None:
     start = time.time()
-    engine = create_engine(MYSQL_URI)
+    mysql_uri = os.environ.get("MYSQL_URI")
+    if not mysql_uri:
+        raise SystemExit("MYSQL_URI is required")
+    engine = create_engine(mysql_uri)
     out_file = resolve_data_root() / "processed" / "data_for_analysis.parquet"
     out_file.parent.mkdir(parents=True, exist_ok=True)
 

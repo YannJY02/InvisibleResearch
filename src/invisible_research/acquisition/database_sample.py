@@ -16,12 +16,10 @@ pd.set_option('display.max_colwidth', None)  # Display full cell content
 # Sample size to limit record reading
 N = 10
 
-engine = create_engine(
-    os.getenv(
-        "MYSQL_URI",
-        "mysql+pymysql://root:secret@127.0.0.1:3306/invisible_research",
-    )
-)
+mysql_uri = os.environ.get("MYSQL_URI")
+if not mysql_uri:
+    raise SystemExit("MYSQL_URI is required")
+engine = create_engine(mysql_uri)
 
 # view all tables in the database
 inspector = inspect(engine)

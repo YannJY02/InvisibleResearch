@@ -10,7 +10,7 @@ Features:
 - Emit a stats JSON with file count, total rows, and columns summary
 
 Usage:
-  DATA_ROOT=/path/to/data ./run_pipeline.sh openalex-merge
+  DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.acquisition.openalex_merge
 
 All code and documentation are in English as required by the repository standards.
 """

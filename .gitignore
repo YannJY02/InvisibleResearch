@@ -3,7 +3,7 @@
 *.sql
 *.gz
 data/processed/
-data/final/
+data/derived/
 data/raw/
 
 # 配置和密钥
@@ -96,9 +96,8 @@ data/validation/backups/
 data/validation/reports/
 data/validation/validation_progress.json
 
-# Local workflow state and generated exports.
+# Local workflow state.
 .agent/
-outputs/exports/*.csv
 
 # Regenerable outputs owned by Exploratory Analysis lanes.
 research/*/artifacts/

@@ -10,7 +10,11 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 
-from invisible_research.artifacts import build_artifact_version
+from invisible_research.artifacts import (
+    build_artifact_version,
+    sha256_file,
+    validate_artifact_record,
+)
 
 
 PROJECT_ROOT = Path(__file__).parents[1]
@@ -37,7 +41,36 @@ def test_artifact_version_uses_content_identity(tmp_path: Path) -> None:
     assert changed_record["id"] != original_record["id"]
 
 
-def test_openalex_merge_runs_through_root_wrapper(tmp_path: Path) -> None:
+def test_retained_artifact_versions_link_derived_data_to_upstream_ids() -> None:
+    record_paths = sorted((PROJECT_ROOT / "data/artifact-versions").glob("*.json"))
+    records = [
+        validate_artifact_record(json.loads(path.read_text(encoding="utf-8")))
+        for path in record_paths
+    ]
+    records_by_id = {record["id"]: record for record in records}
+
+    for record in records:
+        location = str(record["location"])
+        if location.startswith("data/component-manifests/"):
+            manifest_path = PROJECT_ROOT / location
+            assert manifest_path.is_file()
+            assert sha256_file(manifest_path) == record["sha256"]
+
+    derived_record_names = {
+        "creator-sample-manifest.json",
+        "creator-sample-clean.json",
+        "creator-sample-clean-v2.json",
+        "title-pred-lang-manifest.json",
+    }
+    for path in record_paths:
+        if path.name not in derived_record_names:
+            continue
+        record = json.loads(path.read_text(encoding="utf-8"))
+        assert record["source"]
+        assert all(source_id in records_by_id for source_id in record["source"])
+
+
+def test_openalex_merge_runs_through_shared_module(tmp_path: Path) -> None:
     input_dir = tmp_path / "raw" / "openalex_data"
     input_dir.mkdir(parents=True)
     (input_dir / "a.csv").write_text(
@@ -48,16 +81,9 @@ def test_openalex_merge_runs_through_root_wrapper(tmp_path: Path) -> None:
 
     env = os.environ.copy()
     env["DATA_ROOT"] = str(tmp_path)
+    env["PYTHONPATH"] = str(PROJECT_ROOT / "src")
     result = subprocess.run(
-        [
-            sys.executable,
-            str(
-                PROJECT_ROOT
-                / "scripts"
-                / "02_extraction"
-                / "merge_openalex_csv_to_parquet.py"
-            ),
-        ],
+        [sys.executable, "-m", "invisible_research.acquisition.openalex_merge"],
         cwd=PROJECT_ROOT,
         env=env,
         text=True,
@@ -107,8 +133,9 @@ def test_openalex_merge_writes_an_empty_parquet_for_header_only_input(
 
     env = os.environ.copy()
     env["DATA_ROOT"] = str(tmp_path)
+    env["PYTHONPATH"] = str(PROJECT_ROOT / "src")
     result = subprocess.run(
-        [str(PROJECT_ROOT / "run_pipeline.sh"), "openalex-merge"],
+        [sys.executable, "-m", "invisible_research.acquisition.openalex_merge"],
         cwd=PROJECT_ROOT,
         env=env,
         text=True,
@@ -134,10 +161,12 @@ def test_openalex_merge_rejects_outputs_inside_the_input_tree(tmp_path: Path) ->
 
     env = os.environ.copy()
     env["DATA_ROOT"] = str(tmp_path)
+    env["PYTHONPATH"] = str(PROJECT_ROOT / "src")
     result = subprocess.run(
         [
-            str(PROJECT_ROOT / "run_pipeline.sh"),
-            "openalex-merge",
+            sys.executable,
+            "-m",
+            "invisible_research.acquisition.openalex_merge",
             "--output-parquet",
             str(output),
         ],
@@ -151,3 +180,18 @@ def test_openalex_merge_rejects_outputs_inside_the_input_tree(tmp_path: Path) ->
     assert result.returncode != 0
     assert "must be outside the input directory" in result.stderr
     assert not output.exists()
+
+
+def test_retired_top_level_paths_are_absent() -> None:
+    retired_paths = (
+        "run_pipeline.sh",
+        "scripts",
+        "config",
+        "backup",
+        "archive",
+        "notebooks",
+        "outputs",
+        "Writing Report",
+    )
+
+    assert not [path for path in retired_paths if (PROJECT_ROOT / path).exists()]

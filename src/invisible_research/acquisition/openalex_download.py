@@ -38,7 +38,7 @@ populates it with ``communication_works_<year>.jsonl`` files.
 
 Example::
 
-    DATA_ROOT=/path/to/data ./run_pipeline.sh openalex-download
+    DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.acquisition.openalex_download
 
 Note: depending on your internet connection and the number of records per
 year, downloading all data from 2000–2025 can take a significant amount of

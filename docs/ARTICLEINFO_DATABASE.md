@@ -214,7 +214,7 @@ final_result = pd.concat(results, ignore_index=True)
 
 3. **Author Name Variations**:
    - Mixed name formats and separators
-   - Requires additional processing with `DATA_ROOT=/path/to/data ./run_pipeline.sh author-names-llm`
+   - Requires additional processing with `DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.processing.author_names_llm`
    - Integration point for author disambiguation
 
 4. **Encoding Issues**:
@@ -228,8 +228,8 @@ final_result = pd.concat(results, ignore_index=True)
 ### Recommended Workflow
 
 1. **Data Exploration** → Use `articleInfo.parquet` for fast exploratory analysis
-2. **Author Analysis** → Run `DATA_ROOT=/path/to/data ./run_pipeline.sh author-names-llm`
-3. **Language Detection** → Run `DATA_ROOT=/path/to/data ./run_pipeline.sh title-language`
+2. **Author Analysis** → Run `DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.processing.author_names_llm`
+3. **Language Detection** → Run `DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.processing.title_language`
 4. **Temporal Analysis** → Use optimized date/year columns for time-series analysis
 5. **Cross-Reference** → Link back to raw MySQL data via `context_id` when needed
 

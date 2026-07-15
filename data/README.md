@@ -16,7 +16,7 @@
 - **name_clean.parquet**: Author names cleaned by traditional methods (~380MB)
   - Processed using nameparser library
 - **openalex_merged.csv**: Intermediate unioned CSV kept for traceability, source for the Parquet.
-- **openalex_merged.parquet**: Merged OpenAlex works CSVs (Snappy) generated from `raw/openalex_data/*.csv` via `DATA_ROOT=/path/to/data ./run_pipeline.sh openalex-merge`. See `processed/openalex_merged_stats.json` for counts and schema notes.
+- **openalex_merged.parquet**: Merged OpenAlex works CSVs (Snappy) generated from `raw/openalex_data/*.csv` via `DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.acquisition.openalex_merge`. See `processed/openalex_merged_stats.json` for counts and schema notes.
  - **dimension_merged.csv**: Intermediate unioned CSV for Dimensions publications (2000–2025), kept for traceability. Source: `raw/dimensions_cs/publications_*.csv`.
  - **dimension_merged.parquet**: Parquet converted via DuckDB from `dimension_merged.csv` (Snappy). Produced by `research/dimensions-dataset-construction/analysis/merge_dimensions.py`.
 - **dimension_data_for_analysis.parquet**: Analysis-ready dataset derived by `research/dimensions-dataset-construction/analysis/create_variables.py` from `dimension_merged.parquet`. Columns are ordered by conceptual blocks for clarity: [invisibility (with `times_cited`, `date`, `first_author_experience`), geographic/institutional (`research_org_*`), topical (`concepts*`), disciplinary (`issn`, `isbn`, `disciplinary`), prestige (rank bins with matching details), OA (`open_access`), controls (`document_type`, `type`, `authors_count`, `reference_ids`, `referenced_pubs`)].
@@ -31,30 +31,37 @@
 
 Tracked four-field records (`id`, `sha256`, `location`, `source`) point to
 large inputs and shared derived data under `DATA_ROOT` without copying their
-bytes into the repository.
+bytes into the repository. For dataless cloud files that cannot be read during
+the lightweight migration gate, the Artifact Version identifies a tracked
+component manifest containing the stable Drive file ID, revision ID, byte size,
+and provider checksum; the record's SHA-256 is the manifest's content identity.
 
-### `final/` - Final Analysis Results
+### `derived/` - Derived Analysis Results
 - **creator_sample_clean.parquet**: Author data processed by LLM (92KB)
   - Contains original author names, cleaned names, institutional information
+- **creator_sample_clean_v2.parquet**: Current LLM author-processing output
 - **title_pred_lang.parquet**: Title language prediction results (~1.8GB)
   - Contains language labels predicted using GlotLID model
+- **openalex/communication_works.parquet**: Legacy notebook output retained
+  externally with exact content identity. Its original acquisition parameters
+  remain unresolved, so it is not a paper-analysis input.
 
 ## 🔄 Data Flow
 
 ```
 raw/sample_records_language_title_abstract.csv
-    ↓ (`./run_pipeline.sh database-sample`)
+    ↓ (`python -m invisible_research.acquisition.database_sample`)
 raw/database.sql.gz → MySQL Database
-    ↓ (`./run_pipeline.sh database-extract`)
+    ↓ (`python -m invisible_research.acquisition.database_extract`)
 processed/data_for_analysis.parquet
     ↓ (`research/author-name-sampling/analysis/sample_creators.py`)
 processed/creator_sample.parquet
-    ↓ (`./run_pipeline.sh author-names-llm`)
-final/creator_sample_clean.parquet
+    ↓ (`python -m invisible_research.processing.author_names_llm`)
+derived/creator_sample_clean_v2.parquet
 
 processed/data_for_analysis.parquet
-    ↓ (`./run_pipeline.sh title-language`)
-final/title_pred_lang.parquet
+    ↓ (`python -m invisible_research.processing.title_language`)
+derived/title_pred_lang.parquet
 
 processed/dimension_merged.parquet
     ↓ (`research/dimensions-dataset-construction/analysis/create_variables.py`)

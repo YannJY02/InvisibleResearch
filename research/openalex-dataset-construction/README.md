@@ -11,7 +11,7 @@ row counts and meaningful CSV tokens?
 
 - `$DATA_ROOT/raw/openalex_data/**/*.csv`
 - `$DATA_ROOT/raw/works-2025-09-07T08-08-59.csv` as the optional schema header
-- Shared acquisition commands in `run_pipeline.sh`
+- Shared acquisition modules under `src/invisible_research/acquisition/`
 - Merged outputs under `$DATA_ROOT/processed/`
 - Regenerable validation reports under this owner's ignored `artifacts/`
 

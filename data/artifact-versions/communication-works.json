@@ -1,0 +1,8 @@
+{
+  "id": "communication-works@sha256:5aa1c22bbf51b59ca937a63ea25159bde79b3eeecefc4c8dd694c093df1118f5",
+  "sha256": "5aa1c22bbf51b59ca937a63ea25159bde79b3eeecefc4c8dd694c093df1118f5",
+  "location": "$DATA_ROOT/derived/openalex/communication_works.parquet",
+  "source": [
+    "unregistered legacy OpenAlex notebook retrieval; acquisition parameters unresolved"
+  ]
+}

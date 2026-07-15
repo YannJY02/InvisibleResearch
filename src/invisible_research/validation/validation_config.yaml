@@ -4,7 +4,7 @@
 # 数据路径配置
 data_paths:
   input_file: "data/processed/creator_sample.parquet"
-  output_file: "data/final/creator_sample_clean_v2.parquet" 
+  output_file: "data/derived/creator_sample_clean_v2.parquet"
   validation_results: "data/validation/validation_results.parquet"
   validation_progress: "data/validation/validation_progress.json"
 

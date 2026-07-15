@@ -1,0 +1,8 @@
+{
+  "id": "title-pred-lang-manifest@sha256:e84717b015db94d2904ff05dbc341aae07a4132a7c0061791a007258beb82faa",
+  "sha256": "e84717b015db94d2904ff05dbc341aae07a4132a7c0061791a007258beb82faa",
+  "location": "data/component-manifests/title-pred-lang.json",
+  "source": [
+    "data-for-analysis-manifest@sha256:9f0a96eba65f899911ce1e030f55143cc3bca229cb541493618b94c8229c31a3"
+  ]
+}

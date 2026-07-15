@@ -203,7 +203,7 @@ def test_intake_and_paper_artifacts_are_local_only() -> None:
     assert "move, rename, or delete" in inbox_readme
 
 
-def test_external_archive_manifest_and_human_review_are_separate() -> None:
+def test_external_archives_and_human_review_decision_are_separate() -> None:
     manifest = json.loads(
         (PROJECT_ROOT / "docs/writing-report-archive-manifest.json").read_text(
             encoding="utf-8"
@@ -233,11 +233,8 @@ def test_external_archive_manifest_and_human_review_are_separate() -> None:
     review = (PROJECT_ROOT / "docs/writing-report-human-review.md").read_text(
         encoding="utf-8"
     )
-    for path in (
-        "Writing Report/Report/Internship Report.docx",
-        "Writing Report/Support Doc/chat history/history.png",
-        "Writing Report/Support Doc/template/",
-        "Writing Report/Slides/material/*.pdf",
-    ):
-        assert path in review
-    assert "left untouched" in review
+    assert "GoogleDrive:InvisibleResearch/archive/writing-report-human-review/" in review
+    assert "owner approved" in review
+    assert "b778130503d52d4fb0e7310ed4fbf963098eb8bff62a90caa821beb8777afbfd" in review
+    assert "Each archive copy matched" in review
+    assert not (PROJECT_ROOT / "Writing Report").exists()

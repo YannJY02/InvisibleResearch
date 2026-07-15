@@ -23,7 +23,7 @@ For LLM-based author processing, configure your API credentials:
 
 ```bash
 # 1. Copy the configuration template
-cp config/env.template .env
+cp .env.example .env
 
 # 2. Edit .env with your actual API key
 # OPENAI_API_KEY=your_api_key_here
@@ -34,23 +34,28 @@ cp config/env.template .env
 
 📋 **See [Security Guide](docs/SECURITY_GUIDE.md) for detailed configuration instructions and best practices.**
 
-### Run Pipeline
+### Run Shared Capabilities
 ```bash
+# Point commands at the external data workspace
+export DATA_ROOT=/path/to/data
+export PYTHONPATH=src
+
 # Data extraction
-DATA_ROOT=/path/to/data ./run_pipeline.sh database-extract
+export MYSQL_URI=mysql+pymysql://user:password@host/database
+python -m invisible_research.acquisition.database_extract
 
 # Author analysis
-DATA_ROOT=/path/to/data PYTHONPATH=src python research/author-name-sampling/analysis/inspect_creators.py
-DATA_ROOT=/path/to/data PYTHONPATH=src python research/author-name-sampling/analysis/sample_creators.py
+python research/author-name-sampling/analysis/inspect_creators.py
+python research/author-name-sampling/analysis/sample_creators.py
 
 # Intelligent processing (requires API configuration)
-DATA_ROOT=/path/to/data OPENAI_API_KEY=your_key ./run_pipeline.sh author-names-llm
+OPENAI_API_KEY=your_key python -m invisible_research.processing.author_names_llm
 
 # Language detection
-DATA_ROOT=/path/to/data ./run_pipeline.sh title-language
+python -m invisible_research.processing.title_language
 
 # LLM validation (optional - for accuracy assessment)
-DATA_ROOT=/path/to/data ./run_pipeline.sh validation
+python -m invisible_research.validation.start
 ```
 
 ## 📊 Data Sources
@@ -93,11 +98,11 @@ research/              # Question- and experiment-owned Exploratory Analysis
 papers/                # Publication Compendia; placement grants no authority
 └── invisible-communication-science/
 inbox/                 # Local-only, non-authoritative raw intake
-data/raw/             # Raw data
-data/processed/       # Intermediate results
-data/final/           # Final outputs
-data/validation/      # Validation data and reports
-data/artifact-versions/ # Portable records for external content identities
+$DATA_ROOT/raw/         # External raw data
+$DATA_ROOT/processed/   # External intermediate results
+$DATA_ROOT/derived/     # External derived outputs
+$DATA_ROOT/validation/  # External validation data and reports
+data/artifact-versions/ # Tracked portable records for external content identities
 ```
 
 ### 🔄 Shared capabilities vs research owners
@@ -127,7 +132,7 @@ The project includes a comprehensive validation system for assessing the accurac
 ### Quick Start
 ```bash
 # Launch validation interface
-DATA_ROOT=/path/to/data ./run_pipeline.sh validation
+DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.validation.start
 # Access: http://localhost:8501
 
 # Launch data protection dashboard

@@ -3,7 +3,7 @@ Summary
 Document Dimensions (2000–2025) publications CSV merge and Parquet conversion, with validation results and follow-ups.
 
 Notebook
-- notebooks/02_extraction/merge_dimension_2000_2025.ipynb
+- research/dimensions-dataset-construction/notebooks/merge_dimension_2000_2025.ipynb
 
 Key Results (latest run)
 - Logical CSV rows (reader-based): 358,493
@@ -26,11 +26,10 @@ Validation Checks
 6) Optional exact-duplicate rows: distinct full-rows check across all columns
 
 How to Reproduce
-1. Open the notebook and run all cells sequentially
+1. Run `DATA_ROOT=/path/to/data PYTHONPATH=src jupyter lab research/dimensions-dataset-construction/notebooks/merge_dimension_2000_2025.ipynb`
 2. Inspect the "Validation and Sampling" section outputs
 
 Follow-ups
 - Consider doi_norm-based deduplication where appropriate downstream
 - Define acceptable null-ratio thresholds for key fields and alerting
 - Schedule annual schema drift monitoring (per-year null rates by column)
-

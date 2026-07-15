@@ -6,7 +6,7 @@ with GlotLID, and save a new Parquet with columns
 [id, title, language_db, language_pred].
 
 Input : $DATA_ROOT/processed/data_for_analysis.parquet
-Output: $DATA_ROOT/final/title_pred_lang.parquet
+Output: $DATA_ROOT/derived/title_pred_lang.parquet
 """
 
 import os
@@ -25,7 +25,7 @@ BATCH_SIZE  = 50_000   # adjust to available RAM
 def main():
     data_root = resolve_data_root()
     parquet_in = data_root / "processed" / "data_for_analysis.parquet"
-    parquet_out = data_root / "final" / "title_pred_lang.parquet"
+    parquet_out = data_root / "derived" / "title_pred_lang.parquet"
     parquet_out.parent.mkdir(parents=True, exist_ok=True)
     # Locate or download GlotLID model from Hugging Face cache
     model_path = hf_hub_download(repo_id="cis-lmu/glotlid", filename="model.bin")

@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Group meeting report on OJS journal metadata enrichment, literature evidence, and the next research step.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%23176b87'/%3E%3Cpath d='M16 4a12 12 0 0 1 0 24Z' fill='%23e45f2b'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23f2eddf'/%3E%3C/svg%3E">
+  <title>Prepare OJS journal metadata enrichment and literature-review evidence</title>
+  <style>
+    :root {
+      --paper: #f2eddf;
+      --paper-2: #e9e2d1;
+      --ink: #17252b;
+      --muted: #5c6666;
+      --blue: #176b87;
+      --blue-soft: #c6dde2;
+      --orange: #e45f2b;
+      --orange-soft: #f5c7a8;
+      --green: #55735d;
+      --line: rgba(23, 37, 43, .22);
+      --white: #fbfaf5;
+      --display: "Iowan Old Style", "Baskerville", "Palatino Linotype", serif;
+      --body: "Avenir Next", "Trebuchet MS", sans-serif;
+      --mono: "SFMono-Regular", Consolas, monospace;
+      --content: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 5%, rgba(228,95,43,.08), transparent 28rem),
+        linear-gradient(90deg, rgba(23,37,43,.035) 1px, transparent 1px),
+        var(--paper);
+      background-size: auto, 42px 42px, auto;
+      font-family: var(--body);
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .24;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.07'/%3E%3C/svg%3E");
+      z-index: 20;
+    }
+
+    a { color: var(--blue); text-underline-offset: .18em; }
+    a:hover { color: var(--orange); }
+    button, input { font: inherit; }
+    button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--orange);
+      outline-offset: 3px;
+    }
+
+    .progress {
+      position: fixed;
+      inset: 0 0 auto;
+      height: 4px;
+      background: var(--orange);
+      transform: scaleX(0);
+      transform-origin: left;
+      z-index: 60;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 62px;
+      padding: .65rem max(1rem, calc((100vw - var(--content)) / 2));
+      border-bottom: 1px solid var(--line);
+      background: rgba(242, 237, 223, .93);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand { display: flex; align-items: center; gap: .7rem; font-weight: 700; letter-spacing: .03em; }
+    .brand-mark { width: 24px; height: 24px; border: 6px solid var(--blue); border-right-color: var(--orange); border-radius: 50%; }
+    .top-actions { display: flex; align-items: center; gap: .55rem; }
+    .print-button, .jump-button {
+      border: 1px solid var(--ink);
+      background: transparent;
+      color: var(--ink);
+      padding: .45rem .75rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .print-button:hover, .jump-button:hover { background: var(--ink); color: var(--paper); }
+
+    .layout {
+      width: min(calc(100% - 2rem), var(--content));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: clamp(2rem, 5vw, 5rem);
+    }
+
+    .side-nav {
+      position: sticky;
+      top: 86px;
+      align-self: start;
+      max-height: calc(100vh - 110px);
+      overflow: auto;
+      padding: 1.5rem 0 2rem;
+    }
+    .side-nav .eyebrow { margin-bottom: .8rem; }
+    .side-nav a {
+      display: block;
+      padding: .35rem 0 .35rem .8rem;
+      border-left: 2px solid var(--line);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .78rem;
+      line-height: 1.25;
+    }
+    .side-nav a:hover, .side-nav a.active { color: var(--ink); border-color: var(--orange); }
+
+    main { min-width: 0; }
+    section { position: relative; padding: clamp(4.5rem, 9vw, 8rem) 0; border-bottom: 1px solid var(--line); }
+    .hero { min-height: calc(100vh - 62px); display: grid; align-content: center; padding: 5rem 0; }
+    .eyebrow {
+      margin: 0 0 .7rem;
+      color: var(--orange);
+      font-family: var(--mono);
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { font-family: var(--display); line-height: 1.04; letter-spacing: -.025em; text-wrap: balance; }
+    h1 { max-width: 13ch; margin: 0; font-size: clamp(3.5rem, 9vw, 7.8rem); font-weight: 500; }
+    h2 { max-width: 15ch; margin: .2rem 0 1.4rem; font-size: clamp(2.7rem, 6vw, 5rem); font-weight: 500; }
+    h3 { margin: 0 0 .7rem; font-size: clamp(1.45rem, 3vw, 2.15rem); font-weight: 600; }
+    h4 { margin: 0 0 .45rem; font-size: 1rem; letter-spacing: .01em; }
+    p { max-width: 66ch; }
+    .lede { max-width: 58ch; font-family: var(--display); font-size: clamp(1.35rem, 2.4vw, 2rem); line-height: 1.35; }
+    .meta-line { display: flex; flex-wrap: wrap; gap: .45rem 1.5rem; margin-top: 2rem; color: var(--muted); font-size: .9rem; }
+
+    .hero-route {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin-top: 4rem;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+    .hero-route > div { min-height: 150px; padding: 1.2rem; background: var(--paper); }
+    .route-no { display: block; color: var(--orange); font-family: var(--mono); font-size: .72rem; }
+    .hero-route strong { display: block; max-width: 12ch; margin-top: 1.4rem; font-family: var(--display); font-size: 1.35rem; line-height: 1.1; }
+
+    .chapter-head { display: grid; grid-template-columns: 110px 1fr; gap: 1.5rem; margin-bottom: 3rem; }
+    .chapter-no { font-family: var(--display); font-size: 4rem; line-height: .9; color: var(--blue); }
+    .chapter-intro { max-width: 62ch; font-size: 1.08rem; color: var(--muted); }
+
+    .grid-2, .grid-3, .grid-4 { display: grid; gap: 1.2rem; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card { padding: clamp(1.2rem, 3vw, 2rem); border: 1px solid var(--line); background: rgba(251,250,245,.48); }
+    .card.accent { border-top: 5px solid var(--orange); }
+    .card.blue { border-top: 5px solid var(--blue); }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+    .label { display: inline-block; margin-bottom: .75rem; color: var(--blue); font-family: var(--mono); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .big-number { display: block; font-family: var(--display); font-size: clamp(2.6rem, 5vw, 4.8rem); line-height: 1; color: var(--blue); }
+    .unit { font-size: 1rem; color: var(--muted); }
+
+    .issue-frame {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: stretch;
+      margin: 2rem 0;
+      border: 1px solid var(--line);
+      background: var(--white);
+    }
+    .issue-frame article { padding: 2rem; }
+    .issue-arrow { display: grid; place-items: center; min-width: 75px; color: var(--orange); font-size: 2.4rem; border-inline: 1px solid var(--line); }
+
+    .finding-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1rem; }
+    .finding { grid-column: span 4; min-height: 290px; padding: 1.4rem; border: 1px solid var(--line); background: var(--white); }
+    .finding:nth-child(1), .finding:nth-child(7) { grid-column: span 6; }
+    .finding:nth-child(5) { color: var(--white); background: var(--blue); }
+    .finding .number { color: var(--orange); font-family: var(--mono); font-size: .75rem; }
+    .finding .stat { font-family: var(--display); font-size: 2.4rem; line-height: 1; }
+    .finding p { font-size: .9rem; line-height: 1.5; }
+
+    .insight-line { display: grid; grid-template-columns: 1fr 60px 1fr; align-items: center; gap: 1rem; margin: 1rem 0; }
+    .insight-line .arrow { color: var(--orange); text-align: center; font-size: 2rem; }
+    .insight-line > div:not(.arrow) { padding: 1.2rem; border: 1px solid var(--line); }
+
+    .timeline { position: relative; margin: 3rem 0; }
+    .timeline::before { content: ""; position: absolute; left: 1.25rem; top: .5rem; bottom: .5rem; width: 2px; background: var(--blue); }
+    .task { position: relative; display: grid; grid-template-columns: 2.5rem 110px 1fr; gap: 1rem; margin: 0 0 1rem; }
+    .task-dot { width: 1rem; height: 1rem; margin: .55rem 0 0 .8rem; border: 3px solid var(--paper); border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 2px var(--blue); z-index: 1; }
+    .task-id { padding-top: .35rem; color: var(--blue); font-family: var(--mono); font-weight: 700; }
+    .task-body { padding: 1rem 1.2rem; border: 1px solid var(--line); background: var(--white); }
+    .task-body p { margin: .3rem 0; font-size: .9rem; }
+    .task-body strong { font-family: var(--display); font-size: 1.25rem; }
+
+    .pipeline { display: grid; grid-template-columns: repeat(7, minmax(105px, 1fr)); gap: .55rem; overflow-x: auto; padding: .5rem 0 1rem; }
+    .pipe-step { position: relative; min-height: 190px; padding: 1rem; border: 1px solid var(--line); background: var(--white); }
+    .pipe-step:not(:last-child)::after { content: "→"; position: absolute; right: -.65rem; top: 45%; z-index: 2; color: var(--orange); font-size: 1.2rem; }
+    .pipe-step b { display: block; margin: .8rem 0 .4rem; font-family: var(--display); font-size: 1.2rem; line-height: 1.05; }
+    .pipe-step small { color: var(--muted); line-height: 1.4; }
+
+    .outcome-strip { display: flex; min-height: 92px; margin: 2rem 0 .6rem; border: 1px solid var(--ink); overflow: hidden; }
+    .outcome-strip > div { display: grid; place-items: center; min-width: 2px; padding: .6rem; color: var(--white); text-align: center; font-size: .78rem; font-weight: 700; }
+    .unique { background: var(--blue); }
+    .unmatched { background: var(--orange); }
+    .ambiguous { background: #8e6b76; }
+    .missing { background: var(--green); }
+    .legend { display: flex; flex-wrap: wrap; gap: .6rem 1.3rem; font-size: .82rem; color: var(--muted); }
+    .legend i { display: inline-block; width: .7rem; height: .7rem; margin-right: .3rem; }
+
+    .denominator-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 3rem 0; }
+    .denominator { position: relative; min-height: 310px; padding: 2rem; border: 1px solid var(--line); background: var(--white); overflow: hidden; }
+    .denominator::after { content: ""; position: absolute; width: 210px; height: 210px; right: -70px; bottom: -70px; border: 34px solid var(--blue-soft); border-radius: 50%; }
+    .denominator:last-child::after { border-color: var(--orange-soft); }
+    .formula { font-family: var(--mono); font-size: .82rem; color: var(--muted); }
+
+    .chart-block { margin: 2rem 0 3rem; padding: 1.2rem; border: 1px solid var(--line); background: rgba(251,250,245,.55); }
+    .chart-title { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1rem; }
+    .chart-title h3 { margin: 0; }
+    .chart-title p { margin: 0; color: var(--muted); font-size: .78rem; }
+    .bars { display: grid; gap: .65rem; }
+    .bar-row { display: grid; grid-template-columns: minmax(125px, 1fr) minmax(200px, 4fr) 68px; align-items: center; gap: .7rem; font-size: .85rem; }
+    .bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { position: relative; height: 21px; background: var(--paper-2); }
+    .bar-fill { height: 100%; background: var(--blue); transform-origin: left; }
+    .bar-fill.orange { background: var(--orange); }
+    .bar-ci { position: absolute; top: 50%; height: 2px; background: var(--ink); transform: translateY(-50%); }
+    .bar-ci::before, .bar-ci::after { content: ""; position: absolute; top: -4px; width: 1px; height: 10px; background: var(--ink); }
+    .bar-ci::after { right: 0; }
+    .bar-value { font-family: var(--mono); text-align: right; }
+
+    .boundary { margin: 2rem 0; padding: 1.4rem 1.6rem; border-left: 6px solid var(--orange); background: var(--orange-soft); }
+    .boundary strong { display: block; font-family: var(--display); font-size: 1.3rem; }
+    .remember { margin-top: 3rem; padding: 1.3rem 1.5rem; color: var(--white); background: var(--ink); }
+    .remember .label { color: var(--orange-soft); }
+    .remember p { margin: 0; font-family: var(--display); font-size: 1.35rem; line-height: 1.35; }
+
+    .decision-list { counter-reset: decision; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .decision-list article { counter-increment: decision; position: relative; min-height: 260px; padding: 4rem 1.4rem 1.4rem; border: 1px solid var(--line); background: var(--white); }
+    .decision-list article::before { content: "0" counter(decision); position: absolute; top: 1rem; left: 1.4rem; color: var(--orange); font-family: var(--mono); }
+
+    details { margin: .9rem 0; border: 1px solid var(--line); background: rgba(251,250,245,.55); }
+    summary { padding: 1rem 1.2rem; cursor: pointer; font-weight: 700; }
+    summary::marker { color: var(--orange); }
+    .detail-body { padding: 0 1.2rem 1.2rem; }
+    .detail-body li { margin: .35rem 0; }
+    .evidence-tag { display: inline-block; padding: .15rem .45rem; color: var(--white); background: var(--blue); font-family: var(--mono); font-size: .68rem; }
+
+    .table-wrap { overflow: auto; border: 1px solid var(--line); background: var(--white); }
+    table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+    th, td { padding: .65rem .8rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { position: sticky; top: 0; background: var(--ink); color: var(--white); font-size: .72rem; letter-spacing: .03em; }
+    td.num { font-family: var(--mono); text-align: right; }
+    .search-row { display: flex; align-items: center; gap: .7rem; margin: 1rem 0; }
+    .search-row input { width: min(100%, 360px); padding: .65rem .8rem; border: 1px solid var(--ink); background: var(--white); color: var(--ink); }
+    .search-count { color: var(--muted); font-size: .8rem; }
+
+    .source-list { columns: 2; column-gap: 2rem; }
+    .source-list li { break-inside: avoid; margin: 0 0 .7rem; }
+    .artifact-map { display: grid; grid-template-columns: repeat(2, 1fr); gap: .7rem; }
+    .artifact-map a { display: block; padding: .8rem 1rem; border: 1px solid var(--line); background: var(--white); text-decoration: none; }
+    .artifact-map small { display: block; color: var(--muted); }
+
+    footer { padding: 4rem 0 6rem; color: var(--muted); font-size: .82rem; }
+    .fade-in { animation: rise .65s both; animation-delay: calc(var(--i, 0) * 70ms); }
+    @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+
+    @media (max-width: 900px) {
+      .layout { display: block; }
+      .side-nav { display: none; }
+      .grid-3, .grid-4, .decision-list { grid-template-columns: 1fr 1fr; }
+      .finding { grid-column: span 6; }
+      .pipeline { grid-template-columns: repeat(7, 150px); }
+    }
+    @media (max-width: 650px) {
+      body { font-size: 16px; }
+      .brand span { display: none; }
+      .layout { width: min(calc(100% - 1.4rem), var(--content)); }
+      .hero { min-height: auto; }
+      .hero-route, .grid-2, .grid-3, .grid-4, .denominator-compare, .decision-list, .artifact-map { grid-template-columns: 1fr; }
+      .chapter-head { grid-template-columns: 58px 1fr; }
+      .chapter-no { font-size: 2.8rem; }
+      .finding, .finding:nth-child(1), .finding:nth-child(7) { grid-column: span 12; min-height: 0; }
+      .issue-frame { grid-template-columns: 1fr; }
+      .issue-arrow { min-height: 55px; border: 0; border-block: 1px solid var(--line); transform: rotate(90deg); }
+      .insight-line { grid-template-columns: 1fr; }
+      .insight-line .arrow { transform: rotate(90deg); }
+      .task { grid-template-columns: 2.5rem 1fr; }
+      .task-id { grid-column: 2; }
+      .task-body { grid-column: 2; }
+      .bar-row { grid-template-columns: 96px minmax(130px, 1fr) 55px; gap: .4rem; font-size: .75rem; }
+      .source-list { columns: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+    @media print {
+      @page { size: A4; margin: 14mm; }
+      body { background: white; font-size: 10.5pt; }
+      body::before, .topbar, .side-nav, .progress, .print-button, .search-row { display: none !important; }
+      .layout { display: block; width: 100%; }
+      section { padding: 16mm 0; break-before: page; }
+      .hero { min-height: 250mm; break-before: auto; }
+      h1 { font-size: 48pt; }
+      h2 { font-size: 32pt; }
+      .card, .finding, .task-body, .chart-block, .denominator, details { break-inside: avoid; background: white; }
+      details > * { display: block !important; }
+      a { color: var(--ink); text-decoration: none; }
+      .table-wrap { overflow: visible; }
+      th { position: static; }
+      .fade-in { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="brand"><i class="brand-mark" aria-hidden="true"></i><span>OJS metadata field report</span></div>
+    <div class="top-actions">
+      <a class="jump-button" href="#decisions">Meeting decisions</a>
+      <button class="print-button" id="printButton" type="button">Print / PDF</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="side-nav" aria-label="Report chapters">
+      <p class="eyebrow">Field route</p>
+      <a href="#start">Start</a>
+      <a href="#why">Why this matters</a>
+      <a href="#literature">Khanna et al.</a>
+      <a href="#learning">What I learned</a>
+      <a href="#task">My task</a>
+      <a href="#pipeline">What I built</a>
+      <a href="#results">What I found</a>
+      <a href="#profile">After the map</a>
+      <a href="#limits">What this cannot show</a>
+      <a href="#next">What I recommend</a>
+      <a href="#decisions">Group decisions</a>
+      <a href="#evidence">Evidence appendix</a>
+    </nav>
+
+    <main>
+      <section class="hero" id="start">
+        <p class="eyebrow fade-in" style="--i:0">Group meeting · Exploratory Analysis</p>
+        <h1 class="fade-in" style="--i:1">Prepare OJS journal metadata enrichment and literature-review evidence</h1>
+        <p class="lede fade-in" style="--i:2">I read the key paper, fixed the data and matching rules, built a working PKP–OpenAlex pipeline, and ran the first coverage profile. This report shows what the evidence means and what we should do next.</p>
+        <div class="meta-line fade-in" style="--i:3">
+          <span>Yann JY</span><span>Group Meeting</span><span>16 July 2026</span><span>Map #64 + follow-on #74–#75</span>
+        </div>
+        <div class="hero-route fade-in" style="--i:4">
+          <div><span class="route-no">01 · READ</span><strong>What is made invisible?</strong></div>
+          <div><span class="route-no">02 · BUILD</span><strong>How can we measure coverage?</strong></div>
+          <div><span class="route-no">03 · DECIDE</span><strong>Which question comes next?</strong></div>
+        </div>
+      </section>
+
+      <section id="why">
+        <header class="chapter-head">
+          <div class="chapter-no">01</div>
+          <div><p class="eyebrow">Why this matters</p><h2>Two upstream questions guide this work.</h2><p class="chapter-intro">The meeting is a response to the shared project tracker. The metadata task is not an end in itself. It prepares the evidence needed to study invisible research.</p></div>
+        </header>
+        <div class="issue-frame">
+          <article>
+            <span class="label">Upstream issue #6</span>
+            <h3>OJS Journal Metadata</h3>
+            <p>Build an automated pipeline. Merge PKP journal rows with metadata from OpenAlex and, only when useful, other sources.</p>
+            <a href="https://github.com/invisibleinfo/invisible-research/issues/6">Open issue #6</a>
+          </article>
+          <div class="issue-arrow" aria-hidden="true">→</div>
+          <article>
+            <span class="label">Prepare issue #5</span>
+            <h3>Predictors of invisible research</h3>
+            <p>Map source-specific invisibility. Then study whether language, country, DOI activity, past citations, or other features are linked to inclusion.</p>
+            <a href="https://github.com/invisibleinfo/invisible-research/issues/5">Open issue #5</a>
+          </article>
+        </div>
+        <div class="grid-3">
+          <article class="card accent"><span class="label">Need 1</span><h3>A clear outcome</h3><p>“Invisible” cannot start as one loose binary label. OpenAlex coverage, no ISSN, and an ambiguous match are different states.</p></article>
+          <article class="card blue"><span class="label">Need 2</span><h3>A stable cohort</h3><p>We need to know which rows can enter a match before comparing groups or training a model.</p></article>
+          <article class="card"><span class="label">Need 3</span><h3>Traceable evidence</h3><p>Every result must link back to a pinned input, a clear rule, and a reproducible output.</p></article>
+        </div>
+        <details>
+          <summary>Show the exact preparation needs from upstream issue #5</summary>
+          <div class="detail-body"><ul><li>Map invisibility across sources such as Web of Science and Scopus.</li><li>Study possible predictors such as language, country, DOI, and past citations.</li><li>Check which variables are available in Beacon data.</li><li>Give each journal a clear inclusion outcome.</li><li>Only after those steps, test a model such as XGBoost and use SHAP to inspect what is linked to inclusion.</li></ul></div>
+        </details>
+        <aside class="remember"><span class="label">What I want the group to remember</span><p>The pipeline answers issue #6. Its main value is to make a careful version of issue #5 possible.</p></aside>
+      </section>
+
+      <section id="literature">
+        <header class="chapter-head">
+          <div class="chapter-no">02</div>
+          <div><p class="eyebrow">What Khanna et al. show</p><h2>The hidden system is already large and diverse.</h2><p class="chapter-intro">I read the full paper: Khanna, Ball, Alperin, and Willinsky (2022), “Recalibrating the scope of scholarly publishing.” These are the seven findings that matter most for our project.</p></div>
+        </header>
+        <div class="finding-grid">
+          <article class="finding"><span class="number">01 · SCALE</span><p class="stat">25,671</p><h3>active OJS journals</h3><p>This sample alone makes a world estimate of about 30,000 journals too small. The paper does not claim a complete world count.</p></article>
+          <article class="finding"><span class="number">02 · PLACE</span><p class="stat">136</p><h3>countries</h3><p>81.6% fall in Global South countries under the paper’s World Bank grouping. Indonesia and Brazil are the largest groups.</p></article>
+          <article class="finding"><span class="number">03 · LANGUAGE</span><p class="stat">60</p><h3>detected languages</h3><p>49.7% mainly publish in English. 48.3% publish in more than one language. The estimate uses ISSN-verified journals.</p></article>
+          <article class="finding"><span class="number">04 · FIELD & MODEL</span><p class="stat">84.2%</p><h3>estimated OA diamond</h3><p>OJS journals span social science, STEM, and humanities. The OA diamond figure is inferred from earlier survey values, not measured in the 2020 Beacon sample.</p></article>
+          <article class="finding"><span class="number">05 · INDEXING</span><p class="stat">1.2 → 88.3%</p><h3>coverage depends on the source</h3><p>Reported coverage runs from 1.2% in Web of Science to 88.3% in Google Scholar. OpenAlex is 63.8% in the paper’s own cohort.</p></article>
+          <article class="finding"><span class="number">06 · QUALITY CLAIMS</span><p class="stat">1.0–1.4%</p><h3>overlap with two predatory lists</h3><p>Low overlap does not prove quality. It does show why we should not dismiss the whole publishing stratum as suspect.</p></article>
+          <article class="finding"><span class="number">07 · BOUNDARY</span><p class="stat">recenter</p><h3>not “decolonization achieved”</h3><p>Recognition can move the assumed center of publishing. The authors also warn that database inclusion is not the return of Indigenous land and life.</p></article>
+        </div>
+        <details>
+          <summary>Show the paper’s data and methods</summary>
+          <div class="detail-body grid-2">
+            <div><h4>Data and scope</h4><ul><li>Public 2020 PKP Beacon data.</li><li>Active rule: at least five items in 2020.</li><li>25,671 journals; 36.5% of 70,214 PKP beacons.</li><li>ISSN-dependent subsets include 22,809 journals for index matches and 22,561 for language.</li><li>Index snapshots span January 2021 to June 2022.</li></ul></div>
+            <div><h4>Methods</h4><ul><li>Country from ISSN/MARC, country-code domain, and host-IP signals.</li><li>Language from up to 100 titles and abstracts per journal, plus checks and 478 semimanual corrections.</li><li>Discipline from five recent titles and abstracts, translated into English and classified to one ANZSRC field.</li><li>Eleven indexes, directories, and lists matched by ISSN, URL, or domain.</li><li>Preliminary Google Scholar work used about ten returned articles per OJS domain.</li></ul></div>
+          </div>
+        </details>
+        <details>
+          <summary>Show figure conflicts and review cautions</summary>
+          <div class="detail-body"><ul><li>The abstract reports 5.8 million cumulative items. The body reports 5.4 million.</li><li>The abstract reports 5.7% Scopus coverage. Table 3 reports 7.2% for its 22,809-journal subset.</li><li>Country can reflect a hosting server or data center rather than the journal’s organization.</li><li>English may be overestimated because titles and abstracts are often translated.</li><li>The sample covers active, transmitting OJS installations. It is not all OJS journals.</li><li>All four authors are linked to PKP, the developer of OJS. The paper reports this interest.</li></ul></div>
+        </details>
+        <aside class="remember"><span class="label">What I want the group to remember</span><p>Index absence is not journal absence. It is a source-specific view of a large publishing system.</p></aside>
+      </section>
+
+      <section id="learning">
+        <header class="chapter-head">
+          <div class="chapter-no">03</div>
+          <div><p class="eyebrow">My understanding and inspiration</p><h2>I turned the reading into four design rules.</h2><p class="chapter-intro">The paper did not give me a ready-made pipeline. It changed how I think the pipeline should treat missing data, identity, comparison, and the next research question.</p></div>
+        </header>
+        <div class="insight-line"><div><span class="label">The paper says</span><h3>Selective sources hide different parts of publishing.</h3></div><div class="arrow">→</div><div><span class="label">I apply</span><h3>Keep source-specific outcomes.</h3><p>Do not collapse OpenAlex, Scopus, Web of Science, or Crossref absence into one generic failure.</p></div></div>
+        <div class="insight-line"><div><span class="label">The paper shows</span><h3>ISSN-dependent results use smaller cohorts.</h3></div><div class="arrow">→</div><div><span class="label">I apply</span><h3>Separate identifier access from index coverage.</h3><p>A row with no ISSN cannot be called “not covered by OpenAlex” under an ISSN-only route.</p></div></div>
+        <div class="insight-line"><div><span class="label">The paper warns</span><h3>Location and language fields are inferred.</h3></div><div class="arrow">→</div><div><span class="label">I apply</span><h3>Use careful names and caveats.</h3><p>PKP-inferred country is useful for description. It is not an authoritative publisher location.</p></div></div>
+        <div class="insight-line"><div><span class="label">The paper motivates</span><h3>Coverage differences may follow social and technical strata.</h3></div><div class="arrow">→</div><div><span class="label">I apply</span><h3>Describe first; model later.</h3><p>The first profile checks patterns. It does not call them predictors or causes.</p></div></div>
+        <aside class="remember"><span class="label">What I want the group to remember</span><p>My main lesson is not “add more databases.” It is “define each missingness state before we compare or model it.”</p></aside>
+      </section>
+
+      <section id="task">
+        <header class="chapter-head">
+          <div class="chapter-no">04</div>
+          <div><p class="eyebrow">How I understood my task</p><h2>Build a decision package, not a data pile.</h2><p class="chapter-intro">Map #64 asked for literature evidence, a working PKP–OpenAlex route, a coverage report, and a meeting-ready choice. It explicitly kept all work at the Exploratory Analysis level.</p></div>
+        </header>
+        <div class="timeline">
+          <article class="task"><i class="task-dot"></i><a class="task-id" href="https://github.com/YannJY02/InvisibleResearch/issues/65">#65</a><div class="task-body"><strong>Define the note</strong><p>I set one reusable Literature Evidence Note format: Source claim / Evidence / Locator / Caveat.</p></div></article>
+          <article class="task"><i class="task-dot"></i><a class="task-id" href="https://github.com/YannJY02/InvisibleResearch/issues/66">#66</a><div class="task-body"><strong>Read Khanna et al.</strong><p>I recorded the full study, seven findings, limits, project use, and twelve follow-up sources.</p></div></article>
+          <article class="task"><i class="task-dot"></i><a class="task-id" href="https://github.com/YannJY02/InvisibleResearch/issues/67">#67</a><div class="task-body"><strong>Fix the PKP input contract</strong><p>I pinned Beacon V6.0, checked its MD5 and schema, defined row identity, and kept all OJS rows.</p></div></article>
+          <article class="task"><i class="task-dot"></i><a class="task-id" href="https://github.com/YannJY02/InvisibleResearch/issues/68">#68</a><div class="task-body"><strong>Test OpenAlex routes</strong><p>I chose exact batched ISSN matching. I kept title matching provisional and off by default because it is costly and ambiguous.</p></div></article>
+          <article class="task"><i class="task-dot"></i><a class="task-id" href="https://github.com/YannJY02/InvisibleResearch/issues/69">#69</a><div class="task-body"><strong>Build and run the pipeline</strong><p>I preserved 86,282 OJS rows, cached 936 batches, and produced coverage and review artifacts.</p></div></article>
+          <article class="task"><i class="task-dot"></i><a class="task-id" href="https://github.com/YannJY02/InvisibleResearch/issues/70">#70</a><div class="task-body"><strong>Assess other sources</strong><p>I compared Crossref, ISSN Portal, Scopus, Web of Science, and Dimensions. I did not build five integrations.</p></div></article>
+          <article class="task"><i class="task-dot"></i><a class="task-id" href="https://github.com/YannJY02/InvisibleResearch/issues/71">#71</a><div class="task-body"><strong>Prepare the meeting brief</strong><p>I separated known results, unresolved questions, and the smallest next choices.</p></div></article>
+          <article class="task"><i class="task-dot"></i><a class="task-id" href="https://github.com/YannJY02/InvisibleResearch/issues/72">#72</a><div class="task-body"><strong>Choose the first analysis</strong><p>I fixed Strict OpenAlex Coverage, the 64,773-row cohort, four descriptive strata, and the no-causal-claim boundary.</p></div></article>
+        </div>
+        <div class="boundary"><strong>Map boundary</strong>#64 ended with a decision package. The four-dimension profile below was executed later in #74 and #75. I show it as follow-on work, not as an original map deliverable.</div>
+      </section>
+
+      <section id="pipeline">
+        <header class="chapter-head">
+          <div class="chapter-no">05</div>
+          <div><p class="eyebrow">What I prepared and built</p><h2>One strict route, with every row kept.</h2><p class="chapter-intro">The code is long because it handles input checks, API recovery, cache files, matching evidence, and reports. Its main logic is simple.</p></div>
+        </header>
+        <div class="pipeline" aria-label="Pipeline logic">
+          <article class="pipe-step"><span class="route-no">01</span><b>Verify input</b><small>Check MD5, required columns, row count, and row identity.</small></article>
+          <article class="pipe-step"><span class="route-no">02</span><b>Keep OJS rows</b><small>Filter application to OJS. Keep all 86,282 rows.</small></article>
+          <article class="pipe-step"><span class="route-no">03</span><b>Clean ISSNs</b><small>Split values, normalize them, check the checksum, and deduplicate tokens.</small></article>
+          <article class="pipe-step"><span class="route-no">04</span><b>Ask OpenAlex</b><small>Send at most 100 ISSNs per list call. Cache each response.</small></article>
+          <article class="pipe-step"><span class="route-no">05</span><b>Match locally</b><small>Compare each token with every Source ISSN. Keep all candidates.</small></article>
+          <article class="pipe-step"><span class="route-no">06</span><b>Classify result</b><small>One journal Source = unique. Many IDs = ambiguous. No ID = unmatched.</small></article>
+          <article class="pipe-step"><span class="route-no">07</span><b>Left join & report</b><small>Return to every PKP row. Write coverage, review, cost, and quality evidence.</small></article>
+        </div>
+        <div class="grid-4" style="margin-top:2rem">
+          <article class="card"><span class="label">Pinned input</span><span class="big-number">87,170</span><span class="unit">Beacon V6.0 rows</span><p>MD5: <code>9f43fa…2011</code></p></article>
+          <article class="card"><span class="label">OJS scope</span><span class="big-number">86,282</span><span class="unit">rows preserved</span><p>Identity: <code>oai_url + repository_name + set_spec</code></p></article>
+          <article class="card"><span class="label">Request plan</span><span class="big-number">936</span><span class="unit">batched calls</span><p>93,589 distinct valid ISSNs; two retries; zero failed batches.</p></article>
+          <article class="card"><span class="label">Reported cost</span><span class="big-number">$0.0936</span><span class="unit">OpenAlex</span><p>A cache-only rebuild made zero new calls.</p></article>
+        </div>
+        <details>
+          <summary>Show the technical contract and safety checks</summary>
+          <div class="detail-body grid-2"><div><h4>Input</h4><ul><li>Dataverse V6.0 <code>beacon.csv</code>, file ID 13173372.</li><li>Original CSV parser supports multiline quoting.</li><li><code>repository_name</code> can be empty.</li><li><code>stats_id</code> and ISSN are not row keys.</li><li>A new annual release becomes a new Artifact Version and must be profiled again.</li></ul></div><div><h4>Output</h4><ul><li>Every source field carries match route and provenance.</li><li>Non-journal candidates and conflicts are not hidden.</li><li><code>admin_email</code> is excluded from joined files and reports.</li><li>Title fallback is opt-in, bounded, and never equal to exact ISSN.</li><li><code>OPENALEX_API_KEY</code> is required for live calls and never logged.</li><li>Only transient and rate errors are retried, with bounded backoff.</li></ul></div></div>
+        </details>
+        <aside class="remember"><span class="label">What I want the group to remember</span><p>The pipeline does not force a match. It makes uncertainty visible and keeps the original PKP population intact.</p></aside>
+      </section>
+
+      <section id="results">
+        <header class="chapter-head">
+          <div class="chapter-no">06</div>
+          <div><p class="eyebrow">What the run found</p><h2>Coverage depends on the denominator.</h2><p class="chapter-intro">The same 49,877 unique matches produce two correct percentages. They answer two different questions.</p></div>
+        </header>
+        <div class="outcome-strip" role="img" aria-label="86,282 OJS rows: 49,877 unique, 14,706 unmatched, 190 ambiguous, and 21,509 without ISSN">
+          <div class="unique" style="width:57.807%">49,877<br>unique</div>
+          <div class="unmatched" style="width:17.044%">14,706<br>unmatched</div>
+          <div class="ambiguous" style="width:.22%" title="190 ambiguous rows"></div>
+          <div class="missing" style="width:24.929%">21,509<br>no ISSN</div>
+        </div>
+        <div class="legend"><span><i class="unique"></i>Unique exact-ISSN match</span><span><i class="unmatched"></i>Valid ISSN, no unique match</span><span><i class="ambiguous"></i>Ambiguous</span><span><i class="missing"></i>ISSN missing; not attempted</span></div>
+        <div class="denominator-compare">
+          <article class="denominator"><span class="label">Question A · all OJS rows</span><span class="big-number">57.807%</span><h3>How much of the full PKP OJS file received one strict match?</h3><p class="formula">49,877 ÷ 86,282</p><p>This includes 21,509 rows that have no ISSN and cannot enter the exact-ISSN route.</p></article>
+          <article class="denominator"><span class="label">Question B · matchable cohort</span><span class="big-number">77.003%</span><h3>How much of the Valid-ISSN OJS Cohort received one strict match?</h3><p class="formula">49,877 ÷ 64,773 · 95% Wilson CI 76.677–77.325</p><p>This is the outcome for the first coverage profile.</p></article>
+        </div>
+        <div class="grid-3">
+          <article class="card"><span class="label">Field warning</span><span class="big-number">8,778</span><p>Unique matches have OpenAlex <code>is_ojs=false</code>. That field cannot validate PKP provenance.</p></article>
+          <article class="card"><span class="label">Country warning</span><span class="big-number">2,615</span><p>PKP and OpenAlex country values disagree among 30,028 rows where both are present.</p></article>
+          <article class="card"><span class="label">Title fallback</span><span class="big-number">0</span><p>No title-only candidate enters strict coverage. A sample search for “Journal of Public Health” returned 318 results.</p></article>
+        </div>
+        <div class="boundary"><strong>Do not compare 57.807% directly with Khanna et al.’s 63.8%.</strong>The cohorts, data dates, denominators, and matching routes differ. The gap is not evidence that OpenAlex coverage fell.</div>
+      </section>
+
+      <section id="profile">
+        <header class="chapter-head">
+          <div class="chapter-no">07</div>
+          <div><p class="eyebrow">After the map · #74 and #75</p><h2>The first descriptive profile is now complete.</h2><p class="chapter-intro">All four views use the same 64,773 valid-ISSN rows. Each group reports unique, ambiguous, and unmatched outcomes. The bars show strict coverage; thin marks show 95% Wilson intervals.</p></div>
+        </header>
+        <div class="chart-block"><div class="chart-title"><div><span class="label">PKP-inferred country</span><h3>Largest country groups</h3></div><p>Top 12 by cohort size · not authoritative publisher location</p></div><div class="bars" id="countryBars"></div></div>
+        <div class="grid-2">
+          <div class="chart-block"><div class="chart-title"><div><span class="label">Observed activity</span><h3>2025 PKP record count</h3></div></div><div class="bars" id="activityBars"></div><p class="unit">This is observed PKP activity. It is not an authoritative active-journal class.</p></div>
+          <div class="chart-block"><div class="chart-title"><div><span class="label">Observation duration</span><h3>Time since first Beacon</h3></div></div><div class="bars" id="durationBars"></div><p class="unit">This is time in Beacon, not journal age since founding.</p></div>
+        </div>
+        <div class="chart-block"><div class="chart-title"><div><span class="label">Directory evidence</span><h3>PKP DOAJ evidence</h3></div><p>“Not observed” is not proof of absence from DOAJ.</p></div><div class="bars" id="doajBars"></div></div>
+        <div class="grid-3">
+          <article class="card accent"><span class="label">Observed pattern</span><h3>Coverage rises with record-count groups.</h3><p>71.304% for zero 2025 records; 78.023% for 1–4; 82.049% for at least five.</p></article>
+          <article class="card blue"><span class="label">Observed pattern</span><h3>Longer Beacon observation has higher coverage.</h3><p>64.845% under one year; 83.938% at six or more years.</p></article>
+          <article class="card"><span class="label">Largest split</span><h3>PKP DOAJ evidence is strongly separated.</h3><p>98.777% when present; 74.692% when not observed.</p></article>
+        </div>
+        <div class="boundary"><strong>These are descriptive differences, not predictors.</strong>No cross-classified analysis, regression, significance test, ranking, or causal claim was made. Small country groups have wide intervals.</div>
+        <aside class="remember"><span class="label">What I want the group to remember</span><p>The profile shows where coverage differs. It does not yet show why.</p></aside>
+      </section>
+
+      <section id="limits">
+        <header class="chapter-head"><div class="chapter-no">08</div><div><p class="eyebrow">What the results do not show</p><h2>Five lines I will not cross.</h2></div></header>
+        <div class="grid-2">
+          <article class="card"><span class="label">No causal claim</span><h3>Country, activity, duration, and DOAJ evidence are not proven causes.</h3><p>They are separate descriptive views. They may also overlap with each other.</p></article>
+          <article class="card"><span class="label">No quality claim</span><h3>Unmatched does not mean low quality or “predatory.”</h3><p>It means no unique journal Source was found by this exact-ISSN route.</p></article>
+          <article class="card"><span class="label">No identity repair</span><h3>The strict route does not solve title or ISSN history.</h3><p>Some unmatched and ambiguous rows may need ISSN-L, title history, or homepage review.</p></article>
+          <article class="card"><span class="label">No universal invisibility</span><h3>OpenAlex noncoverage is one outcome.</h3><p>Scopus, Web of Science, Crossref, citations, language, and DOI infrastructure describe other forms of visibility.</p></article>
+          <article class="card accent"><span class="label">No authority promotion</span><h3>This remains Exploratory Analysis.</h3><p>No Candidate Version, Designation Event, or Paper Analysis designation was created.</p></article>
+        </div>
+      </section>
+
+      <section id="next">
+        <header class="chapter-head"><div class="chapter-no">09</div><div><p class="eyebrow">My recommendation</p><h2>Explain the profile before adding more sources.</h2><p class="chapter-intro">The shortest useful path is to learn from the current evidence, test identity error on a bounded sample, and only then add a source that answers a named question.</p></div></header>
+        <div class="timeline">
+          <article class="task"><i class="task-dot"></i><div class="task-id">NOW</div><div class="task-body"><strong>Explain descriptive differences</strong><p>Check group size, missing fields, and metadata quality. Define which country and activity contrasts matter for issue #5. Do not move to XGBoost yet.</p></div></article>
+          <article class="task"><i class="task-dot"></i><div class="task-id">NEXT</div><div class="task-body"><strong>Run a bounded identity audit</strong><p>Review a small stratified sample: valid single ISSN unmatched, multi-ISSN ambiguous, missing ISSN, and suspected title change. Use ISSN Portal and homepage evidence manually first.</p></div></article>
+          <article class="task"><i class="task-dot"></i><div class="task-id">IF NEEDED</div><div class="task-body"><strong>Pilot Crossref</strong><p>Use the public ISSN route only if we want DOI activity or deposit-quality evidence. Start with journal summaries, not all works.</p></div></article>
+          <article class="task"><i class="task-dot"></i><div class="task-id">DEFER</div><div class="task-body"><strong>Scopus, Web of Science, Dimensions</strong><p>Add none until we name the metric, confirm entitlement and reuse rules, and show that the source answers a question OpenAlex cannot.</p></div></article>
+        </div>
+        <aside class="remember"><span class="label">What I want the group to remember</span><p>More metadata is useful only when it resolves a known gap or measures a named form of visibility.</p></aside>
+      </section>
+
+      <section id="decisions">
+        <header class="chapter-head"><div class="chapter-no">10</div><div><p class="eyebrow">Decisions for the group</p><h2>Three choices move the research forward.</h2></div></header>
+        <div class="decision-list">
+          <article><h3>Which differences should we explain first?</h3><p>Choose the country, activity, Beacon-duration, or DOAJ contrast that matters most for the research story.</p></article>
+          <article><h3>Should identity audit come next?</h3><p>Agree on a small stratified sample and who will confirm uncertain journal identities.</p></article>
+          <article><h3>Do we have a reason to add a source?</h3><p>Use Crossref for DOI/deposit evidence only. Request licensed access only for a named metric and permitted output.</p></article>
+        </div>
+        <div class="boundary"><strong>Proposed meeting outcome</strong>Keep Strict OpenAlex Coverage as the first outcome for issue #5. Treat Identifier Availability as a separate outcome. Select one descriptive contrast for explanation and approve a bounded identity audit before predictive modeling.</div>
+      </section>
+
+      <section id="evidence">
+        <header class="chapter-head"><div class="chapter-no">A</div><div><p class="eyebrow">Evidence appendix</p><h2>Full detail, kept close to the claim.</h2><p class="chapter-intro">Use these sections during questions, source checking, or later review work.</p></div></header>
+
+        <details open>
+          <summary>All 161 PKP-inferred country groups</summary>
+          <div class="detail-body">
+            <p>Each row uses the Valid-ISSN OJS Cohort. CI is the 95% Wilson interval. Country is inferred PKP metadata, not authoritative publisher location.</p>
+            <div class="search-row"><label for="countrySearch">Find a country code or missing group</label><input id="countrySearch" type="search" placeholder="Example: BR or missing"><span class="search-count" id="countryCount"></span></div>
+            <div class="table-wrap"><table><thead><tr><th>Group</th><th>Cohort</th><th>Unique</th><th>Ambiguous</th><th>Unmatched</th><th>Coverage</th><th>95% CI</th></tr></thead><tbody id="countryTable"></tbody></table></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Khanna et al.: source-reported limits and reviewer assessment</summary>
+          <div class="detail-body grid-2">
+            <div><h4>Source-reported</h4><ul><li>No complete estimate of all world journals.</li><li>Country may be server or data-center location.</li><li>Title and abstract text may overestimate English.</li><li>Language tools do not support every language.</li><li>Citation work is preliminary and grouped by OJS domain.</li><li>Metaphorical decolonization can hide or continue colonial relations.</li></ul></div>
+            <div><h4>Reviewer assessment</h4><ul><li>Beacon participation and the five-item rule select active transmitting installations.</li><li>Different analyses use different ISSN subsets and time snapshots.</li><li>English translation and one ANZSRC label compress multilingual, multidisciplinary journals.</li><li>5.8 vs 5.4 million items and 5.7% vs 7.2% Scopus need archived-source checks.</li><li>All authors’ PKP link matters when reading platform-level claims.</li></ul></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Literature-review seed set</summary>
+          <div class="detail-body"><ol class="source-list"><li>Altbach (1981) — center–periphery framing.</li><li>Alatas (2022) — academic and recognition dependency.</li><li>Thiong'o (1993) — “moving the centre.”</li><li>Tuck & Yang (2012) — decolonization boundary.</li><li>Cetto & Alonso-Gamboa (1998) — Latin American index marginalization.</li><li>Alperin, Stranack & Garnett (2016) — earlier OJS mapping.</li><li>Bosman et al. (2021) — OA Diamond Journals Study.</li><li>Berger (2021) — bibliodiversity and noncommercial OA.</li><li>Canagarajah (2022) — language diversity.</li><li>Navarro et al. (2022) — costs of English-only norms.</li><li>Vera-Baceta, Thelwall & Kousha (2019) — WoS/Scopus language coverage.</li><li>Krawczyk & Kulczycki (2021) — OA and predatory-list discourse.</li></ol></div>
+        </details>
+
+        <details>
+          <summary>Follow-on source decision table</summary>
+          <div class="detail-body"><div class="table-wrap"><table><thead><tr><th>Source</th><th>Decision</th><th>Unique value</th><th>Gate</th></tr></thead><tbody>
+            <tr><td>Crossref</td><td>Bounded pilot only</td><td>DOI activity and deposit completeness</td><td>A named DOI/deposit question</td></tr>
+            <tr><td>ISSN Portal</td><td>Manual identity benchmark first</td><td>ISSN-L, media forms, title history, identifier status</td><td>Material match improvement and valid paid reuse terms</td></tr>
+            <tr><td>Scopus</td><td>Defer</td><td>Curated inclusion, subjects, CiteScore/SJR/SNIP</td><td>Valid entitlement, named metric, permitted retained output</td></tr>
+            <tr><td>Web of Science</td><td>Defer</td><td>JIF/JCI, ranks, JCR categories</td><td>Paid Journals API and named metric/year</td></tr>
+            <tr><td>Dimensions</td><td>Do not add to this pipeline</td><td>Useful mainly for linked cross-domain entities</td><td>A named cross-domain question and approved data route</td></tr>
+          </tbody></table></div></div>
+        </details>
+
+        <details>
+          <summary>Verification and known technical gaps</summary>
+          <div class="detail-body"><ul><li><code>python research/ojs-journal-metadata/analysis/enrich_openalex.py --profile</code> regenerated the profile with zero OpenAlex requests.</li><li><code>python research/ojs-journal-metadata/analysis/enrich_openalex.py --check</code> passed cohort, group, interval, privacy, route, and Exploratory Analysis checks.</li><li>64,773 cohort rows reconcile to 49,877 unique + 190 ambiguous + 14,706 unmatched in every dimension.</li><li>All 86,282 OJS rows reconcile to 64,773 valid ISSN + 21,509 missing + 0 invalid.</li><li>Black, Black-compatible Flake8, and compile checks passed for #74.</li><li>At #74, full pytest had 25 passes and two pre-existing inventory/allowlist failures unrelated to the profile.</li><li>The profile/check path had 47% branch coverage because the live API acquisition path was intentionally not called.</li></ul></div>
+        </details>
+
+        <details>
+          <summary>Evidence and artifact map</summary>
+          <div class="detail-body"><div class="artifact-map">
+            <a href="https://github.com/YannJY02/InvisibleResearch/issues/64"><strong>Wayfinder map #64</strong><small>Destination, decisions, scope, and map boundary</small></a>
+            <a href="../docs/literature-evidence-note-spec.md"><strong>Literature Evidence Note specification</strong><small>Reusable claim / evidence / locator / caveat contract</small></a>
+            <a href="../papers/invisible-communication-science/literature/khanna-2022-recalibrating-scholarly-publishing.md"><strong>Khanna et al. evidence note</strong><small>Full reading record and follow-up literature</small></a>
+            <a href="zotero://select/library/items/57TC9FXV"><strong>Khanna et al. in Zotero</strong><small>Bibliographic item 57TC9FXV</small></a>
+            <a href="https://doi.org/10.1162/qss_a_00228"><strong>Khanna et al. DOI</strong><small>Published source</small></a>
+            <a href="../research/ojs-journal-metadata/README.md"><strong>OJS enrichment research record</strong><small>Input, fields, routes, commands, and report contract</small></a>
+            <a href="../research/ojs-journal-metadata/analysis/enrich_openalex.py"><strong>Pipeline source</strong><small>Acquisition, matching, profile, and checks</small></a>
+            <a href="../research/ojs-journal-metadata/follow-on-source-assessment.md"><strong>Follow-on source assessment</strong><small>Access, value, constraints, and gates</small></a>
+            <a href="../research/ojs-journal-metadata/artifacts/coverage-report.json"><strong>Coverage report</strong><small>Machine-readable run evidence</small></a>
+            <a href="../research/ojs-journal-metadata/artifacts/strict-openalex-coverage-profile-summary.json"><strong>Profile summary</strong><small>Definitions, reconciliation, privacy, and generation</small></a>
+            <a href="../research/ojs-journal-metadata/artifacts/strict-openalex-coverage-profile.csv"><strong>Full profile table</strong><small>Four dimensions and 170 total rows</small></a>
+            <a href="../docs/issues/2026-07-16-strict-openalex-country-profile-tdd.md"><strong>TDD evidence</strong><small>RED/GREEN route and final checks</small></a>
+            <a href="2026-07-16-ojs-journal-metadata.md"><strong>Meeting brief</strong><small>Pre-profile collaborator-facing decision note</small></a>
+            <a href="https://github.com/YannJY02/InvisibleResearch/issues/75"><strong>Follow-on #75</strong><small>Four-dimension profile acceptance contract</small></a>
+          </div></div>
+        </details>
+      </section>
+
+      <footer>
+        <p><span class="evidence-tag">STATUS</span> Exploratory Analysis · No Candidate Version · No Designation Event · No Paper Analysis designation</p>
+        <p>Prepared from pinned local artifacts and the live GitHub issue record on 16 July 2026.</p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const profile = {
+      activity: [
+        ["Zero records", 28436, 71.304, 70.775, 71.827],
+        ["1–4 records", 5292, 78.023, 76.888, 79.119],
+        ["At least 5", 31045, 82.049, 81.618, 82.472]
+      ],
+      duration: [
+        ["Under 1 year", 549, 64.845, 60.761, 68.723],
+        ["1–2 years", 10547, 70.010, 69.129, 70.877],
+        ["3–5 years", 31812, 74.764, 74.284, 75.239],
+        ["6+ years", 21865, 83.938, 83.445, 84.419]
+      ],
+      doaj: [
+        ["Present", 6215, 98.777, 98.472, 99.022],
+        ["Not observed", 58558, 74.692, 74.338, 75.042]
+      ]
+    };
+
+    const countries = [["AE",93,89,0,4,95.699,89.457,98.315],["AF",28,26,0,2,92.857,77.355,98.019],["AL",22,14,0,8,63.636,42.952,80.267],["AM",33,31,1,1,93.939,80.394,98.322],["AO",22,10,0,12,45.455,26.92,65.34],["AR",958,633,0,325,66.075,63.018,69.004],["AT",75,51,0,24,68,56.789,77.457],["AU",173,146,1,26,84.393,78.245,89.047],["AZ",36,33,1,2,91.667,78.173,97.125],["BA",90,83,0,7,92.222,84.806,96.182],["BB",2,1,0,1,50,9.453,90.547],["BD",204,187,0,17,91.667,87.061,94.732],["BE",105,73,0,32,69.524,60.16,77.51],["BF",6,4,0,2,66.667,29.999,90.323],["BG",96,78,0,18,81.25,72.298,87.798],["BH",2,1,0,1,50,9.453,90.547],["BI",1,0,0,1,0,0,79.345],["BJ",6,5,0,1,83.333,43.65,96.995],["BN",8,7,0,1,87.5,52.911,97.758],["BO",99,73,0,26,73.737,64.3,81.402],["BR",5271,3755,6,1510,71.239,70.002,72.445],["BT",14,12,0,2,85.714,60.059,95.991],["BW",4,2,0,2,50,15.004,84.996],["BY",22,15,0,7,68.182,47.319,83.639],["CA",584,477,1,106,81.678,78.337,84.605],["CC",1,1,0,0,100,20.655,100],["CD",14,8,0,6,57.143,32.591,78.619],["CG",6,5,0,1,83.333,43.65,96.995],["CH",97,83,0,14,85.567,77.221,91.204],["CI",4,3,0,1,75,30.064,95.441],["CL",400,330,1,69,82.5,78.472,85.91],["CM",11,9,0,2,81.818,52.302,94.863],["CN",272,225,0,47,82.721,77.78,86.75],["CO",1138,906,0,232,79.613,77.175,81.853],["CR",132,117,0,15,88.636,82.096,92.991],["CU",196,109,0,87,55.612,48.615,62.394],["CY",6,4,0,2,66.667,29.999,90.323],["CZ",137,124,0,13,90.511,84.441,94.371],["DE",606,314,4,288,51.815,47.838,55.769],["DK",188,143,0,45,76.064,69.481,81.602],["DO",26,17,2,7,65.385,46.221,80.588],["DZ",142,81,0,61,57.042,48.821,64.893],["EC",519,436,1,82,84.008,80.606,86.91],["EE",50,35,0,15,70,56.25,80.896],["EG",42,36,0,6,85.714,72.159,93.284],["ES",1602,1409,4,189,87.953,86.267,89.456],["ET",102,57,0,45,55.882,46.207,65.131],["FI",155,132,0,23,85.161,78.718,89.904],["FR",130,91,2,37,70,61.641,77.211],["GB",546,458,4,84,83.883,80.564,86.729],["GE",106,58,2,46,54.717,45.242,63.862],["GH",80,62,1,17,77.5,67.213,85.267],["GM",4,1,0,3,25,4.559,69.936],["GN",3,0,0,3,0,0,56.15],["GR",143,107,0,36,74.825,67.126,81.226],["GT",40,27,0,13,67.5,52.018,79.915],["GY",1,1,0,0,100,20.655,100],["HK",1,0,0,1,0,0,79.345],["HN",9,9,0,0,100,70.085,100],["HR",116,99,0,17,85.345,77.779,90.644],["HU",301,280,0,21,93.023,89.57,95.392],["ID",27737,22488,90,5159,81.076,80.611,81.532],["IE",21,18,0,3,85.714,65.364,95.019],["IL",13,8,0,5,61.538,35.523,82.29],["IM",1,1,0,0,100,20.655,100],["IN",1898,1547,3,348,81.507,79.697,83.189],["IQ",348,298,0,50,85.632,81.557,88.929],["IR",226,154,1,71,68.142,61.807,73.87],["IS",11,10,0,1,90.909,62.264,98.377],["IT",731,480,3,248,65.663,62.147,69.016],["JO",85,66,0,19,77.647,67.706,85.197],["JP",41,27,0,14,65.854,50.55,78.441],["KE",340,286,1,53,84.118,79.854,87.619],["KG",21,20,0,1,95.238,77.331,99.154],["KH",8,6,0,2,75,40.928,92.852],["KR",23,17,0,6,73.913,53.53,87.451],["KW",20,20,0,0,100,83.887,100],["KZ",156,144,2,10,92.308,87.037,95.545],["LA",3,3,0,0,100,43.85,100],["LB",13,12,0,1,92.308,66.686,98.629],["LK",55,34,0,21,61.818,48.609,73.484],["LT",164,159,0,5,96.951,93.062,98.691],["LU",4,2,0,2,50,15.004,84.996],["LV",43,39,1,3,90.698,78.397,96.323],["LY",101,80,0,21,79.208,70.296,85.979],["MA",192,62,0,130,32.292,26.081,39.197],["MC",1,1,0,0,100,20.655,100],["MD",21,18,0,3,85.714,65.364,95.019],["ME",5,5,0,0,100,56.552,100],["MG",1,1,0,0,100,20.655,100],["MH",31,31,0,0,100,88.974,100],["MK",70,62,0,8,88.571,79.036,94.094],["ML",10,3,0,7,30,10.779,60.322],["MM",3,0,0,3,0,0,56.15],["MN",35,31,1,3,88.571,74.049,95.465],["MO",1,0,0,1,0,0,79.345],["MT",2,1,0,1,50,9.453,90.547],["MU",31,20,0,11,64.516,46.948,78.883],["MV",6,3,0,3,50,18.762,81.238],["MW",2,2,0,0,100,34.238,100],["MX",810,644,2,164,79.506,76.59,82.144],["MY",759,573,0,186,75.494,72.311,78.421],["MZ",13,5,0,8,38.462,17.71,64.477],["NA",10,10,0,0,100,72.247,100],["NG",1007,470,12,525,46.673,43.61,49.761],["NI",20,16,0,4,80,58.398,91.934],["NL",297,180,0,117,60.606,54.948,65.994],["NO",108,103,0,5,95.37,89.618,98.007],["NP",529,519,0,10,98.11,96.556,98.97],["NZ",75,67,1,7,89.333,80.339,94.495],["OM",18,17,1,0,94.444,74.243,99.012],["PA",74,59,1,14,79.73,69.212,87.313],["PE",595,493,1,101,82.857,79.62,85.672],["PG",2,2,0,0,100,34.238,100],["PH",257,151,2,104,58.755,52.65,64.601],["PK",1190,741,0,449,62.269,59.48,64.979],["PL",907,813,2,92,89.636,87.483,91.455],["PR",24,12,0,12,50,31.427,68.573],["PS",15,14,0,1,93.333,70.183,98.813],["PT",353,259,1,93,73.371,68.526,77.713],["PW",1,1,0,0,100,20.655,100],["PY",104,65,0,39,62.5,52.907,71.203],["QA",11,9,0,2,81.818,52.302,94.863],["RE",1,0,0,1,0,0,79.345],["RO",332,277,0,55,83.434,79.057,87.046],["RS",163,154,0,9,94.479,89.841,97.068],["RU",840,754,7,79,89.762,87.528,91.634],["RW",11,10,0,1,90.909,62.264,98.377],["SA",38,34,0,4,89.474,75.869,95.83],["SD",47,27,0,20,57.447,43.282,70.486],["SE",128,112,0,16,87.5,80.657,92.157],["SG",290,243,0,47,83.793,79.115,87.588],["SI",135,123,0,12,91.111,85.105,94.842],["SK",46,33,0,13,71.739,57.451,82.676],["SL",1,1,0,0,100,20.655,100],["SN",12,9,0,3,75,46.769,91.106],["SO",6,5,0,1,83.333,43.65,96.995],["SV",35,29,0,6,82.857,67.318,91.897],["SY",20,10,0,10,50,29.93,70.07],["SZ",2,1,0,1,50,9.453,90.547],["TG",1,1,0,0,100,20.655,100],["TH",1342,219,2,1121,16.319,14.438,18.392],["TL",11,5,0,6,45.455,21.271,71.991],["TN",14,9,0,5,64.286,38.764,83.655],["TR",476,301,2,173,63.235,58.814,67.445],["TT",8,3,0,5,37.5,13.684,69.426],["TW",28,15,0,13,53.571,35.813,70.468],["TZ",77,63,2,12,81.818,71.764,88.849],["UA",1243,1173,5,65,94.368,92.945,95.519],["UG",38,25,0,13,65.789,49.892,78.788],["US",1976,1508,5,463,76.316,74.391,78.138],["UY",79,65,1,13,82.278,72.424,89.14],["UZ",268,125,0,143,46.642,40.759,52.62],["VE",279,138,1,140,49.462,43.643,55.296],["VN",326,244,3,79,74.847,69.866,79.249],["VU",4,4,0,0,100,51.011,100],["YE",51,42,1,8,82.353,69.746,90.428],["ZA",270,256,3,11,94.815,91.486,96.886],["ZM",20,8,0,12,40,21.881,61.342],["ZW",26,19,0,7,73.077,53.917,86.296],["Missing PKP-inferred country",1196,867,2,327,72.492,69.892,74.947]];
+
+    const topCountries = [...countries]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([name, n, , , , pct, low, high]) => [name, n, pct, low, high]);
+
+    function renderBars(id, rows, orange = false) {
+      const root = document.getElementById(id);
+      root.innerHTML = rows.map(([name, n, pct, low, high]) => `
+        <div class="bar-row" title="${name}: ${pct.toFixed(3)}% (${n.toLocaleString()} rows); 95% CI ${low.toFixed(3)}–${high.toFixed(3)}">
+          <span class="bar-label">${name} <small>n=${n.toLocaleString()}</small></span>
+          <span class="bar-track"><i class="bar-fill ${orange ? "orange" : ""}" style="width:${pct}%"></i><i class="bar-ci" style="left:${low}%;width:${Math.max(high-low,.2)}%"></i></span>
+          <span class="bar-value">${pct.toFixed(1)}%</span>
+        </div>`).join("");
+    }
+
+    renderBars("countryBars", topCountries);
+    renderBars("activityBars", profile.activity);
+    renderBars("durationBars", profile.duration, true);
+    renderBars("doajBars", profile.doaj);
+
+    const tableBody = document.getElementById("countryTable");
+    const search = document.getElementById("countrySearch");
+    const count = document.getElementById("countryCount");
+    function renderCountryTable(query = "") {
+      const q = query.trim().toLowerCase();
+      const shown = countries.filter(row => row[0].toLowerCase().includes(q));
+      tableBody.innerHTML = shown.map(([name, n, unique, ambiguous, unmatched, pct, low, high]) => `
+        <tr><td><strong>${name}</strong></td><td class="num">${n.toLocaleString()}</td><td class="num">${unique.toLocaleString()}</td><td class="num">${ambiguous.toLocaleString()}</td><td class="num">${unmatched.toLocaleString()}</td><td class="num">${pct.toFixed(3)}%</td><td class="num">${low.toFixed(3)}–${high.toFixed(3)}</td></tr>`).join("");
+      count.textContent = `${shown.length} of ${countries.length} groups`;
+    }
+    renderCountryTable();
+    search.addEventListener("input", event => renderCountryTable(event.target.value));
+
+    const progress = document.getElementById("progress");
+    function updateProgress() {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      progress.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+    }
+    addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
+
+    const navLinks = [...document.querySelectorAll(".side-nav a")];
+    const sections = [...document.querySelectorAll("main section[id]")];
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      navLinks.forEach(link => link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`));
+    }, { rootMargin: "-20% 0px -65%", threshold: [0, .1, .5] });
+    sections.forEach(section => observer.observe(section));
+
+    document.getElementById("printButton").addEventListener("click", () => window.print());
+    let openBeforePrint = [];
+    addEventListener("beforeprint", () => {
+      openBeforePrint = [...document.querySelectorAll("details")].map(item => item.open);
+      document.querySelectorAll("details").forEach(item => item.open = true);
+    });
+    addEventListener("afterprint", () => {
+      document.querySelectorAll("details").forEach((item, index) => item.open = openBeforePrint[index]);
+    });
+  </script>
+</body>
+</html>

@@ -627,6 +627,20 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
     profile_path = output_dir / "strict-openalex-coverage-profile.csv"
     summary_path = output_dir / "strict-openalex-coverage-profile-summary.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
+    identifier_counts = report["input"]["identifier_status_counts"]
+    identifier_availability = {
+        "ojs_rows": report["input"]["ojs_rows"],
+        "valid_issn_rows": identifier_counts.get("valid", 0),
+        "missing_issn_rows": identifier_counts.get("missing", 0),
+        "invalid_issn_rows": identifier_counts.get("invalid", 0),
+    }
+    if identifier_availability != {
+        "ojs_rows": EXPECTED_OJS_ROWS,
+        "valid_issn_rows": EXPECTED_VALID_ISSN_ROWS,
+        "missing_issn_rows": EXPECTED_OJS_ROWS - EXPECTED_VALID_ISSN_ROWS,
+        "invalid_issn_rows": 0,
+    }:
+        raise ValueError(f"Identifier Availability mismatch: {identifier_availability}")
     groups: dict[str, Counter[str]] = defaultdict(Counter)
     status_counts: Counter[str] = Counter()
 
@@ -719,6 +733,7 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
             },
             "uncertainty": "95% Wilson score interval for unique / cohort rows",
         },
+        "identifier_availability": identifier_availability,
         "reconciliation": {
             "cohort_rows": EXPECTED_VALID_ISSN_ROWS,
             "status_counts": EXPECTED_VALID_STATUS_COUNTS,
@@ -729,6 +744,9 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
             "wilson_95_upper_pct": round(total_upper, 6),
             "country_group_count": len(profile_rows),
             "grouped_cohort_rows": sum(row["cohort_rows"] for row in profile_rows),
+            "coverage_report_strict_coverage_pct_all_ojs": round(
+                report["matching"]["strict_issn_coverage"] * 100, 6
+            ),
             "matches_coverage_report": True,
         },
         "generation": {

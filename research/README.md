@@ -10,6 +10,7 @@ analysis eligible for paper claims.
 | `author-name-sampling` | What author-field patterns need inspection before name processing? |
 | `dimensions-dataset-construction` | How can yearly Dimensions exports be merged and turned into analysis variables? |
 | `openalex-dataset-construction` | Can Communication works be acquired and converted without row or token loss? |
+| `ojs-journal-metadata` | How can PKP journal records be enriched without losing unmatched or ambiguous journals? |
 | `scimago-openalex-coverage` | Which SCImago Communication sources are represented in OpenAlex? |
 
 Set `DATA_ROOT` to the external data directory before using an owner command.

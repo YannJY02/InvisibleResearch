@@ -25,6 +25,9 @@ A local-only drop zone for unstandardized research communications, papers, and t
 **Supervisor Meeting Report**:
 A project-wide communication record prepared for a supervisor or research-group meeting. It may link to research or publication material but does not grant Paper Analysis status or create a Designation Event.
 
+**Literature Evidence Note**:
+A reusable, source-linked reading record that separates a publication's research question, framing, data, methods, findings, limitations, project relevance, and follow-up references. It supports later literature-review synthesis but is neither that synthesis nor scientific authority for a paper.
+
 **Exploratory Analysis**:
 Analysis used to investigate data, methods, or hypotheses. Its outputs do not support a paper claim unless the analysis is later designated as Paper Analysis.
 

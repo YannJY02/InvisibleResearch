@@ -769,7 +769,7 @@ def check_outputs(output_dir: Path) -> None:
     assert report["input"]["ojs_rows"] == EXPECTED_OJS_ROWS
     assert report["matching"]["row_preserved"] is True
     assert report["matching"]["provisional_title_coverage"] == 0
-    country_counts: Counter[str] = Counter()
+    country_status_counts: dict[str, Counter[str]] = defaultdict(Counter)
     valid_status_counts: Counter[str] = Counter()
     valid_routes: set[str] = set()
     with (output_dir / "pkp-openalex-enriched.csv").open(
@@ -783,8 +783,9 @@ def check_outputs(output_dir: Path) -> None:
             if enriched_row["identifier_status"] != "valid":
                 continue
             country = enriched_row["country_consolidated"].strip()
-            country_counts[country or MISSING_COUNTRY_GROUP] += 1
-            valid_status_counts[enriched_row["match_status"]] += 1
+            status = enriched_row["match_status"]
+            country_status_counts[country or MISSING_COUNTRY_GROUP][status] += 1
+            valid_status_counts[status] += 1
             valid_routes.add(enriched_row["match_route"])
         assert row_count == EXPECTED_OJS_ROWS
     assert sum(valid_status_counts.values()) == EXPECTED_VALID_ISSN_ROWS
@@ -809,12 +810,23 @@ def check_outputs(output_dir: Path) -> None:
         "profile_csv": "strict-openalex-coverage-profile.csv",
         "summary_json": "strict-openalex-coverage-profile-summary.json",
     }
+    assert summary["identifier_availability"] == {
+        "ojs_rows": EXPECTED_OJS_ROWS,
+        "valid_issn_rows": EXPECTED_VALID_ISSN_ROWS,
+        "missing_issn_rows": EXPECTED_OJS_ROWS - EXPECTED_VALID_ISSN_ROWS,
+        "invalid_issn_rows": 0,
+    }
 
     reconciliation = summary["reconciliation"]
     assert reconciliation["cohort_rows"] == EXPECTED_VALID_ISSN_ROWS
     assert reconciliation["status_counts"] == EXPECTED_VALID_STATUS_COUNTS
     assert reconciliation["matches_coverage_report"] is True
     assert reconciliation["grouped_cohort_rows"] == EXPECTED_VALID_ISSN_ROWS
+    assert math.isclose(
+        reconciliation["coverage_report_strict_coverage_pct_all_ojs"],
+        report["matching"]["strict_issn_coverage"] * 100,
+        abs_tol=0.000001,
+    )
     assert (
         report["input"]["identifier_status_counts"]["valid"]
         == reconciliation["cohort_rows"]
@@ -844,7 +856,14 @@ def check_outputs(output_dir: Path) -> None:
             lower = float(profile_row["wilson_95_lower_pct"])
             upper = float(profile_row["wilson_95_upper_pct"])
             assert math.isclose(reported, estimate, abs_tol=0.000001)
-            assert 0 <= lower <= reported <= upper <= 100
+            expected_lower, expected_upper = wilson_interval(unique, denominator)
+            assert math.isclose(lower, expected_lower, abs_tol=0.000001)
+            assert math.isclose(upper, expected_upper, abs_tol=0.000001)
+            expected_counts = country_status_counts[group]
+            assert (unique, ambiguous, unmatched) == tuple(
+                expected_counts[status]
+                for status in ("unique", "ambiguous", "unmatched")
+            )
             profile_country_counts[group] = denominator
             profile_totals.update(
                 cohort_rows=denominator,
@@ -852,7 +871,10 @@ def check_outputs(output_dir: Path) -> None:
                 ambiguous=ambiguous,
                 unmatched=unmatched,
             )
-    assert profile_country_counts == dict(country_counts)
+    assert profile_country_counts == {
+        group: sum(counts.values()) for group, counts in country_status_counts.items()
+    }
+    assert reconciliation["country_group_count"] == len(profile_country_counts)
     assert profile_totals == Counter(
         cohort_rows=EXPECTED_VALID_ISSN_ROWS, **EXPECTED_VALID_STATUS_COUNTS
     )

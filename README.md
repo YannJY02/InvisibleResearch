@@ -150,22 +150,12 @@ DATA_ROOT=/path/to/data PYTHONPATH=src python -m streamlit run src/invisible_res
 pip install streamlit matplotlib seaborn plotly jinja2
 ```
 
-## 🤖 Multi-Agent Research Workflow
+## 🤖 Agent Workflow
 
-This project is enhanced with a **protocol-driven, multi-agent research system** designed for Cursor AI. It transforms natural language requests into rigorous, academic-standard outputs.
-
-**🎯 How it Works**: The system acts as an intelligent coordinator. It analyzes your request, clarifies ambiguities, assigns expert agent roles (e.g., Research, Analysis, Documentation), and executes tasks using structured, professional protocols.
-
-**💬 Natural Language Interface**: Simply describe your high-level goal. The system handles the rest.
-- `"Find literature on social media's impact on political trust."`
-- `"Analyze our dataset for language patterns and write a results section."`
-- `"Organize the project files and commit the recent changes."`
-
-**📖 System Documentation & Examples**:
-- **Core AI Protocol**: The AI's behavior is governed by high-level rules in [`.cursor/rules/`](.cursor/rules/).
-- **Detailed Agent Guides**: For a full breakdown of the agent workflows, templates, and examples, please see the [Agent Documentation Hub](docs/agents/).
-- **GitHub Integration**: Complete GitHub project management workflow - see [GitHub Management Protocol](docs/agents/github-management.md).
-- **Iteration Workflow**: Multi-round review and refinement process - see [Iteration & Review Workflow](docs/agents/iteration-workflow.md).
+Repository automation follows [`AGENTS.md`](AGENTS.md). Current supporting
+guidance covers the [domain vocabulary](docs/agents/domain.md),
+[GitHub Issue tracker](docs/agents/issue-tracker.md), and
+[triage labels](docs/agents/triage-labels.md).
 
 **📊 Data Documentation**:
 - **MySQL Database Schema**: Complete relational database structure - see [Database Documentation](docs/README.md).

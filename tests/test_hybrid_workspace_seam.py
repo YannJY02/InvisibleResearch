@@ -234,3 +234,35 @@ def test_github_issues_are_the_only_current_tracker() -> None:
     assert "Issues and PRDs for this repo live as GitHub issues" in tracker
     assert "docs/PROJECT_ISSUES.md" not in inventory
     assert "GitHub Issues](agents/issue-tracker.md) is the current tracker authority" in inventory
+
+
+def test_unsupported_cursor_workflow_is_retired() -> None:
+    retired_paths = (
+        ".cursor",
+        "docs/agents/agent-reference.md",
+        "docs/agents/communication-science.md",
+        "docs/agents/core-workflow.md",
+        "docs/agents/github-management.md",
+        "docs/agents/iteration-workflow.md",
+        "docs/agents/multi-agent-workflow.md",
+        "docs/agents/prompt-templates.md",
+        "docs/agents/workflow-examples.md",
+    )
+    assert not [path for path in retired_paths if (PROJECT_ROOT / path).exists()]
+
+    root_readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    inventory = (PROJECT_ROOT / "docs/artifact-authority-inventory.md").read_text(
+        encoding="utf-8"
+    )
+    active_guidance = (
+        "AGENTS.md",
+        "docs/agents/domain.md",
+        "docs/agents/issue-tracker.md",
+        "docs/agents/triage-labels.md",
+    )
+
+    assert "Cursor AI" not in root_readme
+    assert ".cursor/**" not in inventory
+    for path in active_guidance:
+        assert f"]({path})" in root_readme
+        assert (PROJECT_ROOT / path).is_file()

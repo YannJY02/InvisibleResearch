@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enrich pinned PKP Beacon OJS rows with exact OpenAlex Source ISSN matches."""
+"""Enrich PKP OJS rows with OpenAlex Sources and profile strict coverage."""
 
 from __future__ import annotations
 
@@ -608,6 +608,150 @@ def run(
     return report
 
 
+def wilson_interval(successes: int, total: int) -> tuple[float, float]:
+    z = 1.959963984540054
+    proportion = successes / total
+    denominator = 1 + z**2 / total
+    center = (proportion + z**2 / (2 * total)) / denominator
+    margin = (
+        z
+        * math.sqrt(proportion * (1 - proportion) / total + z**2 / (4 * total**2))
+        / denominator
+    )
+    return (center - margin) * 100, (center + margin) * 100
+
+
+def generate_country_profile(output_dir: Path) -> dict[str, Any]:
+    enriched_path = output_dir / "pkp-openalex-enriched.csv"
+    report_path = output_dir / "coverage-report.json"
+    profile_path = output_dir / "strict-openalex-coverage-profile.csv"
+    summary_path = output_dir / "strict-openalex-coverage-profile-summary.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    groups: dict[str, Counter[str]] = defaultdict(Counter)
+    status_counts: Counter[str] = Counter()
+
+    with enriched_path.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        fields = set(reader.fieldnames or [])
+        required = {
+            "country_consolidated",
+            "identifier_status",
+            "match_route",
+            "match_status",
+        }
+        if missing := sorted(required - fields):
+            raise ValueError(f"Joined artifact is missing profile fields: {missing}")
+        if "admin_email" in fields:
+            raise ValueError("Joined artifact contains restricted admin_email")
+        for row in reader:
+            if row["identifier_status"] != "valid":
+                continue
+            if row["match_route"] != "issn":
+                raise ValueError("Valid-ISSN cohort contains a non-ISSN match route")
+            status = row["match_status"]
+            if status not in EXPECTED_VALID_STATUS_COUNTS:
+                raise ValueError(f"Unexpected Valid-ISSN match status: {status}")
+            country = row["country_consolidated"].strip() or MISSING_COUNTRY_GROUP
+            groups[country][status] += 1
+            status_counts[status] += 1
+
+    if sum(status_counts.values()) != EXPECTED_VALID_ISSN_ROWS:
+        raise ValueError(f"Valid-ISSN cohort mismatch: {sum(status_counts.values())}")
+    if dict(status_counts) != EXPECTED_VALID_STATUS_COUNTS:
+        raise ValueError(f"Valid-ISSN status mismatch: {dict(status_counts)}")
+    if report["input"]["identifier_status_counts"]["valid"] != sum(
+        status_counts.values()
+    ) or any(
+        report["matching"]["status_counts"][status] != count
+        for status, count in EXPECTED_VALID_STATUS_COUNTS.items()
+    ):
+        raise ValueError("Country profile does not reconcile with coverage-report.json")
+
+    profile_rows: list[dict[str, Any]] = []
+    for country in sorted(
+        groups, key=lambda value: (value == MISSING_COUNTRY_GROUP, value)
+    ):
+        counts = groups[country]
+        denominator = sum(counts.values())
+        lower, upper = wilson_interval(counts["unique"], denominator)
+        profile_rows.append(
+            {
+                "dimension": "pkp_inferred_country",
+                "group": country,
+                "cohort_rows": denominator,
+                "unique_matches": counts["unique"],
+                "ambiguous_matches": counts["ambiguous"],
+                "unmatched_rows": counts["unmatched"],
+                "strict_coverage_pct": round(counts["unique"] / denominator * 100, 6),
+                "wilson_95_lower_pct": round(lower, 6),
+                "wilson_95_upper_pct": round(upper, 6),
+            }
+        )
+    with profile_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=PROFILE_FIELDS)
+        writer.writeheader()
+        writer.writerows(profile_rows)
+
+    total_lower, total_upper = wilson_interval(
+        status_counts["unique"], EXPECTED_VALID_ISSN_ROWS
+    )
+    summary = {
+        "artifact_scope": "Exploratory Analysis",
+        "analysis_question": (
+            "How does Strict OpenAlex Coverage vary descriptively by "
+            "PKP-inferred country in the Valid-ISSN OJS Cohort?"
+        ),
+        "definitions": {
+            "cohort": {
+                "name": "Valid-ISSN OJS Cohort",
+                "rule": "identifier_status == valid",
+            },
+            "outcome": "unique exact-ISSN match",
+            "ambiguous": "multiple exact-ISSN OpenAlex Source candidates",
+            "unmatched": "no unique journal Source from the exact-ISSN route",
+            "pkp_inferred_country": {
+                "source_field": "country_consolidated",
+                "missing_group": MISSING_COUNTRY_GROUP,
+                "caveat": (
+                    "PKP-inferred country is descriptive metadata, not authoritative "
+                    "publisher location."
+                ),
+            },
+            "uncertainty": "95% Wilson score interval for unique / cohort rows",
+        },
+        "reconciliation": {
+            "cohort_rows": EXPECTED_VALID_ISSN_ROWS,
+            "status_counts": EXPECTED_VALID_STATUS_COUNTS,
+            "strict_coverage_pct": round(
+                status_counts["unique"] / EXPECTED_VALID_ISSN_ROWS * 100, 6
+            ),
+            "wilson_95_lower_pct": round(total_lower, 6),
+            "wilson_95_upper_pct": round(total_upper, 6),
+            "country_group_count": len(profile_rows),
+            "grouped_cohort_rows": sum(row["cohort_rows"] for row in profile_rows),
+            "matches_coverage_report": True,
+        },
+        "generation": {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "source_enriched_csv": enriched_path.name,
+            "source_coverage_report": report_path.name,
+            "source_generated_at": report["generated_at"],
+            "openalex_api_requests": 0,
+        },
+        "privacy": {
+            "restricted_source_fields_excluded": ["admin_email"],
+            "contains_restricted_contact_data": False,
+        },
+        "outputs": {
+            "profile_csv": profile_path.name,
+            "summary_json": summary_path.name,
+        },
+    }
+    write_json_atomic(summary_path, summary)
+    print(json.dumps(summary, ensure_ascii=False))
+    return summary
+
+
 def check_outputs(output_dir: Path) -> None:
     assert normalize_issn("0378-5955") == "0378-5955"
     assert normalize_issn("03785956") is None
@@ -659,9 +803,8 @@ def check_outputs(output_dir: Path) -> None:
     assert "not authoritative publisher location" in country_definition["caveat"]
     assert summary["generation"]["openalex_api_requests"] == 0
     datetime.fromisoformat(summary["generation"]["generated_at"])
-    assert summary["privacy"]["restricted_source_fields_excluded"] == [
-        "admin_email"
-    ]
+    assert summary["privacy"]["restricted_source_fields_excluded"] == ["admin_email"]
+    assert summary["privacy"]["contains_restricted_contact_data"] is False
     assert summary["outputs"] == {
         "profile_csv": "strict-openalex-coverage-profile.csv",
         "summary_json": "strict-openalex-coverage-profile-summary.json",
@@ -671,9 +814,11 @@ def check_outputs(output_dir: Path) -> None:
     assert reconciliation["cohort_rows"] == EXPECTED_VALID_ISSN_ROWS
     assert reconciliation["status_counts"] == EXPECTED_VALID_STATUS_COUNTS
     assert reconciliation["matches_coverage_report"] is True
-    assert report["input"]["identifier_status_counts"]["valid"] == reconciliation[
-        "cohort_rows"
-    ]
+    assert reconciliation["grouped_cohort_rows"] == EXPECTED_VALID_ISSN_ROWS
+    assert (
+        report["input"]["identifier_status_counts"]["valid"]
+        == reconciliation["cohort_rows"]
+    )
     for status, count in EXPECTED_VALID_STATUS_COUNTS.items():
         assert report["matching"]["status_counts"][status] == count
 
@@ -727,7 +872,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument("--workers", type=int, default=8)
-    parser.add_argument("--check", action="store_true")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--profile", action="store_true")
+    action.add_argument("--check", action="store_true")
     return parser.parse_args()
 
 
@@ -735,6 +882,9 @@ def main() -> None:
     args = parse_args()
     if args.check:
         check_outputs(args.output_dir)
+        return
+    if args.profile:
+        generate_country_profile(args.output_dir)
         return
     if args.input is None:
         raise SystemExit("Set DATA_ROOT or pass --input")

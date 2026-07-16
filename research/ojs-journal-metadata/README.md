@@ -263,10 +263,16 @@ curl -fL 'https://dataverse.harvard.edu/api/access/datafile/13173372?format=orig
   -o "$DATA_ROOT/raw/pkp-beacon-v6/beacon.csv"
 
 OPENALEX_API_KEY=... python research/ojs-journal-metadata/analysis/enrich_openalex.py
+python research/ojs-journal-metadata/analysis/enrich_openalex.py --profile
 python research/ojs-journal-metadata/analysis/enrich_openalex.py --check
 ```
 
 The script verifies the pinned MD5 and row baseline before requesting OpenAlex.
 It writes the joined CSV, every non-unique row for review, the JSON coverage
 report, and resumable selected-response cache under this owner's ignored
-`artifacts/` directory. The minimum run does not attempt title matching.
+`artifacts/` directory. `--profile` reads those local outputs without making API
+requests and writes a tidy country profile plus its machine-readable summary in
+the same ignored directory. The profile retains missing PKP-inferred country as
+an explicit group, reports 95% Wilson intervals, and remains Exploratory
+Analysis; PKP-inferred country is not authoritative publisher location. The
+minimum run does not attempt title matching.

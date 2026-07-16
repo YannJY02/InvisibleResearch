@@ -250,3 +250,23 @@ coverage separately from provisional title coverage; OpenAlex field null rates;
 `is_ojs` and country disagreements; request count, cost, retries, and failures.
 It must also list every ambiguous and unmatched row for review. No title-only
 candidate may be folded into strict ISSN coverage.
+
+## Run the exploratory pipeline
+
+Keep the pinned input under the external data root, then run the exact-ISSN
+pipeline and its single output check:
+
+```bash
+export DATA_ROOT=/path/to/invisible-research-data
+mkdir -p "$DATA_ROOT/raw/pkp-beacon-v6"
+curl -fL 'https://dataverse.harvard.edu/api/access/datafile/13173372?format=original' \
+  -o "$DATA_ROOT/raw/pkp-beacon-v6/beacon.csv"
+
+OPENALEX_API_KEY=... python research/ojs-journal-metadata/analysis/enrich_openalex.py
+python research/ojs-journal-metadata/analysis/enrich_openalex.py --check
+```
+
+The script verifies the pinned MD5 and row baseline before requesting OpenAlex.
+It writes the joined CSV, every non-unique row for review, the JSON coverage
+report, and resumable selected-response cache under this owner's ignored
+`artifacts/` directory. The minimum run does not attempt title matching.

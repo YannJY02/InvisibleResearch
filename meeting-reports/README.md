@@ -6,7 +6,7 @@ supervisor or research-group meetings. Name each report
 
 ## Index
 
-No reports have been added yet.
+- [2026-07-16 — OJS Journal Metadata Enrichment](2026-07-16-ojs-journal-metadata.md)
 
 ## Boundaries
 

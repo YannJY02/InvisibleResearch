@@ -271,8 +271,14 @@ The script verifies the pinned MD5 and row baseline before requesting OpenAlex.
 It writes the joined CSV, every non-unique row for review, the JSON coverage
 report, and resumable selected-response cache under this owner's ignored
 `artifacts/` directory. `--profile` reads those local outputs without making API
-requests and writes a tidy country profile plus its machine-readable summary in
-the same ignored directory. The profile retains missing PKP-inferred country as
-an explicit group, reports 95% Wilson intervals, and remains Exploratory
-Analysis; PKP-inferred country is not authoritative publisher location. The
-minimum run does not attempt title matching.
+requests and writes one tidy four-dimension profile plus its machine-readable
+summary in the same ignored directory. The four independently calculated
+dimensions are PKP-inferred country, observable 2025 PKP record count, Beacon
+observation duration as of 2026-07-16, and PKP-side DOAJ evidence. Missing
+groups remain explicit in the grouping definitions, and every observed group
+reports outcome counts and a 95% Wilson interval over the same Valid-ISSN OJS
+Cohort. These are descriptive metadata: country is not authoritative publisher
+location, record count is not an active-journal classification, Beacon duration
+is not journal age since founding, and absent PKP DOAJ evidence is only “Not
+observed.” The profile remains Exploratory Analysis, and the minimum run does
+not attempt title matching.

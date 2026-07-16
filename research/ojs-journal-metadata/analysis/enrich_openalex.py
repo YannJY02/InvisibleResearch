@@ -14,7 +14,7 @@ import tempfile
 import time
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 from urllib.error import HTTPError, URLError
@@ -30,6 +30,40 @@ EXPECTED_VALID_STATUS_COUNTS = {
     "unique": 49_877,
     "ambiguous": 190,
     "unmatched": 14_706,
+}
+ANALYSIS_DATE = date(2026, 7, 16)
+PROFILE_GROUPS = {
+    "pkp_2025_record_count": (
+        "Zero records",
+        "1–4 records",
+        "At least 5 records",
+        "Missing",
+    ),
+    "beacon_observation_duration": (
+        "Less than 1 year",
+        "1–2 years",
+        "3–5 years",
+        "6 or more years",
+        "Unknown",
+    ),
+    "pkp_doaj_evidence": ("Present", "Not observed"),
+}
+EXPECTED_PROFILE_GROUP_COUNTS = {
+    "pkp_2025_record_count": {
+        "Zero records": (28_436, 20_276, 82, 8_078),
+        "1–4 records": (5_292, 4_129, 7, 1_156),
+        "At least 5 records": (31_045, 25_472, 101, 5_472),
+    },
+    "beacon_observation_duration": {
+        "Less than 1 year": (549, 356, 3, 190),
+        "1–2 years": (10_547, 7_384, 31, 3_132),
+        "3–5 years": (31_812, 23_784, 101, 7_927),
+        "6 or more years": (21_865, 18_353, 55, 3_457),
+    },
+    "pkp_doaj_evidence": {
+        "Present": (6_215, 6_139, 17, 59),
+        "Not observed": (58_558, 43_738, 173, 14_647),
+    },
 }
 MISSING_COUNTRY_GROUP = "Missing PKP-inferred country"
 PROFILE_FIELDS = (
@@ -205,9 +239,10 @@ def load_input(path: Path) -> tuple[list[dict[str, str]], list[str], int]:
                     raise ValueError(
                         f"OJS row {all_rows} has blank required field {field}"
                     )
-            identity = tuple(
-                source_row[field]
-                for field in ("oai_url", "repository_name", "set_spec")
+            identity = (
+                str(source_row["oai_url"] or ""),
+                str(source_row["repository_name"] or ""),
+                str(source_row["set_spec"] or ""),
             )
             if identity in identities:
                 raise ValueError(f"Duplicate OJS row identity at source row {all_rows}")
@@ -621,7 +656,57 @@ def wilson_interval(successes: int, total: int) -> tuple[float, float]:
     return (center - margin) * 100, (center + margin) * 100
 
 
-def generate_country_profile(output_dir: Path) -> dict[str, Any]:
+def classify_profile_groups(row: dict[str, str]) -> dict[str, str]:
+    activity_raw = row["record_count_2025"].strip()
+    if not activity_raw:
+        activity_group = "Missing"
+    else:
+        activity = int(activity_raw)
+        if activity < 0:
+            raise ValueError(f"Negative 2025 PKP record count: {activity}")
+        activity_group = (
+            "Zero records"
+            if activity == 0
+            else "1–4 records" if activity < 5 else "At least 5 records"
+        )
+
+    first_beacon_raw = row["first_beacon"].strip()
+    if not first_beacon_raw:
+        duration_group = "Unknown"
+    else:
+        first_beacon = date.fromisoformat(first_beacon_raw[:10])
+        if first_beacon > ANALYSIS_DATE:
+            raise ValueError(f"first_beacon is after analysis date: {first_beacon}")
+        elapsed_years = (
+            ANALYSIS_DATE.year
+            - first_beacon.year
+            - (
+                (ANALYSIS_DATE.month, ANALYSIS_DATE.day)
+                < (first_beacon.month, first_beacon.day)
+            )
+        )
+        duration_group = (
+            "Less than 1 year"
+            if elapsed_years < 1
+            else (
+                "1–2 years"
+                if elapsed_years < 3
+                else "3–5 years" if elapsed_years < 6 else "6 or more years"
+            )
+        )
+
+    return {
+        "pkp_inferred_country": row["country_consolidated"].strip()
+        or MISSING_COUNTRY_GROUP,
+        "pkp_2025_record_count": activity_group,
+        "beacon_observation_duration": duration_group,
+        "pkp_doaj_evidence": (
+            "Present" if row["best_doaj_url"].strip() else "Not observed"
+        ),
+    }
+
+
+def generate_profile(output_dir: Path) -> dict[str, Any]:
     enriched_path = output_dir / "pkp-openalex-enriched.csv"
     report_path = output_dir / "coverage-report.json"
     profile_path = output_dir / "strict-openalex-coverage-profile.csv"
@@ -641,7 +726,9 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
         "invalid_issn_rows": 0,
     }:
         raise ValueError(f"Identifier Availability mismatch: {identifier_availability}")
-    groups: dict[str, Counter[str]] = defaultdict(Counter)
+    groups: dict[str, dict[str, Counter[str]]] = defaultdict(
+        lambda: defaultdict(Counter)
+    )
     status_counts: Counter[str] = Counter()
 
     with enriched_path.open(encoding="utf-8", newline="") as handle:
@@ -649,6 +736,9 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
         fields = set(reader.fieldnames or [])
         required = {
             "country_consolidated",
+            "record_count_2025",
+            "first_beacon",
+            "best_doaj_url",
             "identifier_status",
             "match_route",
             "match_status",
@@ -665,8 +755,8 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
             status = row["match_status"]
             if status not in EXPECTED_VALID_STATUS_COUNTS:
                 raise ValueError(f"Unexpected Valid-ISSN match status: {status}")
-            country = row["country_consolidated"].strip() or MISSING_COUNTRY_GROUP
-            groups[country][status] += 1
+            for dimension, group in classify_profile_groups(row).items():
+                groups[dimension][group][status] += 1
             status_counts[status] += 1
 
     if sum(status_counts.values()) != EXPECTED_VALID_ISSN_ROWS:
@@ -679,30 +769,42 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
         report["matching"]["status_counts"][status] != count
         for status, count in EXPECTED_VALID_STATUS_COUNTS.items()
     ):
-        raise ValueError("Country profile does not reconcile with coverage-report.json")
+        raise ValueError(
+            "Coverage profile does not reconcile with coverage-report.json"
+        )
 
     profile_rows: list[dict[str, Any]] = []
-    for country in sorted(
-        groups, key=lambda value: (value == MISSING_COUNTRY_GROUP, value)
-    ):
-        counts = groups[country]
-        denominator = sum(counts.values())
-        lower, upper = wilson_interval(counts["unique"], denominator)
-        profile_rows.append(
-            {
-                "dimension": "pkp_inferred_country",
-                "group": country,
-                "cohort_rows": denominator,
-                "unique_matches": counts["unique"],
-                "ambiguous_matches": counts["ambiguous"],
-                "unmatched_rows": counts["unmatched"],
-                "strict_coverage_pct": round(counts["unique"] / denominator * 100, 6),
-                "wilson_95_lower_pct": round(lower, 6),
-                "wilson_95_upper_pct": round(upper, 6),
-            }
-        )
+    group_order = {
+        "pkp_inferred_country": sorted(
+            groups["pkp_inferred_country"],
+            key=lambda value: (value == MISSING_COUNTRY_GROUP, value),
+        ),
+        **PROFILE_GROUPS,
+    }
+    for dimension, ordered_groups in group_order.items():
+        for group in ordered_groups:
+            counts = groups[dimension].get(group)
+            if not counts:
+                continue
+            denominator = sum(counts.values())
+            lower, upper = wilson_interval(counts["unique"], denominator)
+            profile_rows.append(
+                {
+                    "dimension": dimension,
+                    "group": group,
+                    "cohort_rows": denominator,
+                    "unique_matches": counts["unique"],
+                    "ambiguous_matches": counts["ambiguous"],
+                    "unmatched_rows": counts["unmatched"],
+                    "strict_coverage_pct": round(
+                        counts["unique"] / denominator * 100, 6
+                    ),
+                    "wilson_95_lower_pct": round(lower, 6),
+                    "wilson_95_upper_pct": round(upper, 6),
+                }
+            )
     with profile_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=PROFILE_FIELDS)
+        writer: csv.DictWriter[str] = csv.DictWriter(handle, fieldnames=PROFILE_FIELDS)
         writer.writeheader()
         writer.writerows(profile_rows)
 
@@ -712,8 +814,10 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
     summary = {
         "artifact_scope": "Exploratory Analysis",
         "analysis_question": (
-            "How does Strict OpenAlex Coverage vary descriptively by "
-            "PKP-inferred country in the Valid-ISSN OJS Cohort?"
+            "How does Strict OpenAlex Coverage vary descriptively across "
+            "PKP-inferred country, observable 2025 PKP record count, Beacon "
+            "observation duration, and PKP DOAJ evidence in the Valid-ISSN OJS "
+            "Cohort?"
         ),
         "definitions": {
             "cohort": {
@@ -731,6 +835,34 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
                     "publisher location."
                 ),
             },
+            "pkp_2025_record_count": {
+                "source_field": "record_count_2025",
+                "groups": list(PROFILE_GROUPS["pkp_2025_record_count"]),
+                "rule": "missing; 0; 1–4; at least 5",
+                "caveat": (
+                    "Observed 2025 PKP record count is descriptive metadata, not an "
+                    "authoritative active-journal classification."
+                ),
+            },
+            "beacon_observation_duration": {
+                "source_field": "first_beacon",
+                "analysis_date": ANALYSIS_DATE.isoformat(),
+                "groups": list(PROFILE_GROUPS["beacon_observation_duration"]),
+                "rule": "completed years observed before the pinned analysis date",
+                "caveat": (
+                    "Elapsed time since first Beacon observation is not journal age "
+                    "since founding."
+                ),
+            },
+            "pkp_doaj_evidence": {
+                "source_field": "best_doaj_url",
+                "groups": list(PROFILE_GROUPS["pkp_doaj_evidence"]),
+                "rule": "non-empty PKP best_doaj_url is Present; otherwise Not observed",
+                "caveat": (
+                    "Not observed means no PKP-side DOAJ evidence; it is not proof "
+                    "that a journal is not in DOAJ."
+                ),
+            },
             "uncertainty": "95% Wilson score interval for unique / cohort rows",
         },
         "identifier_availability": identifier_availability,
@@ -742,8 +874,30 @@ def generate_country_profile(output_dir: Path) -> dict[str, Any]:
             ),
             "wilson_95_lower_pct": round(total_lower, 6),
             "wilson_95_upper_pct": round(total_upper, 6),
-            "country_group_count": len(profile_rows),
-            "grouped_cohort_rows": sum(row["cohort_rows"] for row in profile_rows),
+            "country_group_count": len(groups["pkp_inferred_country"]),
+            "grouped_cohort_rows": sum(
+                sum(counts.values())
+                for counts in groups["pkp_inferred_country"].values()
+            ),
+            "dimensions": {
+                dimension: {
+                    "group_count": sum(
+                        row["dimension"] == dimension for row in profile_rows
+                    ),
+                    "grouped_cohort_rows": sum(
+                        row["cohort_rows"]
+                        for row in profile_rows
+                        if row["dimension"] == dimension
+                    ),
+                    "status_counts": dict(
+                        sum(
+                            (counts for counts in groups[dimension].values()),
+                            Counter(),
+                        )
+                    ),
+                }
+                for dimension in group_order
+            },
             "coverage_report_strict_coverage_pct_all_ojs": round(
                 report["matching"]["strict_issn_coverage"] * 100, 6
             ),
@@ -817,9 +971,37 @@ def check_outputs(output_dir: Path) -> None:
     )
     assert summary["artifact_scope"] == "Exploratory Analysis"
     assert summary["definitions"]["outcome"] == "unique exact-ISSN match"
-    country_definition = summary["definitions"]["pkp_inferred_country"]
+    definitions = summary["definitions"]
+    country_definition = definitions["pkp_inferred_country"]
     assert country_definition["source_field"] == "country_consolidated"
     assert "not authoritative publisher location" in country_definition["caveat"]
+    activity_definition = definitions["pkp_2025_record_count"]
+    assert activity_definition["source_field"] == "record_count_2025"
+    assert activity_definition["groups"] == [
+        "Zero records",
+        "1–4 records",
+        "At least 5 records",
+        "Missing",
+    ]
+    assert (
+        "not an authoritative active-journal classification"
+        in activity_definition["caveat"]
+    )
+    duration_definition = definitions["beacon_observation_duration"]
+    assert duration_definition["source_field"] == "first_beacon"
+    assert duration_definition["analysis_date"] == "2026-07-16"
+    assert duration_definition["groups"] == [
+        "Less than 1 year",
+        "1–2 years",
+        "3–5 years",
+        "6 or more years",
+        "Unknown",
+    ]
+    assert "not journal age since founding" in duration_definition["caveat"]
+    doaj_definition = definitions["pkp_doaj_evidence"]
+    assert doaj_definition["source_field"] == "best_doaj_url"
+    assert doaj_definition["groups"] == ["Present", "Not observed"]
+    assert "not proof that a journal is not in DOAJ" in doaj_definition["caveat"]
     assert summary["generation"]["openalex_api_requests"] == 0
     datetime.fromisoformat(summary["generation"]["generated_at"])
     assert summary["privacy"]["restricted_source_fields_excluded"] == ["admin_email"]
@@ -852,8 +1034,8 @@ def check_outputs(output_dir: Path) -> None:
     for status, count in EXPECTED_VALID_STATUS_COUNTS.items():
         assert report["matching"]["status_counts"][status] == count
 
-    profile_totals: Counter[str] = Counter()
-    profile_country_counts: dict[str, int] = {}
+    profile_totals: dict[str, Counter[str]] = defaultdict(Counter)
+    profile_counts: dict[str, dict[str, tuple[int, int, int, int]]] = defaultdict(dict)
     with (output_dir / "strict-openalex-coverage-profile.csv").open(
         encoding="utf-8", newline=""
     ) as handle:
@@ -861,9 +1043,9 @@ def check_outputs(output_dir: Path) -> None:
         assert tuple(reader.fieldnames or []) == PROFILE_FIELDS
         assert "admin_email" not in (reader.fieldnames or [])
         for profile_row in reader:
-            assert profile_row["dimension"] == "pkp_inferred_country"
+            dimension = profile_row["dimension"]
             group = profile_row["group"]
-            assert group and group not in profile_country_counts
+            assert group and group not in profile_counts[dimension]
             denominator = int(profile_row["cohort_rows"])
             unique = int(profile_row["unique_matches"])
             ambiguous = int(profile_row["ambiguous_matches"])
@@ -877,25 +1059,44 @@ def check_outputs(output_dir: Path) -> None:
             expected_lower, expected_upper = wilson_interval(unique, denominator)
             assert math.isclose(lower, expected_lower, abs_tol=0.000001)
             assert math.isclose(upper, expected_upper, abs_tol=0.000001)
-            expected_counts = country_status_counts[group]
-            assert (unique, ambiguous, unmatched) == tuple(
-                expected_counts[status]
-                for status in ("unique", "ambiguous", "unmatched")
+            profile_counts[dimension][group] = (
+                denominator,
+                unique,
+                ambiguous,
+                unmatched,
             )
-            profile_country_counts[group] = denominator
-            profile_totals.update(
+            profile_totals[dimension].update(
                 cohort_rows=denominator,
                 unique=unique,
                 ambiguous=ambiguous,
                 unmatched=unmatched,
             )
-    assert profile_country_counts == {
-        group: sum(counts.values()) for group, counts in country_status_counts.items()
+    assert set(profile_counts) == {
+        "pkp_inferred_country",
+        *EXPECTED_PROFILE_GROUP_COUNTS,
     }
-    assert reconciliation["country_group_count"] == len(profile_country_counts)
-    assert profile_totals == Counter(
-        cohort_rows=EXPECTED_VALID_ISSN_ROWS, **EXPECTED_VALID_STATUS_COUNTS
-    )
+    profile_country_counts = profile_counts["pkp_inferred_country"]
+    assert profile_country_counts == {
+        group: (
+            sum(counts.values()),
+            counts["unique"],
+            counts["ambiguous"],
+            counts["unmatched"],
+        )
+        for group, counts in country_status_counts.items()
+    }
+    for dimension, expected_counts in EXPECTED_PROFILE_GROUP_COUNTS.items():
+        assert profile_counts[dimension] == expected_counts
+    for dimension, totals in profile_totals.items():
+        assert totals == Counter(
+            cohort_rows=EXPECTED_VALID_ISSN_ROWS, **EXPECTED_VALID_STATUS_COUNTS
+        )
+        dimension_reconciliation = reconciliation["dimensions"][dimension]
+        assert dimension_reconciliation == {
+            "group_count": len(profile_counts[dimension]),
+            "grouped_cohort_rows": EXPECTED_VALID_ISSN_ROWS,
+            "status_counts": EXPECTED_VALID_STATUS_COUNTS,
+        }
     print("PKP–OpenAlex pipeline check passed")
 
 
@@ -924,7 +1125,7 @@ def main() -> None:
         check_outputs(args.output_dir)
         return
     if args.profile:
-        generate_country_profile(args.output_dir)
+        generate_profile(args.output_dir)
         return
     if args.input is None:
         raise SystemExit("Set DATA_ROOT or pass --input")

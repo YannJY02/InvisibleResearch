@@ -8,6 +8,7 @@ import csv
 import gzip
 import hashlib
 import json
+import math
 import os
 import tempfile
 import time
@@ -24,6 +25,24 @@ from urllib.request import Request, urlopen
 EXPECTED_MD5 = "9f43fa051c7ed1cc45d8592593542011"
 EXPECTED_ALL_ROWS = 87_170
 EXPECTED_OJS_ROWS = 86_282
+EXPECTED_VALID_ISSN_ROWS = 64_773
+EXPECTED_VALID_STATUS_COUNTS = {
+    "unique": 49_877,
+    "ambiguous": 190,
+    "unmatched": 14_706,
+}
+MISSING_COUNTRY_GROUP = "Missing PKP-inferred country"
+PROFILE_FIELDS = (
+    "dimension",
+    "group",
+    "cohort_rows",
+    "unique_matches",
+    "ambiguous_matches",
+    "unmatched_rows",
+    "strict_coverage_pct",
+    "wilson_95_lower_pct",
+    "wilson_95_upper_pct",
+)
 REQUIRED_COLUMNS = {
     "oai_url",
     "application",
@@ -606,12 +625,92 @@ def check_outputs(output_dir: Path) -> None:
     assert report["input"]["ojs_rows"] == EXPECTED_OJS_ROWS
     assert report["matching"]["row_preserved"] is True
     assert report["matching"]["provisional_title_coverage"] == 0
+    country_counts: Counter[str] = Counter()
+    valid_status_counts: Counter[str] = Counter()
+    valid_routes: set[str] = set()
     with (output_dir / "pkp-openalex-enriched.csv").open(
         encoding="utf-8", newline=""
     ) as handle:
         reader = csv.DictReader(handle)
         assert "admin_email" not in (reader.fieldnames or [])
-        assert sum(1 for _ in reader) == EXPECTED_OJS_ROWS
+        row_count = 0
+        for enriched_row in reader:
+            row_count += 1
+            if enriched_row["identifier_status"] != "valid":
+                continue
+            country = enriched_row["country_consolidated"].strip()
+            country_counts[country or MISSING_COUNTRY_GROUP] += 1
+            valid_status_counts[enriched_row["match_status"]] += 1
+            valid_routes.add(enriched_row["match_route"])
+        assert row_count == EXPECTED_OJS_ROWS
+    assert sum(valid_status_counts.values()) == EXPECTED_VALID_ISSN_ROWS
+    assert dict(valid_status_counts) == EXPECTED_VALID_STATUS_COUNTS
+    assert valid_routes == {"issn"}
+
+    summary = json.loads(
+        (output_dir / "strict-openalex-coverage-profile-summary.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert summary["artifact_scope"] == "Exploratory Analysis"
+    assert summary["definitions"]["outcome"] == "unique exact-ISSN match"
+    country_definition = summary["definitions"]["pkp_inferred_country"]
+    assert country_definition["source_field"] == "country_consolidated"
+    assert "not authoritative publisher location" in country_definition["caveat"]
+    assert summary["generation"]["openalex_api_requests"] == 0
+    datetime.fromisoformat(summary["generation"]["generated_at"])
+    assert summary["privacy"]["restricted_source_fields_excluded"] == [
+        "admin_email"
+    ]
+    assert summary["outputs"] == {
+        "profile_csv": "strict-openalex-coverage-profile.csv",
+        "summary_json": "strict-openalex-coverage-profile-summary.json",
+    }
+
+    reconciliation = summary["reconciliation"]
+    assert reconciliation["cohort_rows"] == EXPECTED_VALID_ISSN_ROWS
+    assert reconciliation["status_counts"] == EXPECTED_VALID_STATUS_COUNTS
+    assert reconciliation["matches_coverage_report"] is True
+    assert report["input"]["identifier_status_counts"]["valid"] == reconciliation[
+        "cohort_rows"
+    ]
+    for status, count in EXPECTED_VALID_STATUS_COUNTS.items():
+        assert report["matching"]["status_counts"][status] == count
+
+    profile_totals: Counter[str] = Counter()
+    profile_country_counts: dict[str, int] = {}
+    with (output_dir / "strict-openalex-coverage-profile.csv").open(
+        encoding="utf-8", newline=""
+    ) as handle:
+        reader = csv.DictReader(handle)
+        assert tuple(reader.fieldnames or []) == PROFILE_FIELDS
+        assert "admin_email" not in (reader.fieldnames or [])
+        for profile_row in reader:
+            assert profile_row["dimension"] == "pkp_inferred_country"
+            group = profile_row["group"]
+            assert group and group not in profile_country_counts
+            denominator = int(profile_row["cohort_rows"])
+            unique = int(profile_row["unique_matches"])
+            ambiguous = int(profile_row["ambiguous_matches"])
+            unmatched = int(profile_row["unmatched_rows"])
+            assert denominator == unique + ambiguous + unmatched
+            estimate = unique / denominator * 100
+            reported = float(profile_row["strict_coverage_pct"])
+            lower = float(profile_row["wilson_95_lower_pct"])
+            upper = float(profile_row["wilson_95_upper_pct"])
+            assert math.isclose(reported, estimate, abs_tol=0.000001)
+            assert 0 <= lower <= reported <= upper <= 100
+            profile_country_counts[group] = denominator
+            profile_totals.update(
+                cohort_rows=denominator,
+                unique=unique,
+                ambiguous=ambiguous,
+                unmatched=unmatched,
+            )
+    assert profile_country_counts == dict(country_counts)
+    assert profile_totals == Counter(
+        cohort_rows=EXPECTED_VALID_ISSN_ROWS, **EXPECTED_VALID_STATUS_COUNTS
+    )
     print("PKP–OpenAlex pipeline check passed")
 
 

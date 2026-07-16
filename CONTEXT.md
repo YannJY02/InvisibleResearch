@@ -31,6 +31,15 @@ A reusable, source-linked reading record that separates a publication's research
 **Exploratory Analysis**:
 Analysis used to investigate data, methods, or hypotheses. Its outputs do not support a paper claim unless the analysis is later designated as Paper Analysis.
 
+**Strict OpenAlex Coverage**:
+Among OJS journal rows with a valid ISSN, the journal has one unique exact-ISSN match to an OpenAlex Source. Ambiguous matches are reported separately, and rows without a valid ISSN belong to Identifier Availability rather than OpenAlex noncoverage.
+
+**Identifier Availability**:
+Whether an OJS journal row supplies a valid ISSN that permits strict source matching. Missing or invalid ISSNs are a separate outcome from OpenAlex coverage.
+
+**Valid-ISSN OJS Cohort**:
+The OJS journal rows in the pinned PKP Beacon input that supply at least one valid ISSN. It is the primary denominator for Strict OpenAlex Coverage; activity-qualified subsets are sensitivity analyses rather than replacements for this cohort.
+
 **Paper Analysis Candidate**:
 An analysis with reproducible, traceable evidence sufficient for review by the paper collaborators. Eligibility is a technical gate: it neither judges scientific correctness nor authorizes use in the paper.
 

@@ -220,3 +220,17 @@ def test_supervisor_meeting_reports_are_discoverable_and_non_authoritative() -> 
     ):
         assert target in guidance
         assert (meeting_readme.parent / target).is_file()
+
+
+def test_github_issues_are_the_only_current_tracker() -> None:
+    tracker = (PROJECT_ROOT / "docs/agents/issue-tracker.md").read_text(
+        encoding="utf-8"
+    )
+    inventory = (PROJECT_ROOT / "docs/artifact-authority-inventory.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert not (PROJECT_ROOT / "docs/PROJECT_ISSUES.md").exists()
+    assert "Issues and PRDs for this repo live as GitHub issues" in tracker
+    assert "docs/PROJECT_ISSUES.md" not in inventory
+    assert "GitHub Issues](agents/issue-tracker.md) is the current tracker authority" in inventory

@@ -284,7 +284,7 @@ final_result = pd.concat(results, ignore_index=True)
 **📋 See also**: 
 - [Main README](README.md) - Complete MySQL database schema
 - [Data Script Mapping](DATA_SCRIPT_MAPPING.md) - Complete processing pipeline
-- [Project Issues](PROJECT_ISSUES.md) - Known issues and solutions
+- [GitHub Issue Tracker](agents/issue-tracker.md) - Current issue workflow and tracker authority
 
 **🔗 Quick Access**:
 - **File Location**: `data/processed/articleInfo.parquet`

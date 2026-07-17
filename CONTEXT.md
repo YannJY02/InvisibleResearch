@@ -34,6 +34,9 @@ Analysis used to investigate data, methods, or hypotheses. Its outputs do not su
 **Academic Analysis Code**:
 Research-facing code in `research/**`, `papers/**/analysis/**`, QMD/Rmd files, and notebooks whose primary purpose is to make a method readable, rerunnable, and inspectable. It uses the smallest implementation that answers the research question while retaining safeguards required by the method, data, or trust boundary.
 
+**Journal Enrichment Sample**:
+A bounded, source-authentic, purposively selected subset of PKP OJS journal rows used to exercise the same source-specific enrichment contract intended for the full cohort. It validates merge branches but is not a representative sample, the full issue #6 pipeline, or a Paper Analysis designation.
+
 **Strict OpenAlex Coverage**:
 Among OJS journal rows with a valid ISSN, the journal has one unique exact-ISSN match to an OpenAlex Source. Ambiguous matches are reported separately, and rows without a valid ISSN belong to Identifier Availability rather than OpenAlex noncoverage.
 

@@ -7,38 +7,25 @@ execute:
   message: false
 ---
 
-This notebook left-joins OpenAlex and Crossref journal metadata onto PKP OJS
-rows by exact ISSN. By default it runs a **purposive validation sample** of ten
-source-authentic PKP rows selected to exercise missing, unmatched, consistent,
-and inconsistent match branches. It is not a representative sample and must
-not be used to estimate full-cohort coverage.
+This notebook left-joins selected OpenAlex and Crossref journal metadata onto a **purposive validation sample** of ten source-authentic PKP OJS rows by exact ISSN. The sample exercises missing, unmatched, consistent, and inconsistent match branches; it is not representative and must not be used to estimate full-cohort coverage.
 
-Set `OPENALEX_API_KEY` in the environment or the repository-root `.env` file
-for either mode. An existing environment value takes precedence. To run the
-same functions on the complete pinned Beacon file, also set
-`OJS_ENRICHMENT_MODE=full`, `DATA_ROOT`, and `CROSSREF_MAILTO`. This notebook
-validates sample mode only; it does not execute the full run here.
+Set `OPENALEX_API_KEY` in the environment or the repository-root `.env` file before rendering. The active code is intentionally limited to the ten-row sample. Before a formal full-cohort run, replace the sections marked `FULL-COHORT REPLACEMENT` with reviewed batching, caching, checkpointing, and error-provenance code.
 
 ## Packages and paths
 
-This setup chunk loads the required R packages, resolves sample or full mode,
-and defines input and output paths. It uses an already exported
-`OPENALEX_API_KEY` when available and otherwise reads the repository-root
-`.env`; the selected mode is validated before any data or API request is made.
-Artifacts are separated by run mode while source-response caches are shared.
+This setup chunk loads the required R packages and fixes the input and output paths to the ten-row sample. It uses an already exported `OPENALEX_API_KEY` when available and otherwise reads the repository-root `.env`.
+
+The commented lines mark the path replacement required for a formal full-cohort run. They are deliberately inactive in this sample notebook.
 
 ```{r}
 #| label: packages-and-paths
 
 library(dplyr)
 library(httr2)
-library(jsonlite)
 library(purrr)
 library(readr)
 library(tibble)
 
-run_mode <- tolower(Sys.getenv("OJS_ENRICHMENT_MODE", "sample"))
-stopifnot(run_mode %in% c("sample", "full"))
 project_env_path <- file.path("..", "..", "..", ".env")
 if (!nzchar(Sys.getenv("OPENALEX_API_KEY")) && file.exists(project_env_path)) {
   readRenviron(project_env_path)
@@ -47,27 +34,21 @@ if (!nzchar(Sys.getenv("OPENALEX_API_KEY"))) {
   stop("Set OPENALEX_API_KEY before running this notebook.", call. = FALSE)
 }
 
-fixture_path <- file.path(
+input_path <- file.path(
   "..",
   "data",
   "ojs-journal-enrichment-sample.csv"
 )
-data_root <- Sys.getenv("DATA_ROOT")
-if (run_mode == "full" && !nzchar(data_root)) {
-  stop("Set DATA_ROOT before running full mode.", call. = FALSE)
-}
-input_path <- if (run_mode == "sample") {
-  fixture_path
-} else {
-  file.path(data_root, "raw", "pkp-beacon-v6", "beacon.csv")
-}
-
 artifact_dir <- file.path("..", "artifacts", "ojs_journal_enrichment")
-run_dir <- file.path(artifact_dir, run_mode)
+run_dir <- file.path(artifact_dir, "sample")
 dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
 output_path <- file.path(run_dir, "pkp-ojs-multisource-enriched.csv")
-metadata_path <- file.path(run_dir, "run-metadata.json")
+
+# FULL-COHORT REPLACEMENT (inactive):
+# data_root <- Sys.getenv("DATA_ROOT")
+# input_path <- file.path(data_root, "raw", "pkp-beacon-v6", "beacon.csv")
+# run_dir <- file.path(artifact_dir, "full")
 ```
 
 ## ISSN preparation
@@ -110,370 +91,63 @@ source_issns <- function(source) {
 
 ## Source retrieval
 
-OpenAlex accepts up to 100 OR values in one filter, whereas Crossref journal
-records are requested one ISSN at a time. Both retrieval functions use bounded
-timeouts and retries. OpenAlex pagination follows the returned cursor, and a
-Crossref `404` is treated as an unmatched journal rather than an API failure.
-The OpenAlex request deliberately omits `select`, retaining every top-level
-Source field before later filtering.
+The ten-row sample requires one OpenAlex request and one rate-limited Crossref request per distinct valid ISSN. A Crossref `404` is treated as an unmatched journal. The requests retain timeouts because both APIs are external trust boundaries.
+
+For a formal full-cohort run, replace this chunk with the commented production requirements: OpenAlex batching and cursor pagination, Crossref polite-pool identification, bounded retries, cache checkpoints, and per-ISSN error provenance.
 
 ```{r}
 #| label: source-retrieval
 
-fetch_openalex_batch <- function(
+fetch_openalex_sources <- function(
   issns,
   api_key = Sys.getenv("OPENALEX_API_KEY")
 ) {
-  stopifnot(length(issns) >= 1L, length(issns) <= 100L, nzchar(api_key))
+  stopifnot(length(issns) <= 100L, nzchar(api_key))
 
-  results <- list()
-  cursor <- "*"
-  repeat {
-    payload <- request("https://api.openalex.org/sources") |>
-      req_url_query(
-        filter = paste0("issn:", paste(issns, collapse = "|")),
-        per_page = 100,
-        cursor = cursor,
-        api_key = api_key
-      ) |>
-      req_timeout(seconds = 30) |>
-      req_retry(max_tries = 3) |>
-      req_perform() |>
-      resp_body_json(simplifyVector = FALSE)
-
-    results <- c(results, payload$results)
-    next_cursor <- payload$meta$next_cursor
-    if (!length(payload$results) || is.null(next_cursor) ||
-        identical(next_cursor, cursor)) break
-    cursor <- next_cursor
-  }
-  results
+  request("https://api.openalex.org/sources") |>
+    req_url_query(
+      filter = paste0("issn:", paste(issns, collapse = "|")),
+      per_page = 100,
+      api_key = api_key
+    ) |>
+    req_timeout(seconds = 30) |>
+    req_perform() |>
+    resp_body_json(simplifyVector = FALSE) |>
+    pluck("results")
 }
 
-fetch_crossref_journal <- function(
-  issn,
-  mailto = Sys.getenv("CROSSREF_MAILTO")
-) {
-  agent <- if (nzchar(mailto)) {
-    paste0("InvisibleResearch/1.0 (mailto:", mailto, ")")
-  } else {
-    "InvisibleResearch/1.0"
-  }
-  crossref_request <- request(
-    paste0("https://api.crossref.org/journals/", issn)
-  ) |>
-    req_headers(Accept = "application/json", `User-Agent` = agent) |>
+fetch_crossref_journal <- function(issn) {
+  response <- request(paste0("https://api.crossref.org/journals/", issn)) |>
     req_timeout(seconds = 30) |>
     req_error(
       is_error = \(response) {
         resp_status(response) != 404L && resp_is_error(response)
       }
     ) |>
-    req_retry(max_tries = 3)
-  if (nzchar(mailto)) {
-    crossref_request <- req_url_query(crossref_request, mailto = mailto)
-  }
-
-  response <- req_perform(crossref_request)
+    req_perform()
   if (resp_status(response) == 404L) return(NULL)
   resp_body_json(response, simplifyVector = FALSE)$message
 }
+
+# FULL-COHORT REPLACEMENT (inactive):
+# - split OpenAlex ISSNs into batches of at most 100 and follow next_cursor;
+# - identify Crossref requests with CROSSREF_MAILTO and its polite-pool rate;
+# - add bounded retries, persistent caches, checkpoints, and error provenance.
 ```
 
-## Multi-source enrichment
+## Load the PKP/OJS sample
 
-The enrichment keeps the OpenAlex and Crossref methods explicit because they differ in request shape, candidate identity, and rate handling. Only identical cache metadata and CSV serialization mechanics are shared.
+The fixture was extracted from PKP Beacon V6 file `13173372` on 2026-07-17. Its MD5 is `b5fb99c10f38c2a5c3e7e6e0d4aa2212`. This chunk fixes the analysis boundary at ten OJS rows and checks their composite PKP identities before any API request.
 
-### Cache and serialization helpers
-
-These helpers load an existing cache, summarize its reproducibility metadata, and serialize nested values for CSV. They do not contain source-specific matching rules.
+For a formal full-cohort run, replace the commented input path in the setup chunk and replace these sample assertions with the pinned full-file checksum and cohort counts.
 
 ```{r}
-#| label: enrichment-helpers
+#| label: load-sample
 
-read_cache <- function(path) if (file.exists(path)) readRDS(path) else list()
-
-cache_summary <- function(path, cache, entries_before, cached, missing) {
-  list(
-    file = normalizePath(path, mustWork = FALSE),
-    md5 = if (file.exists(path)) unname(tools::md5sum(path)) else NA_character_,
-    entries_before = entries_before,
-    entries_after = length(cache),
-    requested_issns = length(cached) + length(missing),
-    hits = length(cached),
-    misses = length(missing)
-  )
-}
-
-as_csv_cell <- function(value) {
-  if (is.null(value) || !length(value)) return("")
-  if (is.atomic(value) && length(value) == 1L) return(as.character(value))
-  as.character(toJSON(
-    value,
-    auto_unbox = TRUE,
-    null = "null",
-    na = "null",
-    digits = NA
-  ))
-}
-```
-
-### Source-specific classification
-
-Both sources use the same five outcome labels, but OpenAlex candidates are deduplicated by Source ID while Crossref candidates are deduplicated by their normalized ISSN set. Keeping the two classifiers separate makes that methodological difference visible.
-
-```{r}
-#| label: source-specific-classification
-
-classify_status <- function(row_tokens, errors, candidate_keys) {
-  case_when(
-    length(row_tokens) == 0L ~ "not_attempted",
-    any(row_tokens %in% names(errors)) ~ "api_error",
-    length(candidate_keys) == 0L ~ "unmatched",
-    length(candidate_keys) == 1L ~ "consistent",
-    TRUE ~ "inconsistent"
-  )
-}
-
-classify_openalex <- function(row_tokens, cache, errors) {
-  matched_tokens <- keep(row_tokens, \(token) {
-    identical(cache[[token]]$status, "matched")
-  })
-  candidates <- unlist(
-    map(cache[matched_tokens], "candidates"),
-    recursive = FALSE
-  )
-  candidate_ids <- map_chr(candidates, "id")
-  candidates <- candidates[!duplicated(candidate_ids)]
-  candidate_ids <- unique(candidate_ids)
-  status <- classify_status(row_tokens, errors, candidate_ids)
-
-  list(
-    status = status,
-    matched_issns = matched_tokens,
-    candidate_ids = candidate_ids,
-    candidates = candidates,
-    source = if (status == "consistent") candidates[[1]] else NULL
-  )
-}
-
-classify_crossref <- function(row_tokens, cache, errors) {
-  matched_tokens <- keep(row_tokens, \(token) {
-    identical(cache[[token]]$status, "matched")
-  })
-  journals <- map(matched_tokens, \(token) cache[[token]]$journal)
-  candidate_keys <- map_chr(journals, \(journal) {
-    issns <- vapply(journal$ISSN, normalize_issn, character(1))
-    paste(sort(unique(issns[!is.na(issns)])), collapse = "|")
-  })
-  valid_candidates <- nzchar(candidate_keys)
-  journals <- journals[valid_candidates]
-  candidate_keys <- candidate_keys[valid_candidates]
-  journals <- journals[!duplicated(candidate_keys)]
-  candidate_keys <- unique(candidate_keys)
-  status <- classify_status(row_tokens, errors, candidate_keys)
-
-  list(
-    status = status,
-    matched_issns = matched_tokens,
-    candidate_ids = candidate_keys,
-    candidates = journals,
-    source = if (status == "consistent") journals[[1]] else NULL
-  )
-}
-```
-
-### Enrichment orchestration
-
-The main function normalizes PKP identifiers, fills missing cache entries, checkpoints API results, assembles source-specific provenance, and writes one CSV row per PKP row. Timeouts, retries, rate limits, and run-specific API errors remain because they protect the external-data and full-cohort reproducibility boundaries.
-
-```{r}
-#| label: enrichment-function
-
-enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
-  ojs_rows <- ojs_rows |>
-    mutate(
-      .input_issns = map(issn, parse_issns),
-      identifier_status = case_when(
-        !nzchar(issn) ~ "missing",
-        lengths(.input_issns) == 0L ~ "invalid",
-        TRUE ~ "valid"
-      )
-    )
-  tokens <- sort(unique(unlist(ojs_rows$.input_issns)))
-
-  openalex_cache_path <- file.path(
-    artifact_dir,
-    "openalex-source-cache.rds"
-  )
-  crossref_cache_path <- file.path(
-    artifact_dir,
-    "crossref-journal-cache.rds"
-  )
-
-  openalex_cache <- read_cache(openalex_cache_path)
-  crossref_cache <- read_cache(crossref_cache_path)
-  openalex_entries_before <- length(openalex_cache)
-  crossref_entries_before <- length(crossref_cache)
-
-  openalex_errors <- character()
-  openalex_cached_tokens <- intersect(tokens, names(openalex_cache))
-  missing_openalex <- setdiff(tokens, names(openalex_cache))
-  batches <- split(
-    missing_openalex,
-    ceiling(seq_along(missing_openalex) / 100)
-  )
-  for (batch in batches) {
-    sources <- tryCatch(fetch_openalex_batch(batch), error = identity)
-    if (inherits(sources, "error")) {
-      openalex_errors <- c(
-        openalex_errors,
-        setNames(rep(conditionMessage(sources), length(batch)), batch)
-      )
-      next
-    }
-
-    for (token in batch) {
-      candidates <- keep(
-        sources,
-        \(source) token %in% source_issns(source)
-      )
-      openalex_cache[[token]] <- list(
-        status = if (length(candidates)) "matched" else "unmatched",
-        candidates = candidates
-      )
-    }
-    saveRDS(openalex_cache, openalex_cache_path)
-  }
-
-  crossref_mailto <- Sys.getenv("CROSSREF_MAILTO")
-  if (run_mode == "full" && !nzchar(crossref_mailto)) {
-    stop("Set CROSSREF_MAILTO before running full mode.", call. = FALSE)
-  }
-  crossref_rate <- if (nzchar(crossref_mailto)) 9 else 4
-  crossref_errors <- character()
-  crossref_cached_tokens <- intersect(tokens, names(crossref_cache))
-  missing_crossref <- setdiff(tokens, names(crossref_cache))
-  for (index in seq_along(missing_crossref)) {
-    token <- missing_crossref[[index]]
-    journal <- tryCatch(
-      fetch_crossref_journal(token, crossref_mailto),
-      error = identity
-    )
-    if (inherits(journal, "error")) {
-      crossref_errors[[token]] <- conditionMessage(journal)
-    } else {
-      crossref_cache[[token]] <- if (is.null(journal)) {
-        list(status = "unmatched")
-      } else {
-        list(status = "matched", journal = journal)
-      }
-    }
-    if (index %% 100L == 0L || index == length(missing_crossref)) {
-      saveRDS(crossref_cache, crossref_cache_path)
-    }
-    Sys.sleep(1 / crossref_rate)
-  }
-
-  openalex_matches <- map(ojs_rows$.input_issns, \(row_tokens) {
-    classify_openalex(row_tokens, openalex_cache, openalex_errors)
-  })
-  crossref_matches <- map(ojs_rows$.input_issns, \(row_tokens) {
-    classify_crossref(row_tokens, crossref_cache, crossref_errors)
-  })
-  openalex_fields <- sort(unique(unlist(map(
-    openalex_matches,
-    \(match) unlist(map(match$candidates, names), use.names = FALSE)
-  ))))
-  crossref_fields <- sort(unique(unlist(map(
-    crossref_matches,
-    \(match) unlist(map(match$candidates, names), use.names = FALSE)
-  ))))
-
-  csv_output <- map_dfr(seq_len(nrow(ojs_rows)), \(row_number) {
-    row <- select(ojs_rows[row_number, ], -.input_issns)
-    row_tokens <- ojs_rows$.input_issns[[row_number]]
-    openalex <- openalex_matches[[row_number]]
-    crossref <- crossref_matches[[row_number]]
-    provenance <- tibble(
-      openalex_input_issns = paste(row_tokens, collapse = "|"),
-      openalex_matched_issns = paste(openalex$matched_issns, collapse = "|"),
-      openalex_match_status = openalex$status,
-      openalex_candidate_ids = paste(openalex$candidate_ids, collapse = "|"),
-      openalex_candidate_records = list(openalex$candidates),
-      crossref_input_issns = paste(row_tokens, collapse = "|"),
-      crossref_matched_issns = paste(crossref$matched_issns, collapse = "|"),
-      crossref_match_status = crossref$status,
-      crossref_candidate_issn_sets = paste(
-        crossref$candidate_ids,
-        collapse = ";"
-      ),
-      crossref_candidate_records = list(crossref$candidates)
-    )
-    source_cells <- c(
-      set_names(
-        map(openalex_fields, \(field) list(openalex$source[[field]])),
-        paste0("openalex_", openalex_fields)
-      ),
-      set_names(
-        map(crossref_fields, \(field) list(crossref$source[[field]])),
-        paste0("crossref_", crossref_fields)
-      )
-    )
-    bind_cols(row, provenance, as_tibble(source_cells))
-  }) |>
-    mutate(across(where(is.list), \(column) map_chr(column, as_csv_cell)))
-  write_csv(csv_output, output_path, na = "")
-
-  list(
-    csv = csv_output,
-    openalex_fields = openalex_fields,
-    crossref_fields = crossref_fields,
-    openalex_errors = openalex_errors,
-    crossref_errors = crossref_errors,
-    cache = list(
-      openalex = cache_summary(
-        openalex_cache_path,
-        openalex_cache,
-        openalex_entries_before,
-        openalex_cached_tokens,
-        missing_openalex
-      ),
-      crossref = cache_summary(
-        crossref_cache_path,
-        crossref_cache,
-        crossref_entries_before,
-        crossref_cached_tokens,
-        missing_crossref
-      )
-    )
-  )
-}
-```
-
-## Load PKP/OJS input and run
-
-The sample fixture was extracted from PKP Beacon V6 file `13173372` on
-2026-07-17. The source file MD5 is
-`9f43fa051c7ed1cc45d8592593542011`; the fixture MD5 is
-`b5fb99c10f38c2a5c3e7e6e0d4aa2212`. The fixture retains the original PKP
-columns except `admin_email`.
-
-This chunk verifies the selected input checksum and expected row counts before
-enrichment, retains only OJS rows, and checks the composite PKP row identity for
-duplicates. It then runs the shared enrichment function and writes run metadata
-that records inputs, outputs, source names, cache provenance, and API errors.
-
-```{r}
-#| label: run-enrichment
-
-stopifnot(file.exists(input_path))
-input_md5 <- unname(tools::md5sum(input_path))
-if (run_mode == "sample") {
-  stopifnot(input_md5 == "b5fb99c10f38c2a5c3e7e6e0d4aa2212")
-} else {
-  stopifnot(input_md5 == "9f43fa051c7ed1cc45d8592593542011")
-}
+stopifnot(
+  file.exists(input_path),
+  unname(tools::md5sum(input_path)) == "b5fb99c10f38c2a5c3e7e6e0d4aa2212"
+)
 
 raw_input <- read_csv(
   input_path,
@@ -490,82 +164,204 @@ row_identity <- paste(
   ojs_rows$set_spec,
   sep = "\r"
 )
-stopifnot(!anyDuplicated(row_identity))
-if (run_mode == "sample") {
-  stopifnot(nrow(ojs_rows) == 10L)
-} else {
-  stopifnot(nrow(raw_input) == 87170L, nrow(ojs_rows) == 86282L)
+stopifnot(nrow(ojs_rows) == 10L, !anyDuplicated(row_identity))
+
+# FULL-COHORT REPLACEMENT (inactive):
+# stopifnot(unname(tools::md5sum(input_path)) ==
+#   "9f43fa051c7ed1cc45d8592593542011")
+# stopifnot(nrow(raw_input) == 87170L, nrow(ojs_rows) == 86282L)
+```
+
+## Multi-source enrichment
+
+The sample keeps only the matching rules needed to produce readable scalar CSV columns. OpenAlex candidates are deduplicated by Source ID; Crossref candidates are deduplicated by normalized ISSN set. API failures stop the render, so rerunning repeats the small set of requests.
+
+### Sample matching helpers
+
+These helpers assign the four sample match outcomes, construct Crossref candidate identities, and return source fields only when a row has one consistent candidate.
+
+```{r}
+#| label: sample-matching-helpers
+
+classify_status <- function(input_issns, candidate_ids) {
+  case_when(
+    length(input_issns) == 0L ~ "not_attempted",
+    length(candidate_ids) == 0L ~ "unmatched",
+    length(candidate_ids) == 1L ~ "consistent",
+    TRUE ~ "inconsistent"
+  )
 }
 
-result <- enrich_ojs_rows(ojs_rows, run_mode, artifact_dir, output_path)
+crossref_key <- function(journal) {
+  issns <- vapply(journal$ISSN, normalize_issn, character(1))
+  paste(sort(unique(issns[!is.na(issns)])), collapse = "|")
+}
 
-write_json(
-  list(
-    producer = "analysis/ojs_journal_enrichment.qmd",
-    run_mode = run_mode,
-    input_file = normalizePath(input_path),
-    input_md5 = input_md5,
-    input_rows = nrow(raw_input),
-    ojs_rows = nrow(ojs_rows),
-    distinct_valid_issns = length(unique(unlist(map(ojs_rows$issn, parse_issns)))),
-    sources = c("PKP OJS", "OpenAlex", "Crossref"),
-    output_file = normalizePath(output_path),
-    cache = result$cache,
-    openalex_api_errors = length(result$openalex_errors),
-    openalex_api_error_messages = as.list(result$openalex_errors),
-    crossref_api_errors = length(result$crossref_errors),
-    crossref_api_error_messages = as.list(result$crossref_errors),
-    created_at = format(Sys.time(), tz = "UTC", usetz = TRUE)
-  ),
-  metadata_path,
-  auto_unbox = TRUE,
-  pretty = TRUE
+consistent_field <- function(match, field) {
+  if (match$status != "consistent") return(NA_character_)
+  value <- pluck(match$candidates, 1, field, .default = NA_character_)
+  if (!length(value)) NA_character_ else as.character(value[[1]])
+}
+```
+
+### Sample enrichment orchestration
+
+This chunk retrieves the distinct sample ISSNs, applies source-specific candidate identities, selects a fixed review schema, and writes one CSV row per PKP row. It intentionally has no cache, checkpoint, retry loop, dynamic schema, nested candidate JSON, or run metadata.
+
+For a formal full-cohort run, replace this entire chunk with a reviewed pipeline that restores the inactive requirements listed at its end.
+
+```{r}
+#| label: sample-enrichment
+
+input_issns <- map(ojs_rows$issn, parse_issns)
+tokens <- sort(unique(unlist(input_issns)))
+
+openalex_sources <- fetch_openalex_sources(tokens)
+crossref_journals <- set_names(
+  map(tokens, \(token) {
+    journal <- fetch_crossref_journal(token)
+    Sys.sleep(0.25)
+    journal
+  }),
+  tokens
 )
+
+openalex_matches <- map(input_issns, \(issns) {
+  candidates <- keep(openalex_sources, \(source) {
+    any(issns %in% source_issns(source))
+  })
+  candidate_ids <- map_chr(candidates, "id")
+  candidates <- candidates[!duplicated(candidate_ids)]
+  candidate_ids <- unique(candidate_ids)
+
+  list(
+    status = classify_status(issns, candidate_ids),
+    matched_issns = intersect(
+      issns,
+      unique(unlist(map(candidates, source_issns)))
+    ),
+    candidate_ids = candidate_ids,
+    candidates = candidates
+  )
+})
+
+crossref_matches <- map(input_issns, \(issns) {
+  matched_issns <- keep(issns, \(issn) {
+    !is.null(crossref_journals[[issn]])
+  })
+  candidates <- unname(crossref_journals[matched_issns])
+  candidate_ids <- map_chr(candidates, crossref_key)
+  candidates <- candidates[!duplicated(candidate_ids)]
+  candidate_ids <- unique(candidate_ids)
+
+  list(
+    status = classify_status(issns, candidate_ids),
+    matched_issns = matched_issns,
+    candidate_ids = candidate_ids,
+    candidates = candidates
+  )
+})
+
+result <- ojs_rows |>
+  mutate(
+    identifier_status = case_when(
+      is.na(issn) | !nzchar(issn) ~ "missing",
+      lengths(input_issns) == 0L ~ "invalid",
+      TRUE ~ "valid"
+    ),
+    openalex_input_issns = map_chr(input_issns, paste, collapse = "|"),
+    openalex_matched_issns = map_chr(
+      openalex_matches,
+      \(match) paste(match$matched_issns, collapse = "|")
+    ),
+    openalex_match_status = map_chr(openalex_matches, "status"),
+    openalex_candidate_ids = map_chr(
+      openalex_matches,
+      \(match) paste(match$candidate_ids, collapse = "|")
+    ),
+    openalex_display_name = map_chr(
+      openalex_matches,
+      consistent_field,
+      field = "display_name"
+    ),
+    openalex_country_code = map_chr(
+      openalex_matches,
+      consistent_field,
+      field = "country_code"
+    ),
+    openalex_works_count = map_chr(
+      openalex_matches,
+      consistent_field,
+      field = "works_count"
+    ),
+    crossref_input_issns = map_chr(input_issns, paste, collapse = "|"),
+    crossref_matched_issns = map_chr(
+      crossref_matches,
+      \(match) paste(match$matched_issns, collapse = "|")
+    ),
+    crossref_match_status = map_chr(crossref_matches, "status"),
+    crossref_candidate_issn_sets = map_chr(
+      crossref_matches,
+      \(match) paste(match$candidate_ids, collapse = ";")
+    ),
+    crossref_title = map_chr(
+      crossref_matches,
+      consistent_field,
+      field = "title"
+    ),
+    crossref_publisher = map_chr(
+      crossref_matches,
+      consistent_field,
+      field = "publisher"
+    )
+  )
+
+write_csv(result, output_path, na = "")
+
+# FULL-COHORT REPLACEMENT (inactive):
+# - batch OpenAlex requests and paginate each batch;
+# - cache source responses by normalized ISSN and checkpoint writes;
+# - retry transient failures and record per-ISSN API error provenance;
+# - restore complete namespaced source fields and candidate records;
+# - write run metadata with input, output, and cache checksums.
 ```
 
 ## Checks
 
-These assertions form the executable notebook contract. They verify that the
-retrieval and enrichment functions exist, one output row is retained per OJS
-row, required artifacts are written, and complete namespaced source fields and
-candidate records remain available. In sample mode, they also require the
-purposive fixture to exercise the planned match branches; they do not establish
-representative full-cohort coverage.
+These assertions form the executable sample contract. They verify one output row per input row, the fixed review schema, the CSV artifact, and the intended match branches. They do not establish representative full-cohort coverage.
 
 ```{r}
 #| label: contract-check
 
 stopifnot(
-  exists("fetch_openalex_batch", mode = "function"),
+  exists("fetch_openalex_sources", mode = "function"),
   exists("fetch_crossref_journal", mode = "function"),
-  exists("enrich_ojs_rows", mode = "function"),
-  nrow(result$csv) == nrow(ojs_rows),
+  nrow(result) == nrow(ojs_rows),
   file.exists(output_path),
-  file.exists(metadata_path),
-  "openalex_candidate_records" %in% names(result$csv),
-  "crossref_candidate_records" %in% names(result$csv),
-  all(paste0("openalex_", result$openalex_fields) %in% names(result$csv)),
-  all(paste0("crossref_", result$crossref_fields) %in% names(result$csv))
+  all(c(
+    "openalex_match_status",
+    "openalex_display_name",
+    "crossref_match_status",
+    "crossref_title"
+  ) %in% names(result)),
+  all(c(
+    "consistent",
+    "unmatched",
+    "inconsistent",
+    "not_attempted"
+  ) %in% result$openalex_match_status),
+  "not_attempted" %in% result$crossref_match_status
 )
-if (run_mode == "sample") {
-  stopifnot(
-    "consistent" %in% result$csv$openalex_match_status,
-    "unmatched" %in% result$csv$openalex_match_status,
-    "inconsistent" %in% result$csv$openalex_match_status,
-    "not_attempted" %in% result$csv$openalex_match_status,
-    "not_attempted" %in% result$csv$crossref_match_status
-  )
-}
 ```
 
-## Sample review after all fields are retained
+## Selected sample review
 
-The table below is a review surface only. It uses scalar identity, match, title, country, count, and publisher fields so that rows remain readable; JSON candidate records and nested source fields remain available in the CSV and are intentionally excluded from this preview.
+The table below previews the same fixed scalar fields written to the sample CSV. Complete source records are intentionally outside this exploratory implementation.
 
 ```{r}
 #| label: selected-review-fields
 
-result$csv |>
+result |>
   select(any_of(c(
     "context_name",
     "openalex_input_issns",
@@ -592,6 +388,6 @@ does not select variables for substantive analysis.
 ```{r}
 #| label: complete-column-list
 
-tibble(column = names(result$csv)) |>
+tibble(column = names(result)) |>
   knitr::kable()
 ```

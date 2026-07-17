@@ -25,8 +25,10 @@ library(tibble)
 
 `fetch_openalex_source()` accepts one or more ISSNs belonging to one journal.
 It calls the OpenAlex singleton endpoint without `select`, so every top-level
-field in the returned `Source` object becomes an `openalex_*` column. Nested
-objects and arrays remain lossless JSON cells for later filtering.
+field in the returned `Source` object is retained. Nested objects and arrays
+are both stored as lossless JSON and recursively expanded into indexed
+`openalex_*` columns such as `openalex_topics_1_display_name` for later
+filtering.
 
 ```{r}
 #| label: fetch-openalex-source
@@ -44,7 +46,7 @@ fetch_openalex_source <- function(
   }
 
   normalize_issn <- function(value) {
-    compact <- toupper(gsub("[^0-9X]", "", value))
+    compact <- gsub("[^0-9X]", "", toupper(value))
     if (!grepl("^[0-9]{7}[0-9X]$", compact)) {
       stop(sprintf("Invalid ISSN: %s", value), call. = FALSE)
     }
@@ -121,32 +123,63 @@ fetch_openalex_source <- function(
   }
 
   source <- matched[[1]]$source
-  as_cell <- function(value) {
+  flatten_value <- function(value, path) {
     if (is.null(value) || !length(value)) {
-      return(NA)
+      return(stats::setNames(list(NA), path))
     }
     if (is.atomic(value) && length(value) == 1L) {
-      return(value)
+      return(stats::setNames(list(value), path))
     }
-    as.character(jsonlite::toJSON(
+    labels <- names(value)
+    if (is.null(labels) || any(!nzchar(labels))) {
+      labels <- seq_along(value)
+    }
+    children <- Map(
+      function(child, label) {
+        flatten_value(child, paste(path, label, sep = "_"))
+      },
       value,
-      auto_unbox = TRUE,
-      null = "null",
-      na = "null",
-      digits = NA
-    ))
+      labels
+    )
+    do.call(c, unname(children))
   }
 
-  source_cells <- lapply(source, as_cell)
-  names(source_cells) <- paste0("openalex_", names(source))
+  source_cells <- list()
+  for (field in names(source)) {
+    value <- source[[field]]
+    path <- paste0("openalex_", field)
+    source_cells[[paste0(path, "__json")]] <- as.character(
+      jsonlite::toJSON(
+        value,
+        auto_unbox = TRUE,
+        null = "null",
+        na = "null",
+        digits = NA
+      )
+    )
+    source_cells <- c(source_cells, flatten_value(value, path))
+  }
+  source_cells$openalex_source__json <- as.character(jsonlite::toJSON(
+    source,
+    auto_unbox = TRUE,
+    null = "null",
+    na = "null",
+    digits = NA
+  ))
+  if (anyDuplicated(names(source_cells))) {
+    stop("Flattening the OpenAlex Source object produced duplicate columns.")
+  }
+
   output <- tibble::as_tibble(c(provenance, source_cells))
-  retained_fields <- sub(
-    "^openalex_",
-    "",
-    names(output)[startsWith(names(output), "openalex_") &
-      names(output) != "openalex_retrieved_at"]
+  retained_fields <- vapply(
+    names(source),
+    function(field) {
+      path <- paste0("openalex_", field)
+      paste0(path, "__json") %in% names(output)
+    },
+    logical(1)
   )
-  if (!setequal(names(source), retained_fields)) {
+  if (!all(retained_fields) || !"openalex_source__json" %in% names(output)) {
     stop("The OpenAlex Source object lost one or more top-level fields.")
   }
   output
@@ -177,7 +210,7 @@ sample_journals <- tibble::tibble(
   ),
   issns = list(
     c("2307-4108", "2307-4116"),
-    c("1978-0354", "2622-013X"),
+    c("1978-0354", "2622-013x"),
     "2085-7063",
     c("2722-1393", "2722-1407"),
     c("2460-3937", "2549-452X"),
@@ -218,9 +251,11 @@ stopifnot(
   length(source_columns) >= 30L,
   all(c(
     "openalex_id",
-    "openalex_topics",
-    "openalex_counts_by_year",
-    "openalex_summary_stats"
+    "openalex_topics__json",
+    "openalex_topics_1_display_name",
+    "openalex_counts_by_year_1_year",
+    "openalex_summary_stats_2yr_mean_citedness",
+    "openalex_source__json"
   ) %in% source_columns),
   status_for("Kuwait Journal of Science") == "unique",
   status_for("Sintesa: Jurnal Ilmu Pendidikan") == "unmatched",
@@ -261,24 +296,6 @@ tibble::tibble(column = source_columns) |>
   knitr::kable()
 ```
 
-The first unique match is transposed below so nested JSON cells remain
-readable while every retained OpenAlex field is visible.
-
-```{r}
-#| label: complete-example-row
-
-first_unique <- sample_results[
-  which(sample_results$match_status == "unique")[1],
-  c("sample_journal", source_columns),
-  drop = FALSE
-]
-tibble::tibble(
-  column = names(first_unique),
-  value = vapply(
-    first_unique,
-    function(column) as.character(column[[1]]),
-    character(1)
-  )
-) |>
-  knitr::kable()
-```
+The complete values remain in `sample_results`. The
+`openalex_source__json` column also preserves each selected Source object
+losslessly if a later filtering decision needs a different flattening shape.

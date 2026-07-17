@@ -5,7 +5,8 @@ Date: 2026-07-17
 ## Contract
 
 The implementation follows the 2026-07-16 meeting outcome and the agreed
-extension of issue #6. It must:
+extension of `invisibleinfo/invisible-research#6` (OJS Journal Metadata). It
+must:
 
 1. start from source-authentic PKP/OJS rows;
 2. match every valid ISSN against OpenAlex and Crossref;
@@ -22,6 +23,8 @@ merge branches; it does not estimate full-cohort coverage.
 ## RED
 
 Command:
+
+Prerequisite: `OPENALEX_API_KEY` is set in the environment.
 
 ```sh
 red_dir=$(mktemp -d)
@@ -40,7 +43,7 @@ Checkpoint commit: `51d0c4b` (`test(ojs): add multisource QMD RED contract`).
 ## GREEN
 
 The same render command completed successfully after implementation. The
-generated sample CSV contained 10 PKP/OJS rows and 87 columns. Its match states
+generated sample CSV contained 10 PKP/OJS rows and 89 columns. Its match states
 covered:
 
 - `consistent` in OpenAlex and Crossref;
@@ -49,8 +52,9 @@ covered:
 - `not_attempted` for a row without an ISSN.
 
 The sample render reported no OpenAlex or Crossref API errors. The QMD's own
-contract checks also verified one-row-per-input preservation and the presence
-of every discovered, namespaced top-level source field.
+contract checks also verified one-row-per-input preservation, complete
+candidate-record JSON for ambiguous matches, and the presence of every
+discovered, namespaced top-level source field.
 
 ## Full-mode input check
 

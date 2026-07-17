@@ -13,9 +13,10 @@ source-authentic PKP rows selected to exercise missing, unmatched, consistent,
 and inconsistent match branches. It is not a representative sample and must
 not be used to estimate full-cohort coverage.
 
-Set `OJS_ENRICHMENT_MODE=full`, `DATA_ROOT`, `OPENALEX_API_KEY`, and
-`CROSSREF_MAILTO` to run the same functions on the complete pinned Beacon file.
-This notebook validates sample mode only; it does not execute the full run here.
+Set `OPENALEX_API_KEY` for either mode. To run the same functions on the
+complete pinned Beacon file, also set `OJS_ENRICHMENT_MODE=full`, `DATA_ROOT`,
+and `CROSSREF_MAILTO`. This notebook validates sample mode only; it does not
+execute the full run here.
 
 ## Packages and paths
 
@@ -31,6 +32,9 @@ library(tibble)
 
 run_mode <- tolower(Sys.getenv("OJS_ENRICHMENT_MODE", "sample"))
 stopifnot(run_mode %in% c("sample", "full"))
+if (!nzchar(Sys.getenv("OPENALEX_API_KEY"))) {
+  stop("Set OPENALEX_API_KEY before running this notebook.", call. = FALSE)
+}
 
 fixture_path <- file.path(
   "..",
@@ -116,6 +120,7 @@ fetch_openalex_batch <- function(
         cursor = cursor,
         api_key = api_key
       ) |>
+      req_timeout(seconds = 30) |>
       req_retry(max_tries = 3) |>
       req_perform() |>
       resp_body_json(simplifyVector = FALSE)
@@ -142,6 +147,7 @@ fetch_crossref_journal <- function(
     paste0("https://api.crossref.org/journals/", issn)
   ) |>
     req_headers(Accept = "application/json", `User-Agent` = agent) |>
+    req_timeout(seconds = 30) |>
     req_error(
       is_error = \(response) {
         resp_status(response) != 404L && resp_is_error(response)
@@ -161,8 +167,11 @@ fetch_crossref_journal <- function(
 ## Multi-source enrichment
 
 The ignored cache files are owned by this QMD and store complete source
-responses. OpenAlex checkpoints after each batch; Crossref checkpoints every
-100 new ISSNs. API errors remain run-specific so the next run retries them.
+responses by ISSN. They are intentionally shared between sample and full modes
+so a full run can reuse the sample lookups; each run records their paths,
+checksums, and hit/miss counts. OpenAlex checkpoints after each batch; Crossref
+checkpoints every 100 new ISSNs. API errors remain run-specific so the next run
+retries them, while their per-ISSN messages are written to run metadata.
 
 ```{r}
 #| label: enrichment-function
@@ -198,8 +207,11 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
   } else {
     list()
   }
+  openalex_entries_before <- length(openalex_cache)
+  crossref_entries_before <- length(crossref_cache)
 
   openalex_errors <- character()
+  openalex_cached_tokens <- intersect(tokens, names(openalex_cache))
   missing_openalex <- setdiff(tokens, names(openalex_cache))
   batches <- split(
     missing_openalex,
@@ -237,6 +249,7 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
   }
   crossref_rate <- if (nzchar(crossref_mailto)) 9 else 4
   crossref_errors <- character()
+  crossref_cached_tokens <- intersect(tokens, names(crossref_cache))
   missing_crossref <- setdiff(tokens, names(crossref_cache))
   for (index in seq_along(missing_crossref)) {
     token <- missing_crossref[[index]]
@@ -286,6 +299,7 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
       status = status,
       matched_issns = matched_tokens,
       candidate_ids = candidate_ids,
+      candidates = candidates,
       source = if (status == "consistent") candidates[[1]] else NULL
     )
   }
@@ -318,6 +332,7 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
       status = status,
       matched_issns = matched_tokens,
       candidate_ids = candidate_keys,
+      candidates = journals,
       source = if (status == "consistent") journals[[1]] else NULL
     )
   }
@@ -326,11 +341,11 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
   crossref_matches <- map(ojs_rows$.input_issns, classify_crossref)
   openalex_fields <- sort(unique(unlist(map(
     openalex_matches,
-    \(match) names(match$source)
+    \(match) unlist(map(match$candidates, names), use.names = FALSE)
   ))))
   crossref_fields <- sort(unique(unlist(map(
     crossref_matches,
-    \(match) names(match$source)
+    \(match) unlist(map(match$candidates, names), use.names = FALSE)
   ))))
 
   enriched <- map_dfr(seq_len(nrow(ojs_rows)), \(row_number) {
@@ -343,13 +358,15 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
       openalex_matched_issns = paste(openalex$matched_issns, collapse = "|"),
       openalex_match_status = openalex$status,
       openalex_candidate_ids = paste(openalex$candidate_ids, collapse = "|"),
+      openalex_candidate_records = list(openalex$candidates),
       crossref_input_issns = paste(row_tokens, collapse = "|"),
       crossref_matched_issns = paste(crossref$matched_issns, collapse = "|"),
       crossref_match_status = crossref$status,
       crossref_candidate_issn_sets = paste(
         crossref$candidate_ids,
         collapse = ";"
-      )
+      ),
+      crossref_candidate_records = list(crossref$candidates)
     )
     source_cells <- c(
       set_names(
@@ -385,7 +402,35 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
     openalex_fields = openalex_fields,
     crossref_fields = crossref_fields,
     openalex_errors = openalex_errors,
-    crossref_errors = crossref_errors
+    crossref_errors = crossref_errors,
+    cache = list(
+      openalex = list(
+        file = normalizePath(openalex_cache_path, mustWork = FALSE),
+        md5 = if (file.exists(openalex_cache_path)) {
+          unname(tools::md5sum(openalex_cache_path))
+        } else {
+          NA_character_
+        },
+        entries_before = openalex_entries_before,
+        entries_after = length(openalex_cache),
+        requested_issns = length(tokens),
+        hits = length(openalex_cached_tokens),
+        misses = length(missing_openalex)
+      ),
+      crossref = list(
+        file = normalizePath(crossref_cache_path, mustWork = FALSE),
+        md5 = if (file.exists(crossref_cache_path)) {
+          unname(tools::md5sum(crossref_cache_path))
+        } else {
+          NA_character_
+        },
+        entries_before = crossref_entries_before,
+        entries_after = length(crossref_cache),
+        requested_issns = length(tokens),
+        hits = length(crossref_cached_tokens),
+        misses = length(missing_crossref)
+      )
+    )
   )
 }
 ```
@@ -438,8 +483,11 @@ write_json(
     distinct_valid_issns = length(unique(unlist(map(ojs_rows$issn, parse_issns)))),
     sources = c("PKP OJS", "OpenAlex", "Crossref"),
     output_file = normalizePath(output_path),
+    cache = result$cache,
     openalex_api_errors = length(result$openalex_errors),
+    openalex_api_error_messages = as.list(result$openalex_errors),
     crossref_api_errors = length(result$crossref_errors),
+    crossref_api_error_messages = as.list(result$crossref_errors),
     created_at = format(Sys.time(), tz = "UTC", usetz = TRUE)
   ),
   metadata_path,
@@ -460,6 +508,8 @@ stopifnot(
   nrow(result$data) == nrow(ojs_rows),
   file.exists(output_path),
   file.exists(metadata_path),
+  "openalex_candidate_records" %in% names(result$data),
+  "crossref_candidate_records" %in% names(result$data),
   all(paste0("openalex_", result$openalex_fields) %in% names(result$data)),
   all(paste0("crossref_", result$crossref_fields) %in% names(result$data))
 )
@@ -477,7 +527,9 @@ if (run_mode == "sample") {
 ## Sample review after all fields are retained
 
 The table below is a review surface only. The CSV contains all PKP columns and
-all top-level fields returned for consistent OpenAlex and Crossref matches.
+all discovered top-level OpenAlex and Crossref fields. Candidate records retain
+the complete returned objects as JSON, including when multiple ISSNs resolve
+inconsistently and no single candidate may be selected.
 
 ```{r}
 #| label: selected-review-fields

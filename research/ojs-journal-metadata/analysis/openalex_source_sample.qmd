@@ -7,10 +7,11 @@ execute:
   message: false
 ---
 
-This notebook tests the supervisor-requested workflow on ten ISSNs rather than
-the full OJS dataset. Each ISSN is matched through the OpenAlex singleton
+This notebook tests the supervisor-requested workflow on ten journals rather
+than the full OJS dataset. Each ISSN is matched through the OpenAlex singleton
 endpoint, and every top-level field in the returned `Source` object is kept
-before any analytical selection.
+before any analytical selection. Journals with multiple ISSNs are represented
+by one row only when their matched ISSNs resolve to the same OpenAlex Source.
 
 ```{r}
 #| label: packages
@@ -32,13 +33,19 @@ fetch_openalex_source <- function(
 ) {
   stopifnot(length(issn) == 1L, !is.na(issn))
 
-  source <- request(
+  response <- request(
     paste0("https://api.openalex.org/sources/issn:", toupper(trimws(issn)))
   ) |>
     req_url_query(api_key = api_key) |>
-    req_perform() |>
-    resp_body_json(simplifyVector = FALSE)
+    req_error(
+      is_error = \(response) {
+        resp_status(response) != 404L && resp_is_error(response)
+      }
+    ) |>
+    req_perform()
 
+  if (resp_status(response) == 404L) return(NULL)
+  source <- resp_body_json(response, simplifyVector = FALSE)
   as_tibble(lapply(source, list))
 }
 ```
@@ -47,38 +54,94 @@ The function does not use the OpenAlex `select` parameter. All returned fields
 remain list-columns, so `null` and nested values can coexist across journals
 without discarding fields or imposing a project-specific shape during retrieval.
 
-## Ten-ISSN sample
+## Ten-journal sample
 
 ```{r}
 #| label: sample-input
 
-sample_issns <- tibble(
-  input_issn = c(
-    "2307-4108",
-    "1978-0354",
-    "2722-1393",
-    "2460-3937",
-    "2723-309X",
-    "2722-4376",
-    "2088-4842",
-    "2087-1058",
-    "1511-4511",
-    "3093-8112"
+sample_journals <- tibble(
+  sample_journal = c(
+    "Kuwait Journal of Science",
+    "CAKRAWALA",
+    "Sintesa: Jurnal Ilmu Pendidikan",
+    "CARAKA: Jurnal Teologi",
+    "Open Journal Systems",
+    "Rumah Jurnal STKIP Pamane Talino Ngabang 1",
+    "Journal with ISSNs 1511-4511 and 3093-8112",
+    "Rumah Jurnal STKIP Pamane Talino Ngabang 2",
+    "Journal with ISSNs 2088-4842 and 2442-8795",
+    "Journal Online Universitas Palangka Raya"
+  ),
+  issns = list(
+    c("2307-4108", "2307-4116"),
+    c("1978-0354", "2622-013X"),
+    "2085-7063",
+    c("2722-1393", "2722-1407"),
+    c("2460-3937", "2549-452X"),
+    c("2723-309X", "2723-3103"),
+    c("1511-4511", "3093-8112"),
+    c("2722-4376", "2722-4384"),
+    c("2088-4842", "2442-8795"),
+    c("2087-1058", "2988-7712")
   )
 )
 
-openalex_sources <- sample_issns$input_issn |>
-  map(fetch_openalex_source) |>
-  bind_rows() |>
-  mutate(input_issn = sample_issns$input_issn, .before = 1)
+openalex_sources <- pmap(
+  sample_journals,
+  \(sample_journal, issns) {
+    matches <- map(issns, fetch_openalex_source)
+    matched <- !map_lgl(matches, is.null)
+    matched_results <- matches[matched]
+    matched_issns <- issns[matched]
+    source_ids <- unique(map_chr(
+      matched_results,
+      \(result) result$id[[1]]
+    ))
+
+    match_status <- case_when(
+      length(source_ids) == 0L ~ "unmatched",
+      length(source_ids) == 1L ~ "consistent",
+      TRUE ~ "inconsistent"
+    )
+    match_info <- tibble(
+      sample_journal,
+      input_issns = list(issns),
+      matched_issns = list(matched_issns),
+      match_status,
+      candidate_source_ids = list(source_ids)
+    )
+
+    if (match_status != "consistent") return(match_info)
+    bind_cols(match_info, matched_results[[1]])
+  }
+) |>
+  bind_rows()
 ```
+
+`consistent` means that every successful lookup for the journal returned the
+same Source ID. `input_issns` and `matched_issns` remain separate so partial
+matches are visible.
 
 ```{r}
 #| label: check-sample
 
 stopifnot(
-  nrow(openalex_sources) == nrow(sample_issns),
-  all(c("id", "display_name", "issn", "topics") %in% names(openalex_sources))
+  nrow(openalex_sources) == nrow(sample_journals),
+  all(c(
+    "display_name",
+    "host_organization_name",
+    "topics",
+    "works_count",
+    "cited_by_count",
+    "summary_stats"
+  ) %in% names(openalex_sources)),
+  "inconsistent" %in% openalex_sources$match_status,
+  all(map_int(
+    openalex_sources$candidate_source_ids[
+      openalex_sources$match_status == "consistent"
+    ],
+    length
+  ) == 1L)
 )
 ```
 
@@ -97,13 +160,53 @@ tibble(column = names(openalex_sources)) |>
 #| label: selected-columns
 
 openalex_sources |>
-  transmute(
-    input_issn,
-    id = map_chr(id, identity),
-    display_name = map_chr(display_name, identity),
-    is_oa = map_lgl(is_oa, identity),
-    is_in_doaj = map_lgl(is_in_doaj, identity),
-    is_ojs = map_lgl(is_ojs, identity)
+  mutate(
+    input_issns = map_chr(input_issns, paste, collapse = " | "),
+    matched_issns = map_chr(matched_issns, paste, collapse = " | "),
+    candidate_source_ids = map_chr(
+      candidate_source_ids,
+      paste,
+      collapse = " | "
+    ),
+    openalex_title = map_chr(
+      display_name,
+      \(value) if (is.null(value)) NA_character_ else value
+    ),
+    publisher = map_chr(
+      host_organization_name,
+      \(value) if (is.null(value)) NA_character_ else value
+    ),
+    topics = map_chr(topics, \(value) {
+      if (is.null(value) || !length(value)) return(NA_character_)
+      paste(map_chr(head(value, 2), "display_name"), collapse = " | ")
+    }),
+    works_count = map_int(
+      works_count,
+      \(value) if (is.null(value)) NA_integer_ else value
+    ),
+    cited_by_count = map_int(
+      cited_by_count,
+      \(value) if (is.null(value)) NA_integer_ else value
+    ),
+    mean_citedness_2yr = map_dbl(
+      summary_stats,
+      \(value) {
+        if (is.null(value)) NA_real_ else value[["2yr_mean_citedness"]]
+      }
+    )
+  ) |>
+  select(
+    sample_journal,
+    input_issns,
+    matched_issns,
+    match_status,
+    candidate_source_ids,
+    openalex_title,
+    publisher,
+    topics,
+    works_count,
+    cited_by_count,
+    mean_citedness_2yr
   ) |>
   knitr::kable()
 ```

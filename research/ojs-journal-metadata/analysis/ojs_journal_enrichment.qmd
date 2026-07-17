@@ -35,7 +35,13 @@ run_mode <- tolower(Sys.getenv("OJS_ENRICHMENT_MODE", "sample"))
 stopifnot(run_mode %in% c("sample", "full"))
 project_env_path <- file.path("..", "..", "..", ".env")
 if (!nzchar(Sys.getenv("OPENALEX_API_KEY")) && file.exists(project_env_path)) {
+  inherited_env <- Sys.getenv()
   readRenviron(project_env_path)
+  loaded_openalex_api_key <- Sys.getenv("OPENALEX_API_KEY")
+  Sys.unsetenv(setdiff(names(Sys.getenv()), names(inherited_env)))
+  do.call(Sys.setenv, as.list(inherited_env))
+  Sys.setenv(OPENALEX_API_KEY = loaded_openalex_api_key)
+  rm(inherited_env, loaded_openalex_api_key)
 }
 if (!nzchar(Sys.getenv("OPENALEX_API_KEY"))) {
   stop("Set OPENALEX_API_KEY before running this notebook.", call. = FALSE)

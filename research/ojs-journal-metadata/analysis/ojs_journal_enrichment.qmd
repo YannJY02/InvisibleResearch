@@ -21,6 +21,12 @@ validates sample mode only; it does not execute the full run here.
 
 ## Packages and paths
 
+This setup chunk loads the required R packages, resolves sample or full mode,
+and defines input and output paths. It uses an already exported
+`OPENALEX_API_KEY` when available and otherwise reads the repository-root
+`.env`; the selected mode is validated before any data or API request is made.
+Artifacts are separated by run mode while source-response caches are shared.
+
 ```{r}
 #| label: packages-and-paths
 
@@ -64,12 +70,13 @@ output_path <- file.path(run_dir, "pkp-ojs-multisource-enriched.csv")
 metadata_path <- file.path(run_dir, "run-metadata.json")
 ```
 
-The fixture was extracted from PKP Beacon V6 file `13173372` on 2026-07-17.
-The source file MD5 is `9f43fa051c7ed1cc45d8592593542011`; the fixture MD5
-is `b5fb99c10f38c2a5c3e7e6e0d4aa2212`. The fixture retains the original PKP
-columns except `admin_email`.
-
 ## ISSN preparation
+
+Exact matching depends on checksum-valid ISSNs rather than raw identifier
+strings. This chunk removes display punctuation, validates the ISSN check
+digit, parses rows that contain multiple identifiers, and applies the same
+normalization to identifiers returned by external sources. Missing and invalid
+identifiers therefore remain distinguishable from valid but unmatched ISSNs.
 
 ```{r}
 #| label: issn-preparation
@@ -103,8 +110,12 @@ source_issns <- function(source) {
 
 ## Source retrieval
 
-OpenAlex accepts up to 100 OR values in one filter. The function deliberately
-omits `select`, retaining every top-level Source field before later filtering.
+OpenAlex accepts up to 100 OR values in one filter, whereas Crossref journal
+records are requested one ISSN at a time. Both retrieval functions use bounded
+timeouts and retries. OpenAlex pagination follows the returned cursor, and a
+Crossref `404` is treated as an unmatched journal rather than an API failure.
+The OpenAlex request deliberately omits `select`, retaining every top-level
+Source field before later filtering.
 
 ```{r}
 #| label: source-retrieval
@@ -177,6 +188,13 @@ so a full run can reuse the sample lookups; each run records their paths,
 checksums, and hit/miss counts. OpenAlex checkpoints after each batch; Crossref
 checkpoints every 100 new ISSNs. API errors remain run-specific so the next run
 retries them, while their per-ISSN messages are written to run metadata.
+
+For each PKP row, the function normalizes all supplied ISSNs, retrieves missing
+source records, and deduplicates candidates by source-specific identity. It
+classifies each source independently as `not_attempted`, `api_error`,
+`unmatched`, `consistent`, or `inconsistent`; only a single consistent
+candidate supplies flattened source fields. Complete candidate objects and
+match provenance remain attached before list columns are serialized for CSV.
 
 ```{r}
 #| label: enrichment-function
@@ -442,6 +460,17 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
 
 ## Load PKP/OJS input and run
 
+The sample fixture was extracted from PKP Beacon V6 file `13173372` on
+2026-07-17. The source file MD5 is
+`9f43fa051c7ed1cc45d8592593542011`; the fixture MD5 is
+`b5fb99c10f38c2a5c3e7e6e0d4aa2212`. The fixture retains the original PKP
+columns except `admin_email`.
+
+This chunk verifies the selected input checksum and expected row counts before
+enrichment, retains only OJS rows, and checks the composite PKP row identity for
+duplicates. It then runs the shared enrichment function and writes run metadata
+that records inputs, outputs, source names, cache provenance, and API errors.
+
 ```{r}
 #| label: run-enrichment
 
@@ -503,6 +532,13 @@ write_json(
 
 ## Checks
 
+These assertions form the executable notebook contract. They verify that the
+retrieval and enrichment functions exist, one output row is retained per OJS
+row, required artifacts are written, and complete namespaced source fields and
+candidate records remain available. In sample mode, they also require the
+purposive fixture to exercise the planned match branches; they do not establish
+representative full-cohort coverage.
+
 ```{r}
 #| label: contract-check
 
@@ -562,6 +598,10 @@ result$csv |>
 ```
 
 ## Complete merged column list
+
+This final audit table enumerates the exact merged schema produced by the run.
+It supports inspection of retained source fields and provenance columns but
+does not select variables for substantive analysis.
 
 ```{r}
 #| label: complete-column-list

@@ -13,10 +13,11 @@ source-authentic PKP rows selected to exercise missing, unmatched, consistent,
 and inconsistent match branches. It is not a representative sample and must
 not be used to estimate full-cohort coverage.
 
-Set `OPENALEX_API_KEY` for either mode. To run the same functions on the
-complete pinned Beacon file, also set `OJS_ENRICHMENT_MODE=full`, `DATA_ROOT`,
-and `CROSSREF_MAILTO`. This notebook validates sample mode only; it does not
-execute the full run here.
+Set `OPENALEX_API_KEY` in the environment or the repository-root `.env` file
+for either mode. An existing environment value takes precedence. To run the
+same functions on the complete pinned Beacon file, also set
+`OJS_ENRICHMENT_MODE=full`, `DATA_ROOT`, and `CROSSREF_MAILTO`. This notebook
+validates sample mode only; it does not execute the full run here.
 
 ## Packages and paths
 
@@ -32,6 +33,10 @@ library(tibble)
 
 run_mode <- tolower(Sys.getenv("OJS_ENRICHMENT_MODE", "sample"))
 stopifnot(run_mode %in% c("sample", "full"))
+project_env_path <- file.path("..", "..", "..", ".env")
+if (!nzchar(Sys.getenv("OPENALEX_API_KEY")) && file.exists(project_env_path)) {
+  readRenviron(project_env_path)
+}
 if (!nzchar(Sys.getenv("OPENALEX_API_KEY"))) {
   stop("Set OPENALEX_API_KEY before running this notebook.", call. = FALSE)
 }

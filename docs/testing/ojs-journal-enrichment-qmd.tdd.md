@@ -24,7 +24,8 @@ merge branches; it does not estimate full-cohort coverage.
 
 Command:
 
-Prerequisite: `OPENALEX_API_KEY` is set in the environment.
+Prerequisite: `OPENALEX_API_KEY` is set in the environment or the
+repository-root `.env` file.
 
 ```sh
 red_dir=$(mktemp -d)
@@ -55,6 +56,14 @@ The sample render reported no OpenAlex or Crossref API errors. The QMD's own
 contract checks also verified one-row-per-input preservation, complete
 candidate-record JSON for ambiguous matches, and the presence of every
 discovered, namespaced top-level source field.
+
+## Environment-loading regression
+
+The `packages-and-paths` chunk was executed in an isolated temporary project
+with `OPENALEX_API_KEY` removed from the process and supplied only through the
+repository-root `.env`. Before the fix it stopped with `Set OPENALEX_API_KEY
+before running this notebook.`; after the fix the same check loaded the key and
+passed. A separately exported value remained authoritative over `.env`.
 
 ## Full-mode input check
 

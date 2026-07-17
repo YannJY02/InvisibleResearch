@@ -57,23 +57,6 @@ contract checks also verified one-row-per-input preservation, complete
 candidate-record JSON for ambiguous matches, and the presence of every
 discovered, namespaced top-level source field.
 
-## Environment-loading regression
-
-The `packages-and-paths` chunk was executed in an isolated temporary project
-with `OPENALEX_API_KEY` removed from the process and supplied only through the
-repository-root `.env`. Before the fix it stopped with `Set OPENALEX_API_KEY
-before running this notebook.`; after the fix the same check loaded the key and
-passed. Exported values remained authoritative, and unrelated `.env` entries
-were not retained in the notebook process.
-
-```sh
-Rscript tests/test_ojs_journal_enrichment_env.R
-```
-
-```text
-PASS: .env fallback, process precedence, and missing-key guard
-```
-
 ## Full-mode input check
 
 The pinned PKP Beacon V6 file was read without calling either metadata API. Its

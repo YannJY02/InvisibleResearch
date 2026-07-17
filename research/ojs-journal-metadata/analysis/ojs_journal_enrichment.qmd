@@ -567,10 +567,7 @@ if (run_mode == "sample") {
 
 ## Sample review after all fields are retained
 
-The table below is a review surface only. The CSV contains all PKP columns and
-all discovered top-level OpenAlex and Crossref fields. Candidate records retain
-the complete returned objects as JSON, including when multiple ISSNs resolve
-inconsistently and no single candidate may be selected.
+The table below is a review surface only. It uses scalar identity, match, title, country, count, and publisher fields so that rows remain readable; JSON candidate records and nested source fields remain available in the CSV and are intentionally excluded from this preview.
 
 ```{r}
 #| label: selected-review-fields
@@ -578,21 +575,17 @@ inconsistently and no single candidate may be selected.
 result$csv |>
   select(any_of(c(
     "context_name",
-    "issn",
+    "openalex_input_issns",
     "identifier_status",
     "openalex_match_status",
-    "openalex_candidate_ids",
+    "openalex_matched_issns",
     "openalex_display_name",
-    "openalex_host_organization_name",
-    "openalex_topics",
-    "openalex_cited_by_count",
-    "openalex_summary_stats",
+    "openalex_country_code",
+    "openalex_works_count",
     "crossref_match_status",
-    "crossref_candidate_issn_sets",
+    "crossref_matched_issns",
     "crossref_title",
-    "crossref_publisher",
-    "crossref_counts",
-    "crossref_coverage"
+    "crossref_publisher"
   ))) |>
   knitr::kable()
 ```

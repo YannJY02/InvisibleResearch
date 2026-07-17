@@ -7,287 +7,103 @@ execute:
   message: false
 ---
 
-This notebook tests the supervisor-requested shape: one OJS journal per row,
-with the complete OpenAlex `Source` object retained before later column
-selection. It intentionally does not read or run the full OJS cohort.
+This notebook tests the supervisor-requested workflow on ten ISSNs rather than
+the full OJS dataset. Each ISSN is matched through the OpenAlex singleton
+endpoint, and every top-level field in the returned `Source` object is kept
+before any analytical selection.
 
 ```{r}
 #| label: packages
 
 library(dplyr)
 library(httr2)
-library(jsonlite)
 library(purrr)
 library(tibble)
 ```
 
-## Function
-
-`fetch_openalex_source()` accepts one or more ISSNs belonging to one journal.
-It calls the OpenAlex singleton endpoint without `select`, so every top-level
-field in the returned `Source` object is retained. Nested objects and arrays
-are recursively expanded into indexed `openalex_*` columns such as
-`openalex_topics_1_display_name` for later filtering; the complete Source
-object is also retained as one lossless JSON cell.
+## Retrieve one OpenAlex Source
 
 ```{r}
 #| label: fetch-openalex-source
 
 fetch_openalex_source <- function(
-  issns,
+  issn,
   api_key = Sys.getenv("OPENALEX_API_KEY")
 ) {
-  raw_tokens <- unlist(
-    strsplit(paste(stats::na.omit(issns), collapse = "\n"), "[[:space:],;|]+")
-  )
-  raw_tokens <- raw_tokens[nzchar(raw_tokens)]
-  if (!length(raw_tokens)) {
-    stop("Supply at least one ISSN.", call. = FALSE)
-  }
+  stopifnot(length(issn) == 1L, !is.na(issn))
 
-  normalize_issn <- function(value) {
-    compact <- gsub("[^0-9X]", "", toupper(value))
-    if (!grepl("^[0-9]{7}[0-9X]$", compact)) {
-      stop(sprintf("Invalid ISSN: %s", value), call. = FALSE)
-    }
-    digits <- as.integer(strsplit(substr(compact, 1, 7), "")[[1]])
-    check_value <- (11 - sum(digits * 8:2) %% 11) %% 11
-    expected <- if (check_value == 10) "X" else as.character(check_value)
-    if (substr(compact, 8, 8) != expected) {
-      stop(sprintf("Invalid ISSN checksum: %s", value), call. = FALSE)
-    }
-    paste0(substr(compact, 1, 4), "-", substr(compact, 5, 8))
-  }
+  source <- request(
+    paste0("https://api.openalex.org/sources/issn:", toupper(trimws(issn)))
+  ) |>
+    req_url_query(api_key = api_key) |>
+    req_perform() |>
+    resp_body_json(simplifyVector = FALSE)
 
-  tokens <- unique(vapply(raw_tokens, normalize_issn, character(1)))
-  fetched <- lapply(tokens, function(token) {
-    request <- httr2::request(
-      paste0("https://api.openalex.org/sources/issn:", token)
-    ) |>
-      httr2::req_headers(
-        Accept = "application/json",
-        `User-Agent` = "InvisibleResearch/1.0"
-      ) |>
-      httr2::req_error(
-        is_error = function(response) {
-          httr2::resp_status(response) != 404L &&
-            httr2::resp_is_error(response)
-        }
-      ) |>
-      httr2::req_retry(max_tries = 3)
-    if (nzchar(api_key)) {
-      request <- httr2::req_url_query(request, api_key = api_key)
-    }
-
-    response <- httr2::req_perform(request)
-    source <- if (httr2::resp_status(response) == 404L) {
-      NULL
-    } else {
-      httr2::resp_body_json(response, simplifyVector = FALSE)
-    }
-    list(issn = token, source = source)
-  })
-
-  matched <- fetched[!vapply(fetched, function(item) is.null(item$source), logical(1))]
-  candidate_ids <- unique(vapply(
-    matched,
-    function(item) item$source$id,
-    character(1)
-  ))
-  provenance <- list(
-    input_issns = as.character(jsonlite::toJSON(tokens, auto_unbox = FALSE)),
-    matched_issns = as.character(jsonlite::toJSON(
-      vapply(matched, `[[`, character(1), "issn"),
-      auto_unbox = FALSE
-    )),
-    match_status = if (!length(candidate_ids)) {
-      "unmatched"
-    } else if (length(candidate_ids) == 1L) {
-      "unique"
-    } else {
-      "ambiguous"
-    },
-    candidate_source_ids = as.character(jsonlite::toJSON(
-      candidate_ids,
-      auto_unbox = FALSE
-    )),
-    openalex_retrieved_at = format(
-      Sys.time(),
-      tz = "UTC",
-      usetz = TRUE
-    )
-  )
-
-  if (length(candidate_ids) != 1L) {
-    return(tibble::as_tibble(provenance))
-  }
-
-  source <- matched[[1]]$source
-  flatten_value <- function(value, path) {
-    if (is.null(value) || !length(value)) {
-      return(stats::setNames(list(NA), path))
-    }
-    if (is.atomic(value) && length(value) == 1L) {
-      return(stats::setNames(list(value), path))
-    }
-    labels <- names(value)
-    if (is.null(labels) || any(!nzchar(labels))) {
-      labels <- seq_along(value)
-    }
-    children <- Map(
-      function(child, label) {
-        flatten_value(child, paste(path, label, sep = "_"))
-      },
-      value,
-      labels
-    )
-    do.call(c, unname(children))
-  }
-
-  source_cells <- list()
-  field_columns <- list()
-  for (field in names(source)) {
-    value <- source[[field]]
-    path <- paste0("openalex_", field)
-    flattened <- flatten_value(value, path)
-    field_columns[[field]] <- names(flattened)
-    source_cells <- c(source_cells, flattened)
-  }
-  source_cells$openalex_source__json <- as.character(jsonlite::toJSON(
-    source,
-    auto_unbox = TRUE,
-    null = "null",
-    na = "null",
-    digits = NA
-  ))
-  if (anyDuplicated(names(source_cells))) {
-    stop("Flattening the OpenAlex Source object produced duplicate columns.")
-  }
-
-  output <- tibble::as_tibble(c(provenance, source_cells))
-  retained_fields <- vapply(
-    field_columns,
-    function(columns) {
-      length(columns) > 0L && all(columns %in% names(output))
-    },
-    logical(1)
-  )
-  if (!all(retained_fields) || !"openalex_source__json" %in% names(output)) {
-    stop("The OpenAlex Source object lost one or more top-level fields.")
-  }
-  output
+  as_tibble(lapply(source, list))
 }
 ```
 
-## Ten-journal sample
+The function does not use the OpenAlex `select` parameter. All returned fields
+remain list-columns, so `null` and nested values can coexist across journals
+without discarding fields or imposing a project-specific shape during retrieval.
 
-The sample is embedded here so the notebook makes no full-cohort read. It
-includes consistent multi-ISSN matches, one unmatched ISSN, and one journal
-whose ISSNs resolve to conflicting OpenAlex Source IDs.
+## Ten-ISSN sample
 
 ```{r}
 #| label: sample-input
 
-sample_journals <- tibble::tibble(
-  sample_journal = c(
-    "Kuwait Journal of Science",
-    "CAKRAWALA",
-    "Sintesa: Jurnal Ilmu Pendidikan",
-    "CARAKA: Jurnal Teologi",
-    "Open Journal Systems",
-    "Rumah Jurnal STKIP Pamane Talino Ngabang 1",
-    "Journal with ISSNs 1511-4511 and 3093-8112",
-    "Rumah Jurnal STKIP Pamane Talino Ngabang 2",
-    "Journal with ISSNs 2088-4842 and 2442-8795",
-    "Journal Online Universitas Palangka Raya"
-  ),
-  issns = list(
-    c("2307-4108", "2307-4116"),
-    c("1978-0354", "2622-013x"),
-    "2085-7063",
-    c("2722-1393", "2722-1407"),
-    c("2460-3937", "2549-452X"),
-    c("2723-309X", "2723-3103"),
-    c("1511-4511", "3093-8112"),
-    c("2722-4376", "2722-4384"),
-    c("2088-4842", "2442-8795"),
-    c("2087-1058", "2988-7712")
+sample_issns <- tibble(
+  input_issn = c(
+    "2307-4108",
+    "1978-0354",
+    "2722-1393",
+    "2460-3937",
+    "2723-309X",
+    "2722-4376",
+    "2088-4842",
+    "2087-1058",
+    "1511-4511",
+    "3093-8112"
   )
 )
 
-sample_results <- purrr::map2_dfr(
-  sample_journals$issns,
-  sample_journals$sample_journal,
-  function(issns, journal) {
-    fetch_openalex_source(issns) |>
-      dplyr::mutate(sample_journal = journal, .before = 1)
-  }
-)
+openalex_sources <- sample_issns$input_issn |>
+  map(fetch_openalex_source) |>
+  bind_rows() |>
+  mutate(input_issn = sample_issns$input_issn, .before = 1)
 ```
 
-## Checks
-
 ```{r}
-#| label: contract-check
-
-source_columns <- names(sample_results)[
-  startsWith(names(sample_results), "openalex_") &
-    names(sample_results) != "openalex_retrieved_at"
-]
-status_for <- function(journal) {
-  sample_results$match_status[sample_results$sample_journal == journal]
-}
+#| label: check-sample
 
 stopifnot(
-  exists("fetch_openalex_source", mode = "function"),
-  nrow(sample_results) == 10L,
-  length(source_columns) >= 30L,
-  all(c(
-    "openalex_id",
-    "openalex_topics_1_display_name",
-    "openalex_counts_by_year_1_year",
-    "openalex_summary_stats_2yr_mean_citedness",
-    "openalex_source__json"
-  ) %in% source_columns),
-  status_for("Kuwait Journal of Science") == "unique",
-  status_for("Sintesa: Jurnal Ilmu Pendidikan") == "unmatched",
-  status_for("Journal Online Universitas Palangka Raya") == "ambiguous"
-)
-
-cat(
-  "Checks passed:",
-  nrow(sample_results),
-  "journals and",
-  length(source_columns),
-  "OpenAlex Source columns retained.\n"
+  nrow(openalex_sources) == nrow(sample_issns),
+  all(c("id", "display_name", "issn", "topics") %in% names(openalex_sources))
 )
 ```
 
-## Sample outcomes
+## Inspect all retrieved columns
 
 ```{r}
-#| label: sample-outcomes
+#| label: all-column-names
 
-sample_results |>
-  dplyr::select(
-    sample_journal,
-    input_issns,
-    matched_issns,
-    match_status,
-    candidate_source_ids
+tibble(column = names(openalex_sources)) |>
+  knitr::kable()
+```
+
+## Select analytical columns afterwards
+
+```{r}
+#| label: selected-columns
+
+openalex_sources |>
+  transmute(
+    input_issn,
+    id = map_chr(id, identity),
+    display_name = map_chr(display_name, identity),
+    is_oa = map_lgl(is_oa, identity),
+    is_in_doaj = map_lgl(is_in_doaj, identity),
+    is_ojs = map_lgl(is_ojs, identity)
   ) |>
   knitr::kable()
 ```
-
-## Complete OpenAlex columns
-
-```{r}
-#| label: complete-column-list
-
-tibble::tibble(column = source_columns) |>
-  knitr::kable()
-```
-
-The complete values remain in `sample_results`. The
-`openalex_source__json` column also preserves each selected Source object
-losslessly if a later filtering decision needs a different flattening shape.

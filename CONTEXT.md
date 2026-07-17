@@ -31,6 +31,9 @@ A reusable, source-linked reading record that separates a publication's research
 **Exploratory Analysis**:
 Analysis used to investigate data, methods, or hypotheses. Its outputs do not support a paper claim unless the analysis is later designated as Paper Analysis.
 
+**Academic Analysis Code**:
+Research-facing code in `research/**`, `papers/**/analysis/**`, QMD/Rmd files, and notebooks whose primary purpose is to make a method readable, rerunnable, and inspectable. It uses the smallest implementation that answers the research question while retaining safeguards required by the method, data, or trust boundary.
+
 **Strict OpenAlex Coverage**:
 Among OJS journal rows with a valid ISSN, the journal has one unique exact-ISSN match to an OpenAlex Source. Ambiguous matches are reported separately, and rows without a valid ISSN belong to Identifier Availability rather than OpenAlex noncoverage.
 

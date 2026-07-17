@@ -182,19 +182,110 @@ fetch_crossref_journal <- function(
 
 ## Multi-source enrichment
 
-The ignored cache files are owned by this QMD and store complete source
-responses by ISSN. They are intentionally shared between sample and full modes
-so a full run can reuse the sample lookups; each run records their paths,
-checksums, and hit/miss counts. OpenAlex checkpoints after each batch; Crossref
-checkpoints every 100 new ISSNs. API errors remain run-specific so the next run
-retries them, while their per-ISSN messages are written to run metadata.
+The enrichment keeps the OpenAlex and Crossref methods explicit because they differ in request shape, candidate identity, and rate handling. Only identical cache metadata and CSV serialization mechanics are shared.
 
-For each PKP row, the function normalizes all supplied ISSNs, retrieves missing
-source records, and deduplicates candidates by source-specific identity. It
-classifies each source independently as `not_attempted`, `api_error`,
-`unmatched`, `consistent`, or `inconsistent`; only a single consistent
-candidate supplies flattened source fields. Complete candidate objects and
-match provenance remain attached before list columns are serialized for CSV.
+### Cache and serialization helpers
+
+These helpers load an existing cache, summarize its reproducibility metadata, and serialize nested values for CSV. They do not contain source-specific matching rules.
+
+```{r}
+#| label: enrichment-helpers
+
+read_cache <- function(path) if (file.exists(path)) readRDS(path) else list()
+
+cache_summary <- function(path, cache, entries_before, cached, missing) {
+  list(
+    file = normalizePath(path, mustWork = FALSE),
+    md5 = if (file.exists(path)) unname(tools::md5sum(path)) else NA_character_,
+    entries_before = entries_before,
+    entries_after = length(cache),
+    requested_issns = length(cached) + length(missing),
+    hits = length(cached),
+    misses = length(missing)
+  )
+}
+
+as_csv_cell <- function(value) {
+  if (is.null(value) || !length(value)) return("")
+  if (is.atomic(value) && length(value) == 1L) return(as.character(value))
+  as.character(toJSON(
+    value,
+    auto_unbox = TRUE,
+    null = "null",
+    na = "null",
+    digits = NA
+  ))
+}
+```
+
+### Source-specific classification
+
+Both sources use the same five outcome labels, but OpenAlex candidates are deduplicated by Source ID while Crossref candidates are deduplicated by their normalized ISSN set. Keeping the two classifiers separate makes that methodological difference visible.
+
+```{r}
+#| label: source-specific-classification
+
+classify_status <- function(row_tokens, errors, candidate_keys) {
+  case_when(
+    length(row_tokens) == 0L ~ "not_attempted",
+    any(row_tokens %in% names(errors)) ~ "api_error",
+    length(candidate_keys) == 0L ~ "unmatched",
+    length(candidate_keys) == 1L ~ "consistent",
+    TRUE ~ "inconsistent"
+  )
+}
+
+classify_openalex <- function(row_tokens, cache, errors) {
+  matched_tokens <- keep(row_tokens, \(token) {
+    identical(cache[[token]]$status, "matched")
+  })
+  candidates <- unlist(
+    map(cache[matched_tokens], "candidates"),
+    recursive = FALSE
+  )
+  candidate_ids <- map_chr(candidates, "id")
+  candidates <- candidates[!duplicated(candidate_ids)]
+  candidate_ids <- unique(candidate_ids)
+  status <- classify_status(row_tokens, errors, candidate_ids)
+
+  list(
+    status = status,
+    matched_issns = matched_tokens,
+    candidate_ids = candidate_ids,
+    candidates = candidates,
+    source = if (status == "consistent") candidates[[1]] else NULL
+  )
+}
+
+classify_crossref <- function(row_tokens, cache, errors) {
+  matched_tokens <- keep(row_tokens, \(token) {
+    identical(cache[[token]]$status, "matched")
+  })
+  journals <- map(matched_tokens, \(token) cache[[token]]$journal)
+  candidate_keys <- map_chr(journals, \(journal) {
+    issns <- vapply(journal$ISSN, normalize_issn, character(1))
+    paste(sort(unique(issns[!is.na(issns)])), collapse = "|")
+  })
+  valid_candidates <- nzchar(candidate_keys)
+  journals <- journals[valid_candidates]
+  candidate_keys <- candidate_keys[valid_candidates]
+  journals <- journals[!duplicated(candidate_keys)]
+  candidate_keys <- unique(candidate_keys)
+  status <- classify_status(row_tokens, errors, candidate_keys)
+
+  list(
+    status = status,
+    matched_issns = matched_tokens,
+    candidate_ids = candidate_keys,
+    candidates = journals,
+    source = if (status == "consistent") journals[[1]] else NULL
+  )
+}
+```
+
+### Enrichment orchestration
+
+The main function normalizes PKP identifiers, fills missing cache entries, checkpoints API results, assembles source-specific provenance, and writes one CSV row per PKP row. Timeouts, retries, rate limits, and run-specific API errors remain because they protect the external-data and full-cohort reproducibility boundaries.
 
 ```{r}
 #| label: enrichment-function
@@ -220,16 +311,8 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
     "crossref-journal-cache.rds"
   )
 
-  openalex_cache <- if (file.exists(openalex_cache_path)) {
-    readRDS(openalex_cache_path)
-  } else {
-    list()
-  }
-  crossref_cache <- if (file.exists(crossref_cache_path)) {
-    readRDS(crossref_cache_path)
-  } else {
-    list()
-  }
+  openalex_cache <- read_cache(openalex_cache_path)
+  crossref_cache <- read_cache(crossref_cache_path)
   openalex_entries_before <- length(openalex_cache)
   crossref_entries_before <- length(crossref_cache)
 
@@ -241,21 +324,18 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
     ceiling(seq_along(missing_openalex) / 100)
   )
   for (batch in batches) {
-    attempt <- tryCatch(
-      list(sources = fetch_openalex_batch(batch)),
-      error = \(error) list(error = conditionMessage(error))
-    )
-    if (!is.null(attempt$error)) {
+    sources <- tryCatch(fetch_openalex_batch(batch), error = identity)
+    if (inherits(sources, "error")) {
       openalex_errors <- c(
         openalex_errors,
-        setNames(rep(attempt$error, length(batch)), batch)
+        setNames(rep(conditionMessage(sources), length(batch)), batch)
       )
       next
     }
 
     for (token in batch) {
       candidates <- keep(
-        attempt$sources,
+        sources,
         \(source) token %in% source_issns(source)
       )
       openalex_cache[[token]] <- list(
@@ -276,17 +356,17 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
   missing_crossref <- setdiff(tokens, names(crossref_cache))
   for (index in seq_along(missing_crossref)) {
     token <- missing_crossref[[index]]
-    attempt <- tryCatch(
-      list(journal = fetch_crossref_journal(token, crossref_mailto)),
-      error = \(error) list(error = conditionMessage(error))
+    journal <- tryCatch(
+      fetch_crossref_journal(token, crossref_mailto),
+      error = identity
     )
-    if (!is.null(attempt$error)) {
-      crossref_errors[[token]] <- attempt$error
+    if (inherits(journal, "error")) {
+      crossref_errors[[token]] <- conditionMessage(journal)
     } else {
-      crossref_cache[[token]] <- if (is.null(attempt$journal)) {
+      crossref_cache[[token]] <- if (is.null(journal)) {
         list(status = "unmatched")
       } else {
-        list(status = "matched", journal = attempt$journal)
+        list(status = "matched", journal = journal)
       }
     }
     if (index %% 100L == 0L || index == length(missing_crossref)) {
@@ -295,73 +375,12 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
     Sys.sleep(1 / crossref_rate)
   }
 
-  classify_openalex <- function(row_tokens) {
-    matched_tokens <- keep(row_tokens, \(token) {
-      identical(openalex_cache[[token]]$status, "matched")
-    })
-    candidates <- unlist(
-      map(openalex_cache[matched_tokens], "candidates"),
-      recursive = FALSE
-    )
-    candidate_ids <- if (length(candidates)) {
-      map_chr(candidates, "id")
-    } else {
-      character()
-    }
-    candidates <- candidates[!duplicated(candidate_ids)]
-    candidate_ids <- unique(candidate_ids)
-
-    status <- case_when(
-      length(row_tokens) == 0L ~ "not_attempted",
-      any(row_tokens %in% names(openalex_errors)) ~ "api_error",
-      length(candidate_ids) == 0L ~ "unmatched",
-      length(candidate_ids) == 1L ~ "consistent",
-      TRUE ~ "inconsistent"
-    )
-    list(
-      status = status,
-      matched_issns = matched_tokens,
-      candidate_ids = candidate_ids,
-      candidates = candidates,
-      source = if (status == "consistent") candidates[[1]] else NULL
-    )
-  }
-
-  classify_crossref <- function(row_tokens) {
-    matched_tokens <- keep(row_tokens, \(token) {
-      identical(crossref_cache[[token]]$status, "matched")
-    })
-    journals <- map(matched_tokens, \(token) {
-      crossref_cache[[token]]$journal
-    })
-    candidate_keys <- map_chr(journals, \(journal) {
-      issns <- vapply(journal$ISSN, normalize_issn, character(1))
-      paste(sort(unique(issns[!is.na(issns)])), collapse = "|")
-    })
-    valid_candidates <- nzchar(candidate_keys)
-    journals <- journals[valid_candidates]
-    candidate_keys <- candidate_keys[valid_candidates]
-    journals <- journals[!duplicated(candidate_keys)]
-    candidate_keys <- unique(candidate_keys)
-
-    status <- case_when(
-      length(row_tokens) == 0L ~ "not_attempted",
-      any(row_tokens %in% names(crossref_errors)) ~ "api_error",
-      length(candidate_keys) == 0L ~ "unmatched",
-      length(candidate_keys) == 1L ~ "consistent",
-      TRUE ~ "inconsistent"
-    )
-    list(
-      status = status,
-      matched_issns = matched_tokens,
-      candidate_ids = candidate_keys,
-      candidates = journals,
-      source = if (status == "consistent") journals[[1]] else NULL
-    )
-  }
-
-  openalex_matches <- map(ojs_rows$.input_issns, classify_openalex)
-  crossref_matches <- map(ojs_rows$.input_issns, classify_crossref)
+  openalex_matches <- map(ojs_rows$.input_issns, \(row_tokens) {
+    classify_openalex(row_tokens, openalex_cache, openalex_errors)
+  })
+  crossref_matches <- map(ojs_rows$.input_issns, \(row_tokens) {
+    classify_crossref(row_tokens, crossref_cache, crossref_errors)
+  })
   openalex_fields <- sort(unique(unlist(map(
     openalex_matches,
     \(match) unlist(map(match$candidates, names), use.names = FALSE)
@@ -371,7 +390,7 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
     \(match) unlist(map(match$candidates, names), use.names = FALSE)
   ))))
 
-  enriched <- map_dfr(seq_len(nrow(ojs_rows)), \(row_number) {
+  csv_output <- map_dfr(seq_len(nrow(ojs_rows)), \(row_number) {
     row <- select(ojs_rows[row_number, ], -.input_issns)
     row_tokens <- ojs_rows$.input_issns[[row_number]]
     openalex <- openalex_matches[[row_number]]
@@ -402,56 +421,30 @@ enrich_ojs_rows <- function(ojs_rows, run_mode, artifact_dir, output_path) {
       )
     )
     bind_cols(row, provenance, as_tibble(source_cells))
-  })
-
-  as_csv_cell <- function(value) {
-    if (is.null(value) || !length(value)) return("")
-    if (is.atomic(value) && length(value) == 1L) return(as.character(value))
-    as.character(toJSON(
-      value,
-      auto_unbox = TRUE,
-      null = "null",
-      na = "null",
-      digits = NA
-    ))
-  }
-  csv_output <- enriched |>
+  }) |>
     mutate(across(where(is.list), \(column) map_chr(column, as_csv_cell)))
   write_csv(csv_output, output_path, na = "")
 
   list(
-    data = enriched,
     csv = csv_output,
     openalex_fields = openalex_fields,
     crossref_fields = crossref_fields,
     openalex_errors = openalex_errors,
     crossref_errors = crossref_errors,
     cache = list(
-      openalex = list(
-        file = normalizePath(openalex_cache_path, mustWork = FALSE),
-        md5 = if (file.exists(openalex_cache_path)) {
-          unname(tools::md5sum(openalex_cache_path))
-        } else {
-          NA_character_
-        },
-        entries_before = openalex_entries_before,
-        entries_after = length(openalex_cache),
-        requested_issns = length(tokens),
-        hits = length(openalex_cached_tokens),
-        misses = length(missing_openalex)
+      openalex = cache_summary(
+        openalex_cache_path,
+        openalex_cache,
+        openalex_entries_before,
+        openalex_cached_tokens,
+        missing_openalex
       ),
-      crossref = list(
-        file = normalizePath(crossref_cache_path, mustWork = FALSE),
-        md5 = if (file.exists(crossref_cache_path)) {
-          unname(tools::md5sum(crossref_cache_path))
-        } else {
-          NA_character_
-        },
-        entries_before = crossref_entries_before,
-        entries_after = length(crossref_cache),
-        requested_issns = length(tokens),
-        hits = length(crossref_cached_tokens),
-        misses = length(missing_crossref)
+      crossref = cache_summary(
+        crossref_cache_path,
+        crossref_cache,
+        crossref_entries_before,
+        crossref_cached_tokens,
+        missing_crossref
       )
     )
   )
@@ -546,21 +539,21 @@ stopifnot(
   exists("fetch_openalex_batch", mode = "function"),
   exists("fetch_crossref_journal", mode = "function"),
   exists("enrich_ojs_rows", mode = "function"),
-  nrow(result$data) == nrow(ojs_rows),
+  nrow(result$csv) == nrow(ojs_rows),
   file.exists(output_path),
   file.exists(metadata_path),
-  "openalex_candidate_records" %in% names(result$data),
-  "crossref_candidate_records" %in% names(result$data),
-  all(paste0("openalex_", result$openalex_fields) %in% names(result$data)),
-  all(paste0("crossref_", result$crossref_fields) %in% names(result$data))
+  "openalex_candidate_records" %in% names(result$csv),
+  "crossref_candidate_records" %in% names(result$csv),
+  all(paste0("openalex_", result$openalex_fields) %in% names(result$csv)),
+  all(paste0("crossref_", result$crossref_fields) %in% names(result$csv))
 )
 if (run_mode == "sample") {
   stopifnot(
-    "consistent" %in% result$data$openalex_match_status,
-    "unmatched" %in% result$data$openalex_match_status,
-    "inconsistent" %in% result$data$openalex_match_status,
-    "not_attempted" %in% result$data$openalex_match_status,
-    "not_attempted" %in% result$data$crossref_match_status
+    "consistent" %in% result$csv$openalex_match_status,
+    "unmatched" %in% result$csv$openalex_match_status,
+    "inconsistent" %in% result$csv$openalex_match_status,
+    "not_attempted" %in% result$csv$openalex_match_status,
+    "not_attempted" %in% result$csv$crossref_match_status
   )
 }
 ```

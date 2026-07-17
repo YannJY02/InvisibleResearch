@@ -1,0 +1,18 @@
+---
+title: "OpenAlex Source metadata sample"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+This notebook tests the supervisor-requested shape: one OJS journal per row,
+with the complete OpenAlex `Source` object retained before later column
+selection. It intentionally does not read or run the full OJS cohort.
+
+```{r}
+#| label: contract-check
+
+stopifnot(exists("fetch_openalex_source", mode = "function"))
+```

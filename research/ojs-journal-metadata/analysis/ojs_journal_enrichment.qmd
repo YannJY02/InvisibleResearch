@@ -350,29 +350,15 @@ stopifnot(
 )
 ```
 
-## Selected sample review
+## Complete OpenAlex and Crossref dataframe
 
-This table previews the main fields written to the sample CSV.
+This dataframe displays every OpenAlex and Crossref field written to the sample CSV.
 
 ```{r}
-#| label: selected-review-fields
+#| label: complete-sample-dataframe
 
 result |>
-  select(any_of(c(
-    "context_name",
-    "openalex_input_issns",
-    "identifier_status",
-    "openalex_match_status",
-    "openalex_matched_issns",
-    "openalex_display_name",
-    "openalex_country_code",
-    "openalex_works_count",
-    "crossref_match_status",
-    "crossref_matched_issns",
-    "crossref_title",
-    "crossref_publisher"
-  ))) |>
-  knitr::kable()
+  select(starts_with("openalex_"), starts_with("crossref_"))
 ```
 
 ## Complete merged column list

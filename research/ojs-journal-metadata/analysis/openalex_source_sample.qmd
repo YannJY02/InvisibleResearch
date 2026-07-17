@@ -26,9 +26,9 @@ library(tibble)
 `fetch_openalex_source()` accepts one or more ISSNs belonging to one journal.
 It calls the OpenAlex singleton endpoint without `select`, so every top-level
 field in the returned `Source` object is retained. Nested objects and arrays
-are both stored as lossless JSON and recursively expanded into indexed
-`openalex_*` columns such as `openalex_topics_1_display_name` for later
-filtering.
+are recursively expanded into indexed `openalex_*` columns such as
+`openalex_topics_1_display_name` for later filtering; the complete Source
+object is also retained as one lossless JSON cell.
 
 ```{r}
 #| label: fetch-openalex-source
@@ -145,19 +145,13 @@ fetch_openalex_source <- function(
   }
 
   source_cells <- list()
+  field_columns <- list()
   for (field in names(source)) {
     value <- source[[field]]
     path <- paste0("openalex_", field)
-    source_cells[[paste0(path, "__json")]] <- as.character(
-      jsonlite::toJSON(
-        value,
-        auto_unbox = TRUE,
-        null = "null",
-        na = "null",
-        digits = NA
-      )
-    )
-    source_cells <- c(source_cells, flatten_value(value, path))
+    flattened <- flatten_value(value, path)
+    field_columns[[field]] <- names(flattened)
+    source_cells <- c(source_cells, flattened)
   }
   source_cells$openalex_source__json <- as.character(jsonlite::toJSON(
     source,
@@ -172,10 +166,9 @@ fetch_openalex_source <- function(
 
   output <- tibble::as_tibble(c(provenance, source_cells))
   retained_fields <- vapply(
-    names(source),
-    function(field) {
-      path <- paste0("openalex_", field)
-      paste0(path, "__json") %in% names(output)
+    field_columns,
+    function(columns) {
+      length(columns) > 0L && all(columns %in% names(output))
     },
     logical(1)
   )
@@ -251,7 +244,6 @@ stopifnot(
   length(source_columns) >= 30L,
   all(c(
     "openalex_id",
-    "openalex_topics__json",
     "openalex_topics_1_display_name",
     "openalex_counts_by_year_1_year",
     "openalex_summary_stats_2yr_mean_citedness",

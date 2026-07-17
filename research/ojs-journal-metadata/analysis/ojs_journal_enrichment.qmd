@@ -7,15 +7,15 @@ execute:
   message: false
 ---
 
-This notebook left-joins selected OpenAlex and Crossref journal metadata onto a **purposive validation sample** of ten source-authentic PKP OJS rows by exact ISSN. The sample exercises missing, unmatched, consistent, and inconsistent match branches; it is not representative and must not be used to estimate full-cohort coverage.
+This notebook adds selected OpenAlex and Crossref journal details to ten real PKP OJS rows. It matches records by exact ISSN. The ten rows were chosen to include missing ISSNs, no matches, one match, and multiple matches. This sample checks whether the code works; it does not measure coverage across the full dataset.
 
-Set `OPENALEX_API_KEY` in the environment or the repository-root `.env` file before rendering. The active code is intentionally limited to the ten-row sample. Before a formal full-cohort run, replace the sections marked `FULL-COHORT REPLACEMENT` with reviewed batching, caching, checkpointing, and error-provenance code.
+Set `OPENALEX_API_KEY` in the environment or the repository-root `.env` file before rendering. This notebook runs the ten-row sample. Before a formal full-cohort run, replace the sections marked `FULL-COHORT REPLACEMENT` with reviewed batching, caching, checkpointing, and error-provenance code.
 
 ## Packages and paths
 
-This setup chunk loads the required R packages and fixes the input and output paths to the ten-row sample. It uses an already exported `OPENALEX_API_KEY` when available and otherwise reads the repository-root `.env`.
+This chunk loads the required R packages and sets the sample input and output paths. It first looks for `OPENALEX_API_KEY` in the current environment and then in the repository-root `.env` file.
 
-The commented lines mark the path replacement required for a formal full-cohort run. They are deliberately inactive in this sample notebook.
+The commented lines mark the path replacement required for a formal full-cohort run.
 
 ```{r}
 #| label: packages-and-paths
@@ -45,7 +45,7 @@ dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
 output_path <- file.path(run_dir, "pkp-ojs-multisource-enriched.csv")
 
-# FULL-COHORT REPLACEMENT (inactive):
+# FULL-COHORT REPLACEMENT:
 # data_root <- Sys.getenv("DATA_ROOT")
 # input_path <- file.path(data_root, "raw", "pkp-beacon-v6", "beacon.csv")
 # run_dir <- file.path(artifact_dir, "full")
@@ -53,11 +53,7 @@ output_path <- file.path(run_dir, "pkp-ojs-multisource-enriched.csv")
 
 ## ISSN preparation
 
-Exact matching depends on checksum-valid ISSNs rather than raw identifier
-strings. This chunk removes display punctuation, validates the ISSN check
-digit, parses rows that contain multiple identifiers, and applies the same
-normalization to identifiers returned by external sources. Missing and invalid
-identifiers therefore remain distinguishable from valid but unmatched ISSNs.
+ISSNs may contain spaces, punctuation, or more than one value. This chunk converts each valid ISSN to the same `XXXX-XXXX` format and checks its final digit. It keeps missing, invalid, and valid-but-unmatched ISSNs as separate cases.
 
 ```{r}
 #| label: issn-preparation
@@ -91,9 +87,9 @@ source_issns <- function(source) {
 
 ## Source retrieval
 
-The ten-row sample requires one OpenAlex request and one rate-limited Crossref request per distinct valid ISSN. A Crossref `404` is treated as an unmatched journal. The requests retain timeouts because both APIs are external trust boundaries.
+The sample sends all valid ISSNs to OpenAlex in one request. It asks Crossref about each ISSN separately and waits between requests. A Crossref `404` means that no journal record was found.
 
-For a formal full-cohort run, replace this chunk with the commented production requirements: OpenAlex batching and cursor pagination, Crossref polite-pool identification, bounded retries, cache checkpoints, and per-ISSN error provenance.
+For a formal full-cohort run, replace this chunk. The full version must divide requests into small groups, read every page of results, identify the project to Crossref, retry temporary failures, save progress, and record which ISSNs failed.
 
 ```{r}
 #| label: source-retrieval
@@ -129,17 +125,17 @@ fetch_crossref_journal <- function(issn) {
   resp_body_json(response, simplifyVector = FALSE)$message
 }
 
-# FULL-COHORT REPLACEMENT (inactive):
-# - split OpenAlex ISSNs into batches of at most 100 and follow next_cursor;
-# - identify Crossref requests with CROSSREF_MAILTO and its polite-pool rate;
-# - add bounded retries, persistent caches, checkpoints, and error provenance.
+# FULL-COHORT REPLACEMENT:
+# - send OpenAlex ISSNs in groups of at most 100 and read every result page;
+# - identify Crossref requests with CROSSREF_MAILTO and use its request rate;
+# - retry temporary failures, save responses, and record failed ISSNs.
 ```
 
 ## Load the PKP/OJS sample
 
-The fixture was extracted from PKP Beacon V6 file `13173372` on 2026-07-17. Its MD5 is `b5fb99c10f38c2a5c3e7e6e0d4aa2212`. This chunk fixes the analysis boundary at ten OJS rows and checks their composite PKP identities before any API request.
+The sample file was taken from PKP Beacon V6 file `13173372` on 2026-07-17. The MD5 value confirms that the file has not changed. This chunk reads the file, keeps its ten OJS rows, and checks that the same PKP row does not appear twice.
 
-For a formal full-cohort run, replace the commented input path in the setup chunk and replace these sample assertions with the pinned full-file checksum and cohort counts.
+For a formal full-cohort run, replace the sample path, MD5 value, and expected row count with the approved full-dataset values.
 
 ```{r}
 #| label: load-sample
@@ -166,7 +162,7 @@ row_identity <- paste(
 )
 stopifnot(nrow(ojs_rows) == 10L, !anyDuplicated(row_identity))
 
-# FULL-COHORT REPLACEMENT (inactive):
+# FULL-COHORT REPLACEMENT:
 # stopifnot(unname(tools::md5sum(input_path)) ==
 #   "9f43fa051c7ed1cc45d8592593542011")
 # stopifnot(nrow(raw_input) == 87170L, nrow(ojs_rows) == 86282L)
@@ -174,11 +170,11 @@ stopifnot(nrow(ojs_rows) == 10L, !anyDuplicated(row_identity))
 
 ## Multi-source enrichment
 
-The sample keeps only the matching rules needed to produce readable scalar CSV columns. OpenAlex candidates are deduplicated by Source ID; Crossref candidates are deduplicated by normalized ISSN set. API failures stop the render, so rerunning repeats the small set of requests.
+For each PKP row, the sample looks for OpenAlex and Crossref records with the same ISSN. If the same source record appears more than once, it is counted once. The result uses simple CSV columns that are easy to review.
 
 ### Sample matching helpers
 
-These helpers assign the four sample match outcomes, construct Crossref candidate identities, and return source fields only when a row has one consistent candidate.
+These helpers label each row as having no usable ISSN, no match, one match, or multiple matches. They also identify Crossref records by their ISSNs and copy source details when there is exactly one match.
 
 ```{r}
 #| label: sample-matching-helpers
@@ -206,9 +202,9 @@ consistent_field <- function(match, field) {
 
 ### Sample enrichment orchestration
 
-This chunk retrieves the distinct sample ISSNs, applies source-specific candidate identities, selects a fixed review schema, and writes one CSV row per PKP row. It intentionally has no cache, checkpoint, retry loop, dynamic schema, nested candidate JSON, or run metadata.
+This chunk collects the unique sample ISSNs, retrieves source records, matches them to the PKP rows, adds the selected fields, and writes one CSV row for each PKP row.
 
-For a formal full-cohort run, replace this entire chunk with a reviewed pipeline that restores the inactive requirements listed at its end.
+For a formal full-cohort run, replace this chunk with the full version described in the comments at its end.
 
 ```{r}
 #| label: sample-enrichment
@@ -318,17 +314,17 @@ result <- ojs_rows |>
 
 write_csv(result, output_path, na = "")
 
-# FULL-COHORT REPLACEMENT (inactive):
-# - batch OpenAlex requests and paginate each batch;
-# - cache source responses by normalized ISSN and checkpoint writes;
-# - retry transient failures and record per-ISSN API error provenance;
-# - restore complete namespaced source fields and candidate records;
-# - write run metadata with input, output, and cache checksums.
+# FULL-COHORT REPLACEMENT:
+# - send OpenAlex requests in groups and read every result page;
+# - save API responses so an interrupted run can continue;
+# - retry temporary failures and record failed ISSNs;
+# - keep the complete source fields and matched records;
+# - record file checksums and run details in the metadata file.
 ```
 
 ## Checks
 
-These assertions form the executable sample contract. They verify one output row per input row, the fixed review schema, the CSV artifact, and the intended match branches. They do not establish representative full-cohort coverage.
+These checks confirm that every input row appears in the output, the required columns exist, the CSV file was written, and the sample contains the expected match outcomes.
 
 ```{r}
 #| label: contract-check
@@ -356,7 +352,7 @@ stopifnot(
 
 ## Selected sample review
 
-The table below previews the same fixed scalar fields written to the sample CSV. Complete source records are intentionally outside this exploratory implementation.
+This table previews the main fields written to the sample CSV.
 
 ```{r}
 #| label: selected-review-fields
@@ -381,9 +377,7 @@ result |>
 
 ## Complete merged column list
 
-This final audit table enumerates the exact merged schema produced by the run.
-It supports inspection of retained source fields and provenance columns but
-does not select variables for substantive analysis.
+This table lists every column in the CSV so collaborators can review its structure.
 
 ```{r}
 #| label: complete-column-list

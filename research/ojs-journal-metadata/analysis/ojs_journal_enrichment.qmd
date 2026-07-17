@@ -1,0 +1,29 @@
+---
+title: "PKP/OJS multi-source journal enrichment"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+This notebook runs a purposive validation sample of ten source-authentic PKP
+OJS rows. The sample exercises merge branches and is not representative of the
+full PKP/OJS cohort. The same code also exposes an explicit full-run mode.
+
+```{r}
+#| label: red-contract
+
+fixture_path <- file.path(
+  "..",
+  "data",
+  "ojs-journal-enrichment-sample.csv"
+)
+
+stopifnot(
+  file.exists(fixture_path),
+  exists("fetch_openalex_batch", mode = "function"),
+  exists("fetch_crossref_journal", mode = "function"),
+  exists("enrich_ojs_rows", mode = "function")
+)
+```

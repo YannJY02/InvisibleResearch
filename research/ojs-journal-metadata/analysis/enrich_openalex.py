@@ -1109,7 +1109,9 @@ def parse_args() -> argparse.Namespace:
         default=Path(data_root) / "raw/pkp-beacon-v6/beacon.csv" if data_root else None,
     )
     parser.add_argument(
-        "--output-dir", type=Path, default=Path(__file__).parents[1] / "artifacts"
+        "--output-dir",
+        type=Path,
+        default=Path(__file__).parents[1] / "artifacts" / "enrich_openalex",
     )
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument("--workers", type=int, default=8)

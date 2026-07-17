@@ -16,6 +16,8 @@ This repo uses a single-context layout. See `docs/agents/domain.md`.
 
 For future code generation in `research/**`, `papers/**/analysis/**`, QMD/Rmd files, and notebooks, write Academic Analysis Code: prioritize methodological clarity, readability, and reproducibility; reuse established repository, R, and Quarto patterns; and implement the smallest code that answers the research question. Do not add speculative abstractions, custom infrastructure, or production-grade defensive code unless the method or data risk requires it. Keep proportionate checks at external-input, data-loss, security, and other trust boundaries. Shared code in `src/**`, data-writing code, and full-cohort pipelines retain safeguards appropriate to their role.
 
+Each analysis pipeline must write all generated outputs, including caches, intermediate files, reports, and profiles, under its own named subdirectory beneath the nearest ignored `artifacts/` directory. Do not write pipeline outputs directly into a shared artifact root or another pipeline's directory.
+
 ### Task completion
 
 After completing a task or ticket, commit the task's changes and push the current branch. Stage only files related to that task; never include unrelated existing changes. If the commit or push fails, report the reason.

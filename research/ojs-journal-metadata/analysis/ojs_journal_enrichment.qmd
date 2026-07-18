@@ -7,7 +7,7 @@ execute:
   message: false
 ---
 
-This notebook adds selected OpenAlex and Crossref journal details to ten real PKP OJS rows. It matches records by exact ISSN. The ten rows were chosen to include missing ISSNs, no matches, one match, and multiple matches. This sample checks whether the code works; it does not measure coverage across the full dataset.
+This notebook adds the complete available OpenAlex and Crossref journal responses to ten real PKP OJS rows. It matches records by exact ISSN. The ten rows were chosen to include missing ISSNs, no matches, one match, and multiple matches. This sample checks whether the code works; it does not measure coverage across the full dataset.
 
 Set `OPENALEX_API_KEY` in the environment or the repository-root `.env` file before rendering. This notebook runs the ten-row sample. Before a formal full-cohort run, replace the sections marked `FULL-COHORT REPLACEMENT` with reviewed batching, caching, checkpointing, and error-provenance code.
 
@@ -170,11 +170,11 @@ stopifnot(nrow(ojs_rows) == 10L, !anyDuplicated(row_identity))
 
 ## Multi-source enrichment
 
-For each PKP row, the sample looks for OpenAlex and Crossref records with the same ISSN. If the same source record appears more than once, it is counted once. The result uses simple CSV columns that are easy to review.
+For each PKP row, the sample looks for OpenAlex and Crossref records with the same ISSN. If the same source record appears more than once, it is counted once. Every returned top-level API field becomes a dataframe column; nested objects and arrays are stored as JSON in their field columns, and the complete candidate lists are also retained as lossless JSON.
 
 ### Sample matching helpers
 
-These helpers label each row as having no usable ISSN, no match, one match, or multiple matches. They also identify Crossref records by their ISSNs and copy source details when there is exactly one match.
+These helpers label each row as having no usable ISSN, no match, one match, or multiple matches. They also identify Crossref records by their ISSNs and convert every candidate field into a dataframe-safe value without filtering the response schema.
 
 ```{r}
 #| label: sample-matching-helpers
@@ -193,16 +193,54 @@ crossref_key <- function(journal) {
   paste(sort(unique(issns[!is.na(issns)])), collapse = "|")
 }
 
-consistent_field <- function(match, field) {
-  if (match$status != "consistent") return(NA_character_)
-  value <- pluck(match$candidates, 1, field, .default = NA_character_)
-  if (!length(value)) NA_character_ else as.character(value[[1]])
+serialize_json <- function(value) {
+  as.character(jsonlite::toJSON(
+    value,
+    auto_unbox = TRUE,
+    null = "null",
+    na = "null",
+    digits = NA
+  ))
+}
+
+dataframe_value <- function(value) {
+  if (is.null(value) || !length(value)) return(NA)
+  if (is.atomic(value) && length(value) == 1L) return(value)
+  serialize_json(value)
+}
+
+candidate_prefix <- function(prefix, index) {
+  if (index == 1L) prefix else paste0(prefix, "_candidate_", index)
+}
+
+candidate_field_names <- function(match, prefix) {
+  unlist(imap(match$candidates, \(candidate, index) {
+    paste(candidate_prefix(prefix, index), names(candidate), sep = "_")
+  }), use.names = FALSE)
+}
+
+expand_candidate_fields <- function(match, prefix) {
+  cells <- list()
+  for (index in seq_along(match$candidates)) {
+    candidate <- match$candidates[[index]]
+    values <- map(candidate, dataframe_value)
+    names(values) <- paste(
+      candidate_prefix(prefix, index),
+      names(candidate),
+      sep = "_"
+    )
+    cells <- c(cells, values)
+  }
+  cells[[paste0(prefix, "_candidates__json")]] <- serialize_json(
+    match$candidates
+  )
+  as_tibble(cells, .name_repair = "check_unique")
 }
 ```
 
 ### Sample enrichment orchestration
 
-This chunk collects the unique sample ISSNs, retrieves source records, matches them to the PKP rows, adds the selected fields, and writes one CSV row for each PKP row.
+This chunk collects the unique sample ISSNs, retrieves source records, matches them to the PKP rows, adds every returned source field, and writes one CSV row for each PKP row. The first candidate uses the ordinary source prefix; additional candidates use numbered prefixes so inconsistent matches remain complete and auditable.
 
 For a formal full-cohort run, replace this chunk with the full version described in the comments at its end.
 
@@ -258,6 +296,17 @@ crossref_matches <- map(input_issns, \(issns) {
   )
 })
 
+openalex_data <- map_dfr(
+  openalex_matches,
+  expand_candidate_fields,
+  prefix = "openalex"
+)
+crossref_data <- map_dfr(
+  crossref_matches,
+  expand_candidate_fields,
+  prefix = "crossref"
+)
+
 result <- ojs_rows |>
   mutate(
     identifier_status = case_when(
@@ -275,21 +324,6 @@ result <- ojs_rows |>
       openalex_matches,
       \(match) paste(match$candidate_ids, collapse = "|")
     ),
-    openalex_display_name = map_chr(
-      openalex_matches,
-      consistent_field,
-      field = "display_name"
-    ),
-    openalex_country_code = map_chr(
-      openalex_matches,
-      consistent_field,
-      field = "country_code"
-    ),
-    openalex_works_count = map_chr(
-      openalex_matches,
-      consistent_field,
-      field = "works_count"
-    ),
     crossref_input_issns = map_chr(input_issns, paste, collapse = "|"),
     crossref_matched_issns = map_chr(
       crossref_matches,
@@ -299,18 +333,9 @@ result <- ojs_rows |>
     crossref_candidate_issn_sets = map_chr(
       crossref_matches,
       \(match) paste(match$candidate_ids, collapse = ";")
-    ),
-    crossref_title = map_chr(
-      crossref_matches,
-      consistent_field,
-      field = "title"
-    ),
-    crossref_publisher = map_chr(
-      crossref_matches,
-      consistent_field,
-      field = "publisher"
     )
-  )
+  ) |>
+  bind_cols(openalex_data, crossref_data)
 
 write_csv(result, output_path, na = "")
 
@@ -318,16 +343,26 @@ write_csv(result, output_path, na = "")
 # - send OpenAlex requests in groups and read every result page;
 # - save API responses so an interrupted run can continue;
 # - retry temporary failures and record failed ISSNs;
-# - keep the complete source fields and matched records;
 # - record file checksums and run details in the metadata file.
 ```
 
 ## Checks
 
-These checks confirm that every input row appears in the output, the required columns exist, the CSV file was written, and the sample contains the expected match outcomes.
+These checks confirm that every input row appears in the output, every returned top-level API field is retained, the lossless candidate JSON matches the fetched records, the CSV file was written, and the sample contains the expected match outcomes.
 
 ```{r}
 #| label: contract-check
+
+expected_openalex_columns <- unique(unlist(map(
+  openalex_matches,
+  candidate_field_names,
+  prefix = "openalex"
+)))
+expected_crossref_columns <- unique(unlist(map(
+  crossref_matches,
+  candidate_field_names,
+  prefix = "crossref"
+)))
 
 stopifnot(
   exists("fetch_openalex_sources", mode = "function"),
@@ -336,10 +371,27 @@ stopifnot(
   file.exists(output_path),
   all(c(
     "openalex_match_status",
-    "openalex_display_name",
+    "openalex_id",
+    "openalex_summary_stats",
+    "openalex_topics",
+    "openalex_candidate_2_id",
+    "openalex_candidates__json",
     "crossref_match_status",
-    "crossref_title"
+    "crossref_title",
+    "crossref_counts",
+    "crossref_coverage",
+    "crossref_candidates__json"
   ) %in% names(result)),
+  all(expected_openalex_columns %in% names(result)),
+  all(expected_crossref_columns %in% names(result)),
+  identical(
+    result$openalex_candidates__json,
+    map_chr(openalex_matches, \(match) serialize_json(match$candidates))
+  ),
+  identical(
+    result$crossref_candidates__json,
+    map_chr(crossref_matches, \(match) serialize_json(match$candidates))
+  ),
   all(c(
     "consistent",
     "unmatched",

@@ -350,15 +350,15 @@ stopifnot(
 )
 ```
 
-## Complete OpenAlex and Crossref dataframe
+## Complete merged dataframe
 
-This dataframe displays every OpenAlex and Crossref field written to the sample CSV.
+This table displays all OJS, OpenAlex, and Crossref columns in the merged sample dataframe.
 
 ```{r}
 #| label: complete-sample-dataframe
 
 result |>
-  select(starts_with("openalex_"), starts_with("crossref_"))
+  knitr::kable(format = "html")
 ```
 
 ## Complete merged column list

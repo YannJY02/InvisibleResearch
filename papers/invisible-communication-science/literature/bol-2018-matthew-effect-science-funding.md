@@ -250,7 +250,7 @@ write a stronger later proposal.
 | Jacob and Lefgren (2011), “The impact of research grant funding on scientific productivity” | Tests whether research funding raises publication and citation output in another grant setting. | Tension |
 | Li and Agha (2015), “Big names or big ideas” | Examines whether grant peer-review scores predict later scientific impact, helping separate evaluator judgment from output. | Evidence |
 | van Arensbergen and van den Besselaar (2012), “The selection of scientific talent in the allocation of research grants” | Supplies qualitative evidence about committee ranking and the difficulty of distinguishing applicants near the cutoff. | Method |
-| *The Matthew effect and early-career setbacks in research funding—a replication study* (2026 reviewed preprint) | Tests robustness and generalizability across 14 programmes and six funders, beyond the original Dutch threshold setting. | Verification lead |
+| Traag et al. (2025), *The Matthew effect and early-career setbacks in research funding—a replication study* | The eLife reviewed preprint tests robustness and generalizability across 14 programmes and six funders, beyond the original Dutch threshold setting. | Verification lead |
 
 ## Open questions
 
@@ -262,7 +262,7 @@ write a stronger later proposal.
 - Which resource channels—protected time, staff, pilot data, networks, or grant-
   writing support—change later proposal quality without appearing in
   publications, citations, or h-index?
-- Does the 2026 multi-funder replication preserve the participation mechanism,
+- Does the 2025 multi-funder replication preserve the participation mechanism,
   and which institutional features moderate it outside the Dutch Veni system?
 - Do similar feedback processes operate for citation, publication acceptance,
   journal index admission, or professional and policy use, or is the mechanism

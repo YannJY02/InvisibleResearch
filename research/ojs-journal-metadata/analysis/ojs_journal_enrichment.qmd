@@ -79,6 +79,7 @@ parquet_schema_path <- file.path(run_dir, "parquet-schema.json")
 source_output_path <- file.path(run_dir, "openalex-sources.parquet")
 source_staging_path <- file.path(run_dir, "openalex-sources.ndjson")
 source_schema_path <- file.path(run_dir, "openalex-sources-schema.json")
+parquet_validation_path <- file.path(run_dir, "parquet-validation.json")
 openalex_cache_path <- file.path(run_dir, "openalex-sources.rds")
 crossref_cache_path <- file.path(run_dir, "crossref-journals.rds")
 openalex_batch_dir <- file.path(run_dir, "openalex-batches")
@@ -685,6 +686,7 @@ openalex_matches <- map(input_issns, \(issns) {
   if (any(issns %in% failed_issns)) match$status <- "api_error"
   match
 })
+output_status_counts <- table(map_chr(openalex_matches, "status"))
 
 base_result <- ojs_rows |>
   mutate(
@@ -842,7 +844,7 @@ if (run_mode == "sample") {
       c(
         "run",
         "--with", "pyarrow==21.0.0",
-        "python", "ndjson_to_parquet.py",
+        "python", "ndjson_to_parquet.py", "convert",
         shQuote(input),
         shQuote(schema),
         shQuote(output),
@@ -894,11 +896,37 @@ if (run_mode == "sample") {
   )
   unlink(source_staging_path)
 
+  jsonlite::write_json(
+    list(
+      master_rows = nrow(base_result),
+      status_counts = as.list(output_status_counts)
+    ),
+    parquet_validation_path,
+    auto_unbox = TRUE,
+    pretty = TRUE
+  )
+  validation <- system2(
+    uv,
+    c(
+      "run",
+      "--with", "pyarrow==21.0.0",
+      "python", "ndjson_to_parquet.py", "validate",
+      shQuote(output_path),
+      shQuote(source_output_path),
+      shQuote(openalex_batch_dir),
+      shQuote(parquet_validation_path)
+    ),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  if (!is.null(attr(validation, "status"))) {
+    stop(paste(validation, collapse = "\n"), call. = FALSE)
+  }
+  parquet_validation <- jsonlite::fromJSON(tail(validation, 1L))
+
   output_rows <- parquet_contract$rows
   review_result <- build_master_chunk(sample_positions)
 }
-
-output_status_counts <- table(map_chr(openalex_matches, "status"))
 
 run_metadata <- list(
   producer = "analysis/ojs_journal_enrichment.qmd",
@@ -932,6 +960,7 @@ run_metadata <- list(
   } else {
     NULL
   },
+  parquet_validation = if (run_mode == "full") parquet_validation else NULL,
   openalex = if (run_mode == "full") {
     list(
       batch_size = 100L,
@@ -1120,6 +1149,9 @@ if (run_mode == "sample") {
     identical(run_metadata$output$format, "parquet"),
     parquet_contract$columns == length(output_columns),
     source_parquet_contract$rows == length(openalex_sources),
+    parquet_validation$master_rows == 98273L,
+    parquet_validation$unique_identities == 98273L,
+    parquet_validation$catalog_rows == length(openalex_sources),
     !anyDuplicated(map_chr(openalex_sources, "id")),
     all(unique(unlist(map(openalex_matches, "candidate_ids"))) %in%
       map_chr(openalex_sources, "id")),

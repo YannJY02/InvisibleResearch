@@ -147,7 +147,7 @@ whose candidate IDs resolve to complete checkpointed Source responses.
 | 2 | 103,017 valid ISSNs are split into 1,031 batches of at most 100 with 200-row cursor pages | Complete full render, `contract-check` | Integration | PASS |
 | 3 | Every complete checkpoint is tied to PKP V7 MD5 and its exact ISSN batch and is safely reusable | Complete full render after interrupted acquisition | Recovery | PASS |
 | 4 | API failures remain separate from unmatched rows and the qualified run has no unresolved failures | Full run metadata and `contract-check` | Contract | PASS |
-| 5 | Reading the final Parquet files back yields exactly 98,273 unique PKP identities, reconciled status counts, 54,520 unique Source IDs, and no missing candidate/checkpoint references | PyArrow post-write validator and `contract-check` | Contract | PASS |
+| 5 | Reading the final Parquet files back yields the exact pinned set of 98,273 PKP identities, reconciled status counts, 54,520 unique Source IDs, and the exact Source-to-checkpoint mapping | PyArrow post-write validator and `contract-check` | Contract | PASS |
 | 6 | Complete Source responses remain in V7 checkpoints and the catalog indexes every Source ID to one checkpoint while recording all 37 observed top-level fields | Source catalog, schema manifest, and `contract-check` | Reconciliation | PASS |
 | 7 | Credentials and contact configuration are absent from metadata and generated columns | Complete full render, `contract-check` | Privacy | PASS |
 

@@ -899,7 +899,17 @@ if (run_mode == "sample") {
   jsonlite::write_json(
     list(
       master_rows = nrow(base_result),
-      status_counts = as.list(output_status_counts)
+      status_counts = as.list(output_status_counts),
+      source_checkpoints = as.list(set_names(
+        vapply(
+          map_chr(openalex_sources, "id"),
+          get,
+          character(1),
+          envir = checkpoint_by_source,
+          inherits = FALSE
+        ),
+        map_chr(openalex_sources, "id")
+      ))
     ),
     parquet_validation_path,
     auto_unbox = TRUE,
@@ -914,6 +924,7 @@ if (run_mode == "sample") {
       shQuote(output_path),
       shQuote(source_output_path),
       shQuote(openalex_batch_dir),
+      shQuote(input_path),
       shQuote(parquet_validation_path)
     ),
     stdout = TRUE,

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+import csv
 import json
 from pathlib import Path
 
@@ -72,6 +73,7 @@ def validate(args: argparse.Namespace) -> None:
     source_ids = catalog["openalex_source_id"].to_pylist()
     checkpoint_files = catalog["checkpoint_file"].to_pylist()
     catalog_ids = set(source_ids)
+    actual_source_checkpoints = dict(zip(source_ids, checkpoint_files, strict=True))
     candidate_ids = {
         candidate_id
         for cell in master["openalex_candidate_ids"].to_pylist()
@@ -80,15 +82,24 @@ def validate(args: argparse.Namespace) -> None:
     }
     private_names = {"admin_email", "openalex_api_key", "crossref_mailto"}
     master_names = {name.casefold() for name in master.schema.names}
+    with args.input_csv.open(encoding="utf-8-sig", newline="") as handle:
+        expected_identities = {
+            (row["oai_url"], row["repository_name"], row["set_spec"])
+            for row in csv.DictReader(handle)
+        }
 
     if master.num_rows != contract["master_rows"]:
         raise RuntimeError("Master Parquet row count mismatch")
     if len(identities) != master.num_rows:
         raise RuntimeError("Master Parquet contains duplicate PKP identities")
+    if identities != expected_identities:
+        raise RuntimeError("Master Parquet PKP identities differ from pinned input")
     if statuses != Counter(contract["status_counts"]):
         raise RuntimeError("Master Parquet status counts do not reconcile")
     if len(source_ids) != len(catalog_ids):
         raise RuntimeError("Source catalog contains duplicate Source IDs")
+    if actual_source_checkpoints != contract["source_checkpoints"]:
+        raise RuntimeError("Source catalog ID-to-checkpoint mapping is incorrect")
     if not candidate_ids <= catalog_ids:
         raise RuntimeError("Master candidate IDs are missing from the Source catalog")
     if private_names & master_names:
@@ -125,6 +136,7 @@ def main() -> None:
     validate_parser.add_argument("master", type=Path)
     validate_parser.add_argument("catalog", type=Path)
     validate_parser.add_argument("batch_dir", type=Path)
+    validate_parser.add_argument("input_csv", type=Path)
     validate_parser.add_argument("contract", type=Path)
     validate_parser.set_defaults(func=validate)
 

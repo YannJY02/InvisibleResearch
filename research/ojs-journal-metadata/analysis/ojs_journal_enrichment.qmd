@@ -365,6 +365,41 @@ expected_crossref_columns <- unique(unlist(map(
 )))
 
 stopifnot(
+  exists("pkp_version"),
+  identical(pkp_version, 7L),
+  identical(
+    unname(tools::md5sum(input_path)),
+    "3a4ad8ae1ebfcc2b991aaf55b2d82c92"
+  ),
+  nrow(raw_input) == 98273L,
+  identical(
+    names(raw_input),
+    c(
+      "context_name",
+      "issn",
+      "oai_url",
+      "application",
+      "country",
+      "region",
+      "total_record_count",
+      "record_count_2025",
+      "earliest_datestamp",
+      "repository_name",
+      "set_spec",
+      "stats_id",
+      "best_doaj_url",
+      "last_completed_update",
+      "first_beacon",
+      "last_beacon",
+      "last_oai_response",
+      "unresponsive_endpoint",
+      "unresponsive_context"
+    )
+  ),
+  sum(result$identifier_status == "missing") == 1L,
+  nrow(ojs_rows) == 10L,
+  exists("metadata_path"),
+  file.exists(metadata_path),
   exists("fetch_openalex_sources", mode = "function"),
   exists("fetch_crossref_journal", mode = "function"),
   nrow(result) == nrow(ojs_rows),

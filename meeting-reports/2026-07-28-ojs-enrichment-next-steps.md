@@ -1,0 +1,104 @@
+# OJS Journal Enrichment and Analysis — Meeting Outcomes
+
+- **Date:** 2026-07-28
+- **Status:** Communication record; Exploratory Analysis only
+- **Intake reference:** `inbox/file-d5a928a3-164a-4539-b4b7-eaba1d8019fa-20260728-132032.md`
+- **Intake SHA-256:** `df2f49f0e3a5b1410b6dd35311039849846d84bdcedec3c26237426705d50a7e`
+
+## Evidence boundary
+
+This record was checked against the timestamped transcript rather than relying
+on its generated summary. Speaker roles are inferred from context. The
+project-relevant meeting ends at approximately 30:45; unrelated private audio
+from 36:47 onward and a separate personal administrative discussion are
+intentionally excluded.
+
+## Agreed immediate work
+
+### 1. Run the journal enrichment at full-cohort scale
+
+Move from the reviewed sample to the complete pinned PKP/OJS cohort using the
+existing [OpenAlex and Crossref enrichment
+analysis](../research/ojs-journal-metadata/analysis/ojs_journal_enrichment.qmd).
+The result should:
+
+- retain one PKP/OJS journal per row in a single wide master CSV;
+- add the available OpenAlex and Crossref fields as columns rather than
+  narrowing the source responses prematurely;
+- preserve exact-ISSN match status, including consistent, unmatched, and
+  inconsistent results, so source disagreements remain reviewable; and
+- keep the PKP rows even where no external-source match is found.
+
+The run should respect API limits. Start slowly, identify requests where the
+service supports it, and pause or resume later if throttling occurs. If running
+from China is unreliable, the researcher will share the runnable script and the
+supervisor will help arrange or execute a university-server run.
+
+### 2. Make the review output readable
+
+The current rendered wide table is difficult to inspect because long fields
+expand the rows. Future shared reports should use an interactive,
+searchable/filterable table, such as the R `DT` package discussed in the
+meeting, and show or hide code according to the audience. The master CSV
+remains the data deliverable.
+
+### 3. Start the literature review from a curated seed set
+
+The supervisor will send a small manually curated set of papers relevant to
+the journal-invisibility question. The researcher will use that set as the
+starting point, follow its references to discover further work, and begin an
+overview or draft in parallel with the enrichment run.
+
+Broad AI-assisted discovery may supplement this process, but it should not be
+the sole starting point because its results may overrepresent preprints,
+repositories, or other material prominent in model training data.
+
+## Later analysis direction
+
+After the enriched journal table exists, the project may examine which journal
+characteristics predict whether a journal is represented in an external
+index. Language was discussed as one possible predictor. The intended analysis
+is exploratory rather than a preregistered confirmatory test.
+
+The meeting clearly mentioned a simple regression approach and SHAP as
+candidate ways to examine predictor importance, with value in comparing a
+simple and a more advanced view. A second method name is transcribed as
+“Robustify,” but the transcript is not reliable enough to identify the exact
+method or package. It must be clarified before implementation or citation.
+
+This modelling is not part of the immediate enrichment run. The outcome,
+analysis cohort, predictor set, treatment of missing identifiers, and
+interpretation of source absence still need to be specified before modelling.
+In particular, source absence must not yet be treated as a settled causal
+measure of journal “invisibility.”
+
+## Possible follow-on data sources
+
+OpenAlex and Crossref are the agreed first step. Search results and journal
+landing pages may later supply variables missing from public databases.
+PKP–OpenAlex title discrepancies may also be summarized for PKP once their
+frequency and identity evidence are checked. Neither follow-on expands the
+current task.
+
+## Action register
+
+| Owner | Action | Timing or dependency |
+|---|---|---|
+| Researcher | Prepare and run, or share, the full-cohort OpenAlex and Crossref enrichment script | Immediate |
+| Researcher | Produce one wide master CSV and a readable interactive review report | With the full-cohort run |
+| Supervisor | Send the curated seed-paper list | Before the literature pass expands |
+| Researcher | Start the literature overview from the seed set and citation chaining | In parallel with enrichment |
+| Supervisor | Help provide server instructions or run the script if local access is unreliable | Only if needed |
+| Researcher | Send a durable non-student email address for future logistics | Before the UvA address expires |
+| Researcher and supervisor | Define the modelling outcome and clarify the method transcribed as “Robustify” | Before predictor modelling |
+
+No delivery deadline or next meeting date was fixed. Questions may be handled
+asynchronously while the supervisor is travelling.
+
+## Governance
+
+This meeting authorizes the next **Exploratory Analysis** step: a full-cohort
+OpenAlex and Crossref enrichment run. It does not create a Candidate Version,
+Designation Event, or Paper Analysis designation. The ambition to develop a
+strong paper or target a selective journal is a direction, not evidence that
+the research question, method, or publication claim has been finalized.

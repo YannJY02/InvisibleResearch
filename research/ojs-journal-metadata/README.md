@@ -12,7 +12,8 @@ private `DATA_ROOT`.
 
 ```bash
 cd research/ojs-journal-metadata/analysis
-OPENALEX_API_KEY=... quarto render ojs_journal_enrichment.qmd
+OPENALEX_API_KEY=... quarto render ojs_journal_enrichment.qmd \
+  --output-dir ../artifacts/ojs_journal_enrichment/rendered
 ```
 
 The input, source caches, enriched CSV, run metadata, and rendered report stay

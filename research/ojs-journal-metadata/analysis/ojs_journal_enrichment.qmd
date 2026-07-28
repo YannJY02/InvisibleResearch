@@ -67,12 +67,31 @@ crossref_cache_path <- file.path(run_dir, "crossref-journals.rds")
 dir.create(input_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
+curl <- Sys.which("curl")
+if (!nzchar(curl)) {
+  stop("curl is required to download the pinned PKP V7 input.", call. = FALSE)
+}
+
 download_pkp_input <- function(path) {
   if (file.exists(path)) return(invisible(path))
 
   download_path <- paste0(path, ".download")
   on.exit(unlink(download_path), add = TRUE)
-  download.file(pkp_url, download_path, mode = "wb", method = "libcurl")
+  status <- system2(
+    curl,
+    c(
+      "-fL",
+      "--retry", "5",
+      "--retry-all-errors",
+      "--retry-delay", "2",
+      "--continue-at", "-",
+      "-o", shQuote(download_path),
+      shQuote(pkp_url)
+    )
+  )
+  if (status != 0L) {
+    stop("Could not download PKP V7.", call. = FALSE)
+  }
   if (unname(tools::md5sum(download_path)) != pkp_md5) {
     stop("Downloaded PKP V7 file failed checksum verification.", call. = FALSE)
   }
@@ -526,6 +545,7 @@ run_metadata <- list(
   runtime = list(
     r = R.version.string,
     quarto = system2("quarto", "--version", stdout = TRUE)[1],
+    curl = system2(curl, "--version", stdout = TRUE)[1],
     packages = as.list(set_names(
       vapply(
         required_packages,

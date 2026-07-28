@@ -117,3 +117,50 @@ The repository failures are unchanged baseline debt:
 
 If the checkpoint commits are later squashed, preserve this RED/GREEN summary
 in the merge record.
+
+## Issue #100: resumable V7 OpenAlex full cohort
+
+Source: [issue #100](https://github.com/YannJY02/InvisibleResearch/issues/100)
+and parent PRD [#98](https://github.com/YannJY02/InvisibleResearch/issues/98).
+No separate plan file was used.
+
+### User journey
+
+As a researcher, I can explicitly start a resumable V7 OpenAlex run, preserve
+all PKP identities and exact-ISSN outcomes, and inspect a compact Parquet master
+whose candidate IDs resolve to complete checkpointed Source responses.
+
+### Task report
+
+| Stage | Commit | Command | Evidence |
+|---|---|---|---|
+| RED | `640497e` | `./render_full.sh` | The existing notebook rendered only sample mode, then the full contract exited 1 because `full-v7/run-metadata.json` did not exist. |
+| Sample GREEN | GREEN commit | `./render_sample.sh` | PASS: the fixed ten-case OpenAlex/Crossref contract remained unchanged. |
+| Full GREEN | GREEN commit | `./render_full.sh` | PASS: 1,031 V7 checkpoints were reused, both Parquet files passed row/schema checks, and the report rendered. |
+| Python check | GREEN commit | `python3 -m py_compile analysis/ndjson_to_parquet.py` | PASS. |
+
+### Test specification
+
+| # | What is guaranteed | Test target | Type | Result |
+|---|---|---|---|---|
+| 1 | Normal sample rendering cannot activate full mode; full mode is a separate command | `render_sample.sh`, `render_full.sh` | Contract | PASS |
+| 2 | 103,017 valid ISSNs are split into 1,031 batches of at most 100 with 200-row cursor pages | Complete full render, `contract-check` | Integration | PASS |
+| 3 | Every complete checkpoint is tied to PKP V7 MD5 and its exact ISSN batch and is safely reusable | Complete full render after interrupted acquisition | Recovery | PASS |
+| 4 | API failures remain separate from unmatched rows and the qualified run has no unresolved failures | Full run metadata and `contract-check` | Contract | PASS |
+| 5 | The Parquet master has exactly 98,273 unique PKP rows and all candidate IDs reconcile to 54,520 unique Source IDs | Both Parquet artifacts and `contract-check` | Contract | PASS |
+| 6 | Complete Source responses remain in V7 checkpoints and the catalog indexes every Source ID to one checkpoint while recording all 37 observed top-level fields | Source catalog, schema manifest, and `contract-check` | Reconciliation | PASS |
+| 7 | Credentials and contact configuration are absent from metadata and generated columns | Complete full render, `contract-check` | Privacy | PASS |
+
+### Full-run evidence and resource adjustment
+
+The qualified run produced a 98,273-row, 25-column master Parquet file
+(7.8 MB) and a 54,520-row Source-to-checkpoint catalog (293 KB). Statuses
+reconciled to 54,286 consistent, 221 inconsistent, 17,577 unmatched, and
+26,189 not attempted.
+
+An initial wide-CSV design was stopped after real execution showed excessive
+CPU, memory, and repeated JSON serialization. The approved Parquet adjustment
+keeps candidate IDs in the master and complete Source responses in their V7
+checkpoints instead of duplicating large JSON per PKP row. Temporary NDJSON
+staging files are removed only after PyArrow verifies Parquet row counts and
+schemas.

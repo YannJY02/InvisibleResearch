@@ -3,7 +3,7 @@
 This owner investigates journal-level enrichment for PKP Beacon records. All
 work here remains **Exploratory Analysis**.
 
-## Reproduce the V7 Journal Enrichment Sample
+## Reproduce the V7 Journal Enrichment
 
 The current explanatory notebook pins PKP V7 Dataverse file `14084919` at MD5
 `3a4ad8ae1ebfcc2b991aaf55b2d82c92`. It downloads the file when absent, checks
@@ -15,10 +15,29 @@ cd research/ojs-journal-metadata/analysis
 OPENALEX_API_KEY=... ./render_sample.sh
 ```
 
-The input, source caches, enriched CSV, run metadata, and rendered report stay
+The input, source caches, enriched artifact, run metadata, and rendered report stay
 under `research/ojs-journal-metadata/artifacts/ojs_journal_enrichment/`, which
-is ignored. This command runs sample mode only; it does not start a full-cohort
-retrieval. The V6 sections below document the earlier Python pipeline.
+is ignored. This command always runs sample mode; it cannot start a full-cohort
+retrieval.
+
+Start the resumable V7 OpenAlex full-cohort run explicitly:
+
+```bash
+cd research/ojs-journal-metadata/analysis
+OPENALEX_API_KEY=... ./render_full.sh
+```
+
+Full mode queries the 103,017 distinct valid ISSNs in deterministic groups of
+at most 100, follows cursor pagination, and checkpoints each completed batch
+under `ojs_journal_enrichment/full-v7/openalex-batches/`. A rerun reuses only
+complete checkpoints whose V7 checksum and exact batch contents match. It
+writes one OpenAlex-enriched row for each of the 98,273 PKP V7 rows in a
+Zstandard-compressed Parquet master. Candidate IDs join to a companion Parquet
+catalog that maps every unique OpenAlex Source ID to the complete V7 batch
+checkpoint retaining its response. The chunked NDJSON staging files are deleted
+after PyArrow verifies both Parquet row counts and schemas. Crossref
+full-cohort retrieval remains a separate follow-on. The V6 sections below
+document the earlier Python pipeline.
 
 ## PKP input decision
 

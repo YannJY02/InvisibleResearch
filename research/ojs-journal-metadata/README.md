@@ -3,7 +3,7 @@
 This owner investigates journal-level enrichment for PKP Beacon records. All
 work here remains **Exploratory Analysis**.
 
-## Reproduce the V7 notebook sample
+## Reproduce the V7 Journal Enrichment Sample
 
 The current explanatory notebook pins PKP V7 Dataverse file `14084919` at MD5
 `3a4ad8ae1ebfcc2b991aaf55b2d82c92`. It downloads the file when absent, checks
@@ -12,8 +12,7 @@ private `DATA_ROOT`.
 
 ```bash
 cd research/ojs-journal-metadata/analysis
-OPENALEX_API_KEY=... quarto render ojs_journal_enrichment.qmd \
-  --output-dir ../artifacts/ojs_journal_enrichment/rendered
+OPENALEX_API_KEY=... ./render_sample.sh
 ```
 
 The input, source caches, enriched CSV, run metadata, and rendered report stay

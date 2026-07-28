@@ -7,7 +7,7 @@ execute:
   message: false
 ---
 
-This notebook adds the complete available OpenAlex and Crossref journal responses to ten real PKP OJS rows from the pinned V7 release. It matches records by exact ISSN. The ten rows were chosen to include missing ISSNs, no matches, one match, partial identifier coverage, and multiple matches. This sample checks whether the code works; it does not measure coverage across the full dataset.
+This notebook adds the complete available OpenAlex and Crossref journal responses to ten real PKP OJS rows from the pinned V7 release. It matches records by exact ISSN. The ten rows were chosen to include missing ISSNs, no matches, one match, partial identifier coverage, and multiple matches. This Journal Enrichment Sample checks whether the code works; it does not measure coverage across the full dataset.
 
 Set `OPENALEX_API_KEY` in the environment or the repository-root `.env` file before rendering. Sample mode is the only mode implemented here; full-cohort retrieval remains a separate, explicit step.
 
@@ -126,14 +126,14 @@ normalize_issn <- function(value) {
   paste0(substr(compact, 1, 4), "-", substr(compact, 5, 8))
 }
 
-parse_issns <- function(value) {
-  if (
-    is.na(value) ||
-    !nzchar(trimws(value)) ||
+is_missing_identifier <- function(value) {
+  is.na(value) |
+    !nzchar(trimws(value)) |
     toupper(trimws(value)) == "NA"
-  ) {
-    return(character())
-  }
+}
+
+parse_issns <- function(value) {
+  if (is_missing_identifier(value)) return(character())
 
   tokens <- unlist(strsplit(value, "[[:space:],;|]+"))
   normalized <- vapply(tokens[nzchar(tokens)], normalize_issn, character(1))
@@ -189,7 +189,7 @@ fetch_crossref_journal <- function(issn) {
 
 ```
 
-## Load the PKP/OJS sample
+## Load the Journal Enrichment Sample
 
 The pinned PKP V7 file is Dataverse file `14084919`, released on 2026-07-18. This chunk checks the complete 98,273-row baseline, schema, row identity, and identifier counts before selecting ten fixed source rows in a deliberate display order.
 
@@ -224,12 +224,10 @@ expected_schema <- c(
   "unresponsive_endpoint",
   "unresponsive_context"
 )
-raw_row_identity <- paste(
-  raw_input$oai_url,
-  raw_input$repository_name,
-  raw_input$set_spec,
-  sep = "\r"
-)
+row_identity <- function(data) {
+  paste(data$oai_url, data$repository_name, data$set_spec, sep = "\r")
+}
+raw_row_identity <- row_identity(raw_input)
 
 stopifnot(
   nrow(raw_input) == 98273L,
@@ -239,7 +237,7 @@ stopifnot(
 )
 
 all_input_issns <- map(raw_input$issn, parse_issns)
-missing_identifier <- toupper(trimws(raw_input$issn)) == "NA"
+missing_identifier <- is_missing_identifier(raw_input$issn)
 stopifnot(
   sum(missing_identifier) == 26189L,
   sum(lengths(all_input_issns) > 0L) == 72084L,
@@ -289,12 +287,7 @@ sample_spec <- tribble(
   "Journal Online Universitas Palangka Raya",
   "JTP"
 )
-sample_identity <- paste(
-  sample_spec$oai_url,
-  sample_spec$repository_name,
-  sample_spec$set_spec,
-  sep = "\r"
-)
+sample_identity <- row_identity(sample_spec)
 sample_positions <- match(sample_identity, raw_row_identity)
 stopifnot(!anyNA(sample_positions))
 
@@ -483,9 +476,7 @@ crossref_data <- map_dfr(
 result <- ojs_rows |>
   mutate(
     identifier_status = case_when(
-      is.na(issn) |
-        !nzchar(trimws(issn)) |
-        toupper(trimws(issn)) == "NA" ~ "missing",
+      is_missing_identifier(issn) ~ "missing",
       lengths(input_issns) == 0L ~ "invalid",
       TRUE ~ "valid"
     ),
@@ -606,12 +597,7 @@ stopifnot(
   sum(lengths(all_input_issns) > 0L) == 72084L,
   length(unique(unlist(all_input_issns))) == 103017L,
   identical(
-    paste(
-      ojs_rows$oai_url,
-      ojs_rows$repository_name,
-      ojs_rows$set_spec,
-      sep = "\r"
-    ),
+    row_identity(ojs_rows),
     sample_identity
   ),
   sum(result$identifier_status == "missing") == 1L,
@@ -624,6 +610,8 @@ stopifnot(
   all(nzchar(unlist(run_metadata$runtime))),
   all(vapply(c(
     "normalize_issn",
+    "is_missing_identifier",
+    "row_identity",
     "match_exact_issns",
     "deduplicate_candidates",
     "expand_candidate_fields",

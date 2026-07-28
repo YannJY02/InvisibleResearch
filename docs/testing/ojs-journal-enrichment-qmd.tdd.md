@@ -75,16 +75,17 @@ No separate plan file was used.
 
 ### User journey
 
-As a researcher starting from a clean checkout, I can run the documented sample
-render once, acquire and verify PKP V7 inside the ignored owner artifact area,
-and inspect a fixed ten-row exact-ISSN enrichment without `DATA_ROOT`.
+As a researcher starting from a clean checkout, I can run the documented
+Journal Enrichment Sample render once, acquire and verify PKP V7 inside the
+ignored owner artifact area, and inspect a fixed ten-row exact-ISSN enrichment
+without `DATA_ROOT`.
 
 ### Task report
 
 | Stage | Commit | Command | Evidence |
 |---|---|---|---|
 | RED | `e869248` | `quarto render ojs_journal_enrichment.qmd --output-dir ../artifacts/ojs_journal_enrichment/tdd-red` | Exit 1 at the intended contract boundary: `exists("pkp_version") is not TRUE`. |
-| GREEN | `214d0d7` plus the final follow-up commit | `quarto render ojs_journal_enrichment.qmd --output-dir ../artifacts/ojs_journal_enrichment/rendered` | PASS: V7 input and source caches were reused, the contract passed, and the report was written under the ignored artifact directory. |
+| GREEN | `214d0d7` plus the final follow-up commit | `./render_sample.sh` | PASS: V7 input and source caches were reused, the contract passed, and the report was written under the ignored artifact directory without cleaning legacy generated files. |
 | Clean acquisition | final follow-up commit | The same render in a temporary clean clone with no artifacts | PASS: the download path acquired the checksum-verified 28.4 MB V7 file, first-run source caches reported `reused: false`, and the complete render passed. The control-flow run served the already checksum-verified official file locally because Harvard Dataverse throttled repeated verification downloads after the initial official acquisition. |
 | Repository regression | final follow-up commit | `uv run --with pytest --with pandas --with pyarrow pytest` | 25 passed; two unrelated baseline failures remained. Both failures reproduce at starting commit `03e3b83`. |
 
@@ -92,12 +93,12 @@ and inspect a fixed ten-row exact-ISSN enrichment without `DATA_ROOT`.
 
 | # | What is guaranteed | Test target | Type | Result |
 |---|---|---|---|---|
-| 1 | Missing V7 input is downloaded into the owner artifact directory and must match official MD5 `3a4ad8ae1ebfcc2b991aaf55b2d82c92` before use | Complete sample render, `packages-and-paths` | End to end | PASS |
-| 2 | V7 has the pinned 19-column schema, 98,273 unique source rows, 72,084 valid-identifier rows, 26,189 literal-`NA` missing-identifier rows, and 103,017 distinct valid ISSNs | Complete sample render, `load-sample` | Contract | PASS |
-| 3 | The fixed ten rows come directly from V7 and cover consistent, unmatched, partial-identifier, not-attempted, and inconsistent OpenAlex behavior | Complete sample render, `contract-check` | Integration | PASS |
-| 4 | OpenAlex and Crossref use the shared normalization, exact matching, candidate deduplication, field expansion, and serialization functions | Complete sample render, `contract-check` | Integration | PASS |
-| 5 | The master retains ten PKP rows, every discovered top-level source field, and lossless candidate JSON | Complete sample render, `contract-check` | Contract | PASS |
-| 6 | Run metadata records R, Quarto, curl, and package versions without API-key or Crossref-contact fields | Complete sample render, `run-metadata.json` contract | Privacy | PASS |
+| 1 | Missing V7 input is downloaded into the owner artifact directory and must match official MD5 `3a4ad8ae1ebfcc2b991aaf55b2d82c92` before use | Complete Journal Enrichment Sample render, `packages-and-paths` | End to end | PASS |
+| 2 | V7 has the pinned 19-column schema, 98,273 unique source rows, 72,084 valid-identifier rows, 26,189 literal-`NA` missing-identifier rows, and 103,017 distinct valid ISSNs | Complete Journal Enrichment Sample render, `load-sample` | Contract | PASS |
+| 3 | The fixed ten rows come directly from V7 and cover consistent, unmatched, partial-identifier, not-attempted, and inconsistent OpenAlex behavior | Complete Journal Enrichment Sample render, `contract-check` | Integration | PASS |
+| 4 | OpenAlex and Crossref use the shared normalization, exact matching, candidate deduplication, field expansion, and serialization functions | Complete Journal Enrichment Sample render, `contract-check` | Integration | PASS |
+| 5 | The master retains ten PKP rows, every discovered top-level source field, and lossless candidate JSON | Complete Journal Enrichment Sample render, `contract-check` | Contract | PASS |
+| 6 | Run metadata records R, Quarto, curl, and package versions without API-key or Crossref-contact fields | Complete Journal Enrichment Sample render, `run-metadata.json` contract | Privacy | PASS |
 
 ### Coverage and known gaps
 

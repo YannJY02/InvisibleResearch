@@ -1,0 +1,3 @@
+project:
+  type: default
+  output-dir: ../artifacts/ojs_journal_enrichment/rendered

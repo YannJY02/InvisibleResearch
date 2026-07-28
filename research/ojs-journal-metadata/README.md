@@ -3,6 +3,23 @@
 This owner investigates journal-level enrichment for PKP Beacon records. All
 work here remains **Exploratory Analysis**.
 
+## Reproduce the V7 notebook sample
+
+The current explanatory notebook pins PKP V7 Dataverse file `14084919` at MD5
+`3a4ad8ae1ebfcc2b991aaf55b2d82c92`. It downloads the file when absent, checks
+the 98,273-row release contract, and selects ten fixed source rows without a
+private `DATA_ROOT`.
+
+```bash
+cd research/ojs-journal-metadata/analysis
+OPENALEX_API_KEY=... quarto render ojs_journal_enrichment.qmd
+```
+
+The input, source caches, enriched CSV, run metadata, and rendered report stay
+under `research/ojs-journal-metadata/artifacts/ojs_journal_enrichment/`, which
+is ignored. This command runs sample mode only; it does not start a full-cohort
+retrieval. The V6 sections below document the earlier Python pipeline.
+
 ## PKP input decision
 
 Use the original CSV behind `beacon.tab` in version 6.0 of [Details of

@@ -187,6 +187,7 @@ Crossref outcomes whose candidate keys resolve to lossless page checkpoints.
 | Missing-contact check | `8a544c9` | `env -u CROSSREF_MAILTO ./render_full.sh` | Exit 1 in `packages-and-paths`: full mode required a contact email before retrieval. |
 | Sample GREEN | `8a544c9` | `./render_sample.sh` | PASS: the fixed ten-case sample rendered with no full-mode contact requirement. |
 | Full GREEN | `8a544c9` | `CROSSREF_MAILTO=... ./render_full.sh` | PASS: 169 Crossref pages and all 1,031 OpenAlex batches were reused, three Parquet files reconciled, and the HTML report rendered. |
+| Review fix | `e283b37` | `CROSSREF_MAILTO=... ./render_full.sh` | PASS: pagination stayed bounded by `total-results`; every Crossref pointer and checkpoint key reconciled in R; Python independently rebuilt and matched every master candidate set. |
 | Syntax | `8a544c9` | `python3 -m py_compile analysis/ndjson_to_parquet.py`; QMD code extraction plus R `parse()` | PASS. |
 | Repository regression | `8a544c9` | `uv run --with pytest --with pandas --with pyarrow pytest` | 25 passed; the same two baseline failures recorded for #99 remained. |
 

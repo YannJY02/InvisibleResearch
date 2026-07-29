@@ -13,8 +13,11 @@ OJS_ENRICHMENT_MODE=full quarto render ojs_journal_enrichment.qmd \
   --output-dir ../rendered-full
 
 test -f "$artifact_dir/full-v7/run-metadata.json"
-test -f "$artifact_dir/full-v7/pkp-ojs-openalex-enriched.parquet"
+test -f "$artifact_dir/full-v7/pkp-ojs-multisource-enriched.parquet"
 test -f "$artifact_dir/full-v7/openalex-sources.parquet"
+test -f "$artifact_dir/full-v7/crossref-journals.parquet"
 grep -q '"run_mode": "full"' "$artifact_dir/full-v7/run-metadata.json"
 grep -q '"rows": 98273' "$artifact_dir/full-v7/run-metadata.json"
 grep -q '"format": "parquet"' "$artifact_dir/full-v7/run-metadata.json"
+grep -q '"rows_per_page": 1000' "$artifact_dir/full-v7/run-metadata.json"
+grep -q '"failed_pages": 0' "$artifact_dir/full-v7/run-metadata.json"

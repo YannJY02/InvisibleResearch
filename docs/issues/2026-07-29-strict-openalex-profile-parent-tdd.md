@@ -71,4 +71,5 @@ configured; `compileall` is the available repository-wide syntax check.
 The Standards review passed. The initial Spec review found that `--check`
 trusted aggregate `match_status` counts without independently enforcing the
 unique/ambiguous candidate-count invariant; the Review RED checkpoint above
-closes that gap. Review GREEN passed; the Spec re-review remains pending.
+closes that gap. Review GREEN passed, and the final Standards and Spec
+re-reviews reported no remaining actionable findings.

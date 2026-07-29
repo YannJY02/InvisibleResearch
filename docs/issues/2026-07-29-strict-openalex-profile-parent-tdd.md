@@ -27,7 +27,8 @@ The joined CSV has MD5 `051937a2f0266ceaf5f78e3e3b96be21`.
 | RED | `python3 research/ojs-journal-metadata/analysis/enrich_openalex.py --check` | Exit 1 at the intended output boundary: `FileNotFoundError: strict-openalex-coverage-profile-summary.json` |
 | GREEN | `env -u OPENALEX_API_KEY python3 research/ojs-journal-metadata/analysis/enrich_openalex.py --profile` followed by the same `--check` command | PASS: `PKP–OpenAlex pipeline check passed`; generation recorded zero OpenAlex API requests |
 | Review baseline | Run the original `--check` against an ignored artifact copy with one same-country unique/ambiguous label swap | Incorrectly passed while a two-candidate row counted as unique and a one-candidate row counted as ambiguous |
-| Review RED | Run the strengthened `--check` against the same mutated artifact copy | Exit 1 at the intended classification boundary: `assert candidate_count > 1` |
+| Review RED | Run the strengthened `--check` against the same mutated artifact copy | Exit 1 at the intended Strict Coverage boundary: `assert candidate_count == 1` |
+| Review GREEN | Run the strengthened `--check` against the unmodified joined evidence | PASS: every unique row has exactly one journal candidate and every ambiguous row has multiple candidates |
 
 No OpenAlex request was made. The joined CSV checksum remained unchanged after
 generation.
@@ -37,7 +38,7 @@ generation.
 | # | What is guaranteed | Test target | Result |
 |---|---|---|---|
 | 1 | Identifier Availability reconciles 86,282 OJS rows to 64,773 valid, 21,509 missing, and zero invalid ISSNs | `enrich_openalex.py --check` | PASS |
-| 2 | The primary cohort reconciles to 49,877 unique, 190 ambiguous, and 14,706 unmatched exact-ISSN outcomes | `enrich_openalex.py --check` | PASS |
+| 2 | The primary cohort reconciles to 49,877 unique, 190 ambiguous, and 14,706 unmatched exact-ISSN outcomes; unique rows have one journal candidate and ambiguous rows have multiple candidates | `enrich_openalex.py --check` | PASS |
 | 3 | Country, activity, Beacon duration, and PKP DOAJ dimensions each preserve all 64,773 cohort rows and outcome totals | `enrich_openalex.py --check` | PASS |
 | 4 | The tidy output reports group denominators, all three outcome counts, Strict OpenAlex Coverage, and 95% Wilson intervals | `enrich_openalex.py --check` | PASS |
 | 5 | The profile records zero OpenAlex requests, excludes `admin_email`, counts no title-only candidate, and remains Exploratory Analysis | `enrich_openalex.py --check` | PASS |
@@ -56,7 +57,7 @@ all OJS rows for reconciliation with the existing coverage report.
 - `python3 -m compileall -q src
   research/ojs-journal-metadata/analysis`: PASS.
 - Profile generation followed by `--check`: PASS.
-- Branch coverage across `--profile` and `--check`: 51% (272 of 482
+- Branch coverage across `--profile` and `--check`: 52% (278 of 488
   statements reached, with branch measurement enabled). The uncovered code is
   primarily the live acquisition path that this issue must not call.
 - `uv run --with pytest --with pandas --with pyarrow pytest -q`: 25 passed,
@@ -70,4 +71,4 @@ configured; `compileall` is the available repository-wide syntax check.
 The Standards review passed. The initial Spec review found that `--check`
 trusted aggregate `match_status` counts without independently enforcing the
 unique/ambiguous candidate-count invariant; the Review RED checkpoint above
-closes that gap. Review GREEN and the Spec re-review remain pending.
+closes that gap. Review GREEN passed; the Spec re-review remains pending.

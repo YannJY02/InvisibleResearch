@@ -956,6 +956,12 @@ def check_outputs(output_dir: Path) -> None:
                 continue
             country = enriched_row["country_consolidated"].strip()
             status = enriched_row["match_status"]
+            candidate_count = int(enriched_row["candidate_count"])
+            if status == "unique":
+                assert candidate_count == 1
+                assert enriched_row["candidate_types"] == "journal"
+            elif status == "ambiguous":
+                assert candidate_count > 1
             country_status_counts[country or MISSING_COUNTRY_GROUP][status] += 1
             valid_status_counts[status] += 1
             valid_routes.add(enriched_row["match_route"])

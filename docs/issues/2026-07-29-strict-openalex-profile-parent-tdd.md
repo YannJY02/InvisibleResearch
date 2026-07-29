@@ -26,6 +26,8 @@ The joined CSV has MD5 `051937a2f0266ceaf5f78e3e3b96be21`.
 |---|---|---|
 | RED | `python3 research/ojs-journal-metadata/analysis/enrich_openalex.py --check` | Exit 1 at the intended output boundary: `FileNotFoundError: strict-openalex-coverage-profile-summary.json` |
 | GREEN | `env -u OPENALEX_API_KEY python3 research/ojs-journal-metadata/analysis/enrich_openalex.py --profile` followed by the same `--check` command | PASS: `PKP–OpenAlex pipeline check passed`; generation recorded zero OpenAlex API requests |
+| Review baseline | Run the original `--check` against an ignored artifact copy with one same-country unique/ambiguous label swap | Incorrectly passed while a two-candidate row counted as unique and a one-candidate row counted as ambiguous |
+| Review RED | Run the strengthened `--check` against the same mutated artifact copy | Exit 1 at the intended classification boundary: `assert candidate_count > 1` |
 
 No OpenAlex request was made. The joined CSV checksum remained unchanged after
 generation.
@@ -65,4 +67,7 @@ all OJS rows for reconciliation with the existing coverage report.
 The broader legacy `src/` tree is not Black- or Flake8-clean, while the
 issue-owned analysis command passes both checks. No static typechecker is
 configured; `compileall` is the available repository-wide syntax check.
-Standards/Spec review remains pending.
+The Standards review passed. The initial Spec review found that `--check`
+trusted aggregate `match_status` counts without independently enforcing the
+unique/ambiguous candidate-count invariant; the Review RED checkpoint above
+closes that gap. Review GREEN and the Spec re-review remain pending.

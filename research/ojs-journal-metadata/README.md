@@ -47,6 +47,23 @@ staging files are deleted only after PyArrow verifies the master identities,
 status counts, catalog keys, checkpoint references, row counts, and schemas.
 The V6 sections below document the earlier Python pipeline.
 
+Both commands also write
+`pkp-openalex-disagreement-audit.csv` and
+`pkp-openalex-disagreement-summary.csv` in their mode-specific artifact
+directory. The full audit has one compact, traceable row per PKP V7 identity;
+the summary records each category's eligible denominator and includes the
+OpenAlex-by-Crossref status cross-tabulation. The report shows counts and
+percentages, three descriptive charts, and the fixed ten-row V7 review table.
+It omits long JSON from the table only: complete source records remain in the
+ignored checkpoints and resolve through the compact Parquet catalogs.
+
+Delete generated reports, CSVs, Parquet files, or checkpoints when local
+storage is no longer needed; rerunning the same command recreates outputs and
+reuses any complete compatible checkpoints left in place. Title, ISSN, OJS,
+DOAJ, and country differences are source-specific metadata evidence, not proof
+that either source is wrong. PKP country is inferred, absent DOAJ evidence is
+not a negative assertion, and all results remain **Exploratory Analysis**.
+
 ## PKP input decision
 
 Use the original CSV behind `beacon.tab` in version 6.0 of [Details of

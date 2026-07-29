@@ -47,4 +47,22 @@ all OJS rows for reconciliation with the existing coverage report.
 
 ## Final verification
 
-Pending the repository-wide validation and two-axis Standards/Spec review.
+- `black --check research/ojs-journal-metadata/analysis/enrich_openalex.py`:
+  PASS.
+- `flake8 --ignore=E203,E501,W503
+  research/ojs-journal-metadata/analysis/enrich_openalex.py`: PASS.
+- `python3 -m compileall -q src
+  research/ojs-journal-metadata/analysis`: PASS.
+- Profile generation followed by `--check`: PASS.
+- Branch coverage across `--profile` and `--check`: 51% (272 of 482
+  statements reached, with branch measurement enabled). The uncovered code is
+  primarily the live acquisition path that this issue must not call.
+- `uv run --with pytest --with pandas --with pyarrow pytest -q`: 25 passed,
+  with two baseline failures in exploratory-owner and publication-compendium
+  inventory tests. This branch changes only this evidence document, so it does
+  not alter either failing contract.
+
+The broader legacy `src/` tree is not Black- or Flake8-clean, while the
+issue-owned analysis command passes both checks. No static typechecker is
+configured; `compileall` is the available repository-wide syntax check.
+Standards/Spec review remains pending.

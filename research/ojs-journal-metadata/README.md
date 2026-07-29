@@ -3,7 +3,7 @@
 This owner investigates journal-level enrichment for PKP Beacon records. All
 work here remains **Exploratory Analysis**.
 
-## Reproduce the V7 Journal Enrichment Sample
+## Reproduce the V7 Journal Enrichment
 
 The current explanatory notebook pins PKP V7 Dataverse file `14084919` at MD5
 `3a4ad8ae1ebfcc2b991aaf55b2d82c92`. It downloads the file when absent, checks
@@ -15,10 +15,54 @@ cd research/ojs-journal-metadata/analysis
 OPENALEX_API_KEY=... ./render_sample.sh
 ```
 
-The input, source caches, enriched CSV, run metadata, and rendered report stay
+The input, source caches, enriched artifact, run metadata, and rendered report stay
 under `research/ojs-journal-metadata/artifacts/ojs_journal_enrichment/`, which
-is ignored. This command runs sample mode only; it does not start a full-cohort
-retrieval. The V6 sections below document the earlier Python pipeline.
+is ignored. This command always runs sample mode; it cannot start a full-cohort
+retrieval.
+
+Start the resumable V7 multisource full-cohort run explicitly:
+
+```bash
+cd research/ojs-journal-metadata/analysis
+OPENALEX_API_KEY=... CROSSREF_MAILTO=you@example.org ./render_full.sh
+```
+
+Full mode queries the 103,017 distinct valid ISSNs in deterministic groups of
+at most 100, follows cursor pagination, and checkpoints each completed batch
+under `ojs_journal_enrichment/full-v7/openalex-batches/`. A rerun reuses only
+complete checkpoints whose V7 checksum and exact batch contents match. It
+also retrieves the complete Crossref journals directory in sequential
+1,000-record pages below the polite-pool limit. Each completed page is saved
+under `full-v7/crossref-pages/`, and the run stops only after the short final
+page and `total-results` reconcile. `CROSSREF_MAILTO` is sent as process
+configuration but is not stored in any generated artifact.
+
+The qualified 2026-07-29 run retrieved 168,654 Crossref journal records in 169
+pages. It writes one 30-column row for each of the 98,273 PKP V7 rows in the
+Zstandard-compressed `pkp-ojs-multisource-enriched.parquet` master. Candidate
+identities join to `openalex-sources.parquet` and `crossref-journals.parquet`;
+those compact catalogs point to checkpoints containing the complete source
+records rather than duplicating large JSON in the master. The chunked NDJSON
+staging files are deleted only after PyArrow verifies the master identities,
+status counts, catalog keys, checkpoint references, row counts, and schemas.
+The V6 sections below document the earlier Python pipeline.
+
+Both commands also write
+`pkp-openalex-disagreement-audit.csv` and
+`pkp-openalex-disagreement-summary.csv` in their mode-specific artifact
+directory. The full audit has one compact, traceable row per PKP V7 identity;
+the summary records each category's eligible denominator and includes the
+OpenAlex-by-Crossref status cross-tabulation. The report shows counts and
+percentages, three descriptive charts, and the fixed ten-row V7 review table.
+It omits long JSON from the table only: complete source records remain in the
+ignored checkpoints and resolve through the compact Parquet catalogs.
+
+Delete generated reports, CSVs, Parquet files, or checkpoints when local
+storage is no longer needed; rerunning the same command recreates outputs and
+reuses any complete compatible checkpoints left in place. Title, ISSN, OJS,
+DOAJ, and country differences are source-specific metadata evidence, not proof
+that either source is wrong. PKP country is inferred, absent DOAJ evidence is
+not a negative assertion, and all results remain **Exploratory Analysis**.
 
 ## PKP input decision
 

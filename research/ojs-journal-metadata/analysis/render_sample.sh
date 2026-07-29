@@ -8,6 +8,6 @@ render_source_dir="$artifact_dir/render-source"
 mkdir -p "$render_source_dir"
 cp "$analysis_dir/ojs_journal_enrichment.qmd" "$render_source_dir/"
 cd "$render_source_dir"
-exec quarto render ojs_journal_enrichment.qmd \
+exec env OJS_ENRICHMENT_MODE=sample quarto render ojs_journal_enrichment.qmd \
   --execute-dir "$analysis_dir" \
   --output-dir ../rendered

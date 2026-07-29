@@ -215,3 +215,59 @@ inconsistent, 19,054 unmatched, and 26,189 not attempted rows.
 The two repository-suite failures remain unchanged baseline debt: the owner
 README already lacked `## Question`, and the publication-compendium allowlist
 already excluded tracked literature notes before #101.
+
+## Issue #102: PKP–OpenAlex disagreement audit
+
+Source: [issue #102](https://github.com/YannJY02/InvisibleResearch/issues/102)
+and parent PRD [#98](https://github.com/YannJY02/InvisibleResearch/issues/98).
+No separate plan file was used. The user-approved resource adjustment remains
+authoritative: compact Parquet master and source/checkpoint catalogs are the
+fact layer; the audit CSV does not duplicate long source JSON.
+
+### User journey
+
+As a researcher, I can render the fixed V7 sample or complete 98,273-row
+cohort, inspect denominator-explicit identity and metadata disagreements, trace
+every aggregate to a compact audit row, and review three descriptive visuals
+and the fixed ten-row interactive table without changing the evidence or
+authority boundaries.
+
+### Task report
+
+| Stage | Commit | Command | Evidence |
+|---|---|---|---|
+| RED | `4c57e54` | `CROSSREF_MAILTO=... ./render_full.sh` | The existing QMD and #101 artifacts passed, then the shell contract exited 1 because `pkp-openalex-disagreement-audit.csv` did not exist. |
+| Sample GREEN | `ba66fb4` | `./render_sample.sh` | PASS: the ten fixed rows reconciled to six consistent, one partial-agreement, one conflicting-ID, one unmatched, and one no-valid-ISSN outcome; all report widgets rendered. |
+| Full GREEN | `ba66fb4` | `CROSSREF_MAILTO=... ./render_full.sh` | PASS: all 98,273 rows reconciled, all 1,031 OpenAlex batches and 169 Crossref pages were reused, zero API failures remained, and the complete report rendered. |
+| Independent CSV check | `ba66fb4` | Python `csv`/`Counter` reconciliation of the generated audit and summary | PASS: identity, five metadata dimensions, the source-status cross-tab, and 98,273 unique PKP identities matched independently. |
+| Syntax | `ba66fb4` | QMD code extraction plus R `parse()`; `sh -n`; `python3 -m py_compile analysis/ndjson_to_parquet.py` | PASS. |
+| Repository regression | `ba66fb4` | `uv run --with pytest --with pandas --with pyarrow pytest` | 25 passed; the same two pre-existing failures recorded for #101 remained. |
+| Dual review | `58c966a...ba66fb4` | Parallel Standards and Spec reviews | PASS on both axes with zero findings. |
+
+### Test specification
+
+| # | What is guaranteed | Test target | Type | Result |
+|---|---|---|---|---|
+| 1 | Every PKP row has exactly one of seven identity outcomes, including zero-count API error, and identity counts sum to the mode's cohort | Complete render, `contract-check`, and summary CSV | Classification | PASS |
+| 2 | Title, ISSN-set, OJS, DOAJ, and country comparisons each use the same 54,153-row identity-matched OpenAlex-journal denominator in the full run | Full render and summary reconciliation | Denominator | PASS |
+| 3 | DOAJ and country fields retain source-specific caveats; absent evidence is not converted into a negative assertion | Report prose, audit vocabulary, and metadata chart | Evidence boundary | PASS |
+| 4 | The compact audit preserves all 98,273 PKP identities, excludes long JSON and `admin_email`, and independently reconciles to the summary | Full audit CSV and independent CSV check | Auditability/privacy | PASS |
+| 5 | OpenAlex and Crossref states remain separate in a complete cross-tab whose counts sum to all 98,273 rows | Summary CSV, heatmap, and `contract-check` | Reconciliation | PASS |
+| 6 | The report includes count/percentage identity and metadata bar charts, a count/percentage heatmap, and the fixed searchable, filterable, paginated, horizontally scrollable ten-row table | Complete sample and full renders | End to end | PASS |
+| 7 | Input, master, catalogs, audit, and summary checksums; retrieval windows; cache/retry summaries; and runtime/package versions are recorded without API keys or process contact configuration | `run-metadata.json` and `contract-check` | Provenance/privacy | PASS |
+| 8 | Complete source objects remain in lossless checkpoints and resolve through compact catalogs instead of being repeated in the master or audit CSV | Full artifact contract and dual review | Resource/audit design | PASS |
+
+### Full-run evidence and known gaps
+
+The qualified full audit has 98,273 rows, 31 compact columns, and no long JSON.
+It records 53,615 consistent identities, 538 partial ISSN agreements, 221
+conflicting Source-ID cases, 133 non-journal Sources, 17,577 valid-ISSN
+unmatched rows, 26,189 rows without a valid ISSN, and zero API errors. The
+54-row summary records explicit denominators and occupies less than 5 KB; the
+audit CSV is approximately 40.4 MB.
+
+The agreed public seam remains the complete notebook render, so no separate
+line-coverage framework was added. The repository suite still has the same two
+baseline failures: this owner lacked `## Question` before #102, and the
+publication-compendium allowlist already excluded tracked literature notes.
+These unrelated governance changes remain outside #102.

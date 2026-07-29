@@ -164,3 +164,53 @@ keeps candidate IDs in the master and complete Source responses in their V7
 checkpoints instead of duplicating large JSON per PKP row. Temporary NDJSON
 staging files are removed only after PyArrow verifies Parquet row counts and
 schemas.
+
+## Issue #101: resumable Crossref journal directory
+
+Source: [issue #101](https://github.com/YannJY02/InvisibleResearch/issues/101)
+and parent PRD [#98](https://github.com/YannJY02/InvisibleResearch/issues/98).
+No separate plan file was used. The user-approved resource adjustment extends
+the compact Parquet master and checkpoint catalogs instead of restoring a wide
+CSV with repeated source JSON.
+
+### User journey
+
+As a researcher, I can provide a Crossref contact email only to the full-run
+process, resume a polite complete-directory retrieval, and inspect exact-ISSN
+Crossref outcomes whose candidate keys resolve to lossless page checkpoints.
+
+### Task report
+
+| Stage | Commit | Command | Evidence |
+|---|---|---|---|
+| RED | `f3684f9` | `CROSSREF_MAILTO=... ./render_full.sh` | The #100 notebook completed its full render, then the new contract exited 1 because the multisource master and Crossref catalog did not exist. |
+| Missing-contact check | `8a544c9` | `env -u CROSSREF_MAILTO ./render_full.sh` | Exit 1 in `packages-and-paths`: full mode required a contact email before retrieval. |
+| Sample GREEN | `8a544c9` | `./render_sample.sh` | PASS: the fixed ten-case sample rendered with no full-mode contact requirement. |
+| Full GREEN | `8a544c9` | `CROSSREF_MAILTO=... ./render_full.sh` | PASS: 169 Crossref pages and all 1,031 OpenAlex batches were reused, three Parquet files reconciled, and the HTML report rendered. |
+| Syntax | `8a544c9` | `python3 -m py_compile analysis/ndjson_to_parquet.py`; QMD code extraction plus R `parse()` | PASS. |
+| Repository regression | `8a544c9` | `uv run --with pytest --with pandas --with pyarrow pytest` | 25 passed; the same two baseline failures recorded for #99 remained. |
+
+### Test specification
+
+| # | What is guaranteed | Test target | Type | Result |
+|---|---|---|---|---|
+| 1 | Full mode rejects a missing or malformed process contact before source retrieval | `packages-and-paths` and missing-contact render | Privacy/preflight | PASS |
+| 2 | Crossref retrieval uses one sequential 1,000-row cursor stream with bounded retries, explicit failures, and a delay below the polite-pool limit | `perform_crossref_page`, `fetch_crossref_directory`, full metadata | Integration | PASS |
+| 3 | Each completed page is saved atomically and reused by page index, cursor, page size, status, and item count | Interrupted first run plus complete rerun | Recovery | PASS |
+| 4 | The short final page and the sum of all 169 page counts reconcile exactly to Crossref `total-results` 168,654 | Full render `contract-check` | Pagination | PASS |
+| 5 | Checksum-valid normalized ISSNs are matched locally; 137,473 unique ISSN sets remain in the catalog and distinct sets remain distinct candidates | Crossref catalog and full render `contract-check` | Identity | PASS |
+| 6 | The 98,273-row master preserves all PKP identities and separate Crossref consistent, inconsistent, unmatched, and not-attempted states | PyArrow validator and `contract-check` | Contract | PASS |
+| 7 | Candidate keys in the master resolve to a checkpoint file and record index while all 11 observed top-level fields remain in lossless checkpoints | Crossref catalog/schema and PyArrow validator | Reconciliation | PASS |
+| 8 | The configured contact does not appear in metadata, checkpoints, or any Parquet artifact | Full artifact byte scan and metadata contract | Privacy | PASS |
+
+### Coverage and known gaps
+
+The agreed executable seam is the complete QMD render, so no separate
+line-coverage framework was added. The qualified master has 98,273 rows and 30
+columns (9.3 MB); the Crossref catalog has 137,473 rows and three pointer
+columns (1.0 MB). Crossref statuses reconcile to 52,656 consistent, 374
+inconsistent, 19,054 unmatched, and 26,189 not attempted rows.
+
+The two repository-suite failures remain unchanged baseline debt: the owner
+README already lacked `## Question`, and the publication-compendium allowlist
+already excluded tracked literature notes before #101.

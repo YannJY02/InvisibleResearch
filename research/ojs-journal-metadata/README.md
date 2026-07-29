@@ -20,24 +20,32 @@ under `research/ojs-journal-metadata/artifacts/ojs_journal_enrichment/`, which
 is ignored. This command always runs sample mode; it cannot start a full-cohort
 retrieval.
 
-Start the resumable V7 OpenAlex full-cohort run explicitly:
+Start the resumable V7 multisource full-cohort run explicitly:
 
 ```bash
 cd research/ojs-journal-metadata/analysis
-OPENALEX_API_KEY=... ./render_full.sh
+OPENALEX_API_KEY=... CROSSREF_MAILTO=you@example.org ./render_full.sh
 ```
 
 Full mode queries the 103,017 distinct valid ISSNs in deterministic groups of
 at most 100, follows cursor pagination, and checkpoints each completed batch
 under `ojs_journal_enrichment/full-v7/openalex-batches/`. A rerun reuses only
 complete checkpoints whose V7 checksum and exact batch contents match. It
-writes one OpenAlex-enriched row for each of the 98,273 PKP V7 rows in a
-Zstandard-compressed Parquet master. Candidate IDs join to a companion Parquet
-catalog that maps every unique OpenAlex Source ID to the complete V7 batch
-checkpoint retaining its response. The chunked NDJSON staging files are deleted
-after PyArrow verifies both Parquet row counts and schemas. Crossref
-full-cohort retrieval remains a separate follow-on. The V6 sections below
-document the earlier Python pipeline.
+also retrieves the complete Crossref journals directory in sequential
+1,000-record pages below the polite-pool limit. Each completed page is saved
+under `full-v7/crossref-pages/`, and the run stops only after the short final
+page and `total-results` reconcile. `CROSSREF_MAILTO` is sent as process
+configuration but is not stored in any generated artifact.
+
+The qualified 2026-07-29 run retrieved 168,654 Crossref journal records in 169
+pages. It writes one 30-column row for each of the 98,273 PKP V7 rows in the
+Zstandard-compressed `pkp-ojs-multisource-enriched.parquet` master. Candidate
+identities join to `openalex-sources.parquet` and `crossref-journals.parquet`;
+those compact catalogs point to checkpoints containing the complete source
+records rather than duplicating large JSON in the master. The chunked NDJSON
+staging files are deleted only after PyArrow verifies the master identities,
+status counts, catalog keys, checkpoint references, row counts, and schemas.
+The V6 sections below document the earlier Python pipeline.
 
 ## PKP input decision
 

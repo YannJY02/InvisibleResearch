@@ -54,11 +54,21 @@ def validate(args: argparse.Namespace) -> None:
             "set_spec",
             "openalex_match_status",
             "openalex_candidate_ids",
+            "crossref_match_status",
+            "crossref_candidate_issn_sets",
         ],
     )
-    catalog = pq.read_table(
-        args.catalog,
+    openalex_catalog = pq.read_table(
+        args.openalex_catalog,
         columns=["openalex_source_id", "checkpoint_file"],
+    )
+    crossref_catalog = pq.read_table(
+        args.crossref_catalog,
+        columns=[
+            "crossref_candidate_issn_set",
+            "checkpoint_file",
+            "record_index",
+        ],
     )
 
     identities = set(
@@ -69,16 +79,42 @@ def validate(args: argparse.Namespace) -> None:
             strict=True,
         )
     )
-    statuses = Counter(master["openalex_match_status"].to_pylist())
-    source_ids = catalog["openalex_source_id"].to_pylist()
-    checkpoint_files = catalog["checkpoint_file"].to_pylist()
+    openalex_statuses = Counter(master["openalex_match_status"].to_pylist())
+    crossref_statuses = Counter(master["crossref_match_status"].to_pylist())
+    source_ids = openalex_catalog["openalex_source_id"].to_pylist()
+    source_checkpoint_files = openalex_catalog["checkpoint_file"].to_pylist()
     catalog_ids = set(source_ids)
-    actual_source_checkpoints = dict(zip(source_ids, checkpoint_files, strict=True))
-    candidate_ids = {
+    actual_source_checkpoints = dict(
+        zip(source_ids, source_checkpoint_files, strict=True)
+    )
+    openalex_candidate_ids = {
         candidate_id
         for cell in master["openalex_candidate_ids"].to_pylist()
         if cell
         for candidate_id in cell.split("|")
+    }
+    crossref_keys = crossref_catalog[
+        "crossref_candidate_issn_set"
+    ].to_pylist()
+    crossref_checkpoint_files = crossref_catalog[
+        "checkpoint_file"
+    ].to_pylist()
+    crossref_record_indices = crossref_catalog["record_index"].to_pylist()
+    crossref_catalog_ids = set(crossref_keys)
+    actual_crossref_checkpoints = {
+        candidate_key: f"{checkpoint_file}#{record_index}"
+        for candidate_key, checkpoint_file, record_index in zip(
+            crossref_keys,
+            crossref_checkpoint_files,
+            crossref_record_indices,
+            strict=True,
+        )
+    }
+    crossref_candidate_ids = {
+        candidate_id
+        for cell in master["crossref_candidate_issn_sets"].to_pylist()
+        if cell
+        for candidate_id in cell.split(";")
     }
     private_names = {"admin_email", "openalex_api_key", "crossref_mailto"}
     master_names = {name.casefold() for name in master.schema.names}
@@ -94,29 +130,56 @@ def validate(args: argparse.Namespace) -> None:
         raise RuntimeError("Master Parquet contains duplicate PKP identities")
     if identities != expected_identities:
         raise RuntimeError("Master Parquet PKP identities differ from pinned input")
-    if statuses != Counter(contract["status_counts"]):
-        raise RuntimeError("Master Parquet status counts do not reconcile")
+    if openalex_statuses != Counter(contract["status_counts"]["openalex"]):
+        raise RuntimeError("OpenAlex status counts do not reconcile")
+    if crossref_statuses != Counter(contract["status_counts"]["crossref"]):
+        raise RuntimeError("Crossref status counts do not reconcile")
     if len(source_ids) != len(catalog_ids):
         raise RuntimeError("Source catalog contains duplicate Source IDs")
-    if actual_source_checkpoints != contract["source_checkpoints"]:
+    if (
+        actual_source_checkpoints
+        != contract["openalex_source_checkpoints"]
+    ):
         raise RuntimeError("Source catalog ID-to-checkpoint mapping is incorrect")
-    if not candidate_ids <= catalog_ids:
+    if not openalex_candidate_ids <= catalog_ids:
         raise RuntimeError("Master candidate IDs are missing from the Source catalog")
+    if len(crossref_keys) != len(crossref_catalog_ids):
+        raise RuntimeError("Crossref catalog contains duplicate candidate keys")
+    if (
+        actual_crossref_checkpoints
+        != contract["crossref_source_checkpoints"]
+    ):
+        raise RuntimeError(
+            "Crossref catalog key-to-checkpoint mapping is incorrect"
+        )
+    if not crossref_candidate_ids <= crossref_catalog_ids:
+        raise RuntimeError(
+            "Master candidate keys are missing from the Crossref catalog"
+        )
     if private_names & master_names:
         raise RuntimeError("Private configuration appears in Parquet columns")
-    for checkpoint_file in checkpoint_files:
+    for checkpoint_file in source_checkpoint_files:
         if Path(checkpoint_file).name != checkpoint_file:
             raise RuntimeError("Unsafe checkpoint path in Source catalog")
-        if not (args.batch_dir / checkpoint_file).is_file():
+        if not (args.openalex_batch_dir / checkpoint_file).is_file():
             raise RuntimeError("Source catalog references a missing checkpoint")
+    for checkpoint_file in crossref_checkpoint_files:
+        if Path(checkpoint_file).name != checkpoint_file:
+            raise RuntimeError("Unsafe checkpoint path in Crossref catalog")
+        if not (args.crossref_page_dir / checkpoint_file).is_file():
+            raise RuntimeError(
+                "Crossref catalog references a missing checkpoint"
+            )
 
     print(
         json.dumps(
             {
                 "master_rows": master.num_rows,
                 "unique_identities": len(identities),
-                "catalog_rows": catalog.num_rows,
-                "candidate_ids": len(candidate_ids),
+                "openalex_catalog_rows": openalex_catalog.num_rows,
+                "openalex_candidate_ids": len(openalex_candidate_ids),
+                "crossref_catalog_rows": crossref_catalog.num_rows,
+                "crossref_candidate_ids": len(crossref_candidate_ids),
             }
         )
     )
@@ -134,8 +197,10 @@ def main() -> None:
 
     validate_parser = subparsers.add_parser("validate")
     validate_parser.add_argument("master", type=Path)
-    validate_parser.add_argument("catalog", type=Path)
-    validate_parser.add_argument("batch_dir", type=Path)
+    validate_parser.add_argument("openalex_catalog", type=Path)
+    validate_parser.add_argument("openalex_batch_dir", type=Path)
+    validate_parser.add_argument("crossref_catalog", type=Path)
+    validate_parser.add_argument("crossref_page_dir", type=Path)
     validate_parser.add_argument("input_csv", type=Path)
     validate_parser.add_argument("contract", type=Path)
     validate_parser.set_defaults(func=validate)

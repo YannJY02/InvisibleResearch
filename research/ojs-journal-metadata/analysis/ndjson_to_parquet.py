@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter
+from collections import Counter, defaultdict
 import csv
 import json
 from pathlib import Path
@@ -54,6 +54,7 @@ def validate(args: argparse.Namespace) -> None:
             "set_spec",
             "openalex_match_status",
             "openalex_candidate_ids",
+            "crossref_input_issns",
             "crossref_match_status",
             "crossref_candidate_issn_sets",
         ],
@@ -116,6 +117,10 @@ def validate(args: argparse.Namespace) -> None:
         if cell
         for candidate_id in cell.split(";")
     }
+    crossref_keys_by_issn: defaultdict[str, set[str]] = defaultdict(set)
+    for candidate_key in crossref_keys:
+        for issn in candidate_key.split("|"):
+            crossref_keys_by_issn[issn].add(candidate_key)
     private_names = {"admin_email", "openalex_api_key", "crossref_mailto"}
     master_names = {name.casefold() for name in master.schema.names}
     with args.input_csv.open(encoding="utf-8-sig", newline="") as handle:
@@ -156,6 +161,22 @@ def validate(args: argparse.Namespace) -> None:
         raise RuntimeError(
             "Master candidate keys are missing from the Crossref catalog"
         )
+    for input_cell, candidate_cell in zip(
+        master["crossref_input_issns"].to_pylist(),
+        master["crossref_candidate_issn_sets"].to_pylist(),
+        strict=True,
+    ):
+        expected_candidates = {
+            candidate_key
+            for issn in (input_cell or "").split("|")
+            if issn
+            for candidate_key in crossref_keys_by_issn[issn]
+        }
+        actual_candidates = set((candidate_cell or "").split(";")) - {""}
+        if actual_candidates != expected_candidates:
+            raise RuntimeError(
+                "Master Crossref candidates do not reconcile to the catalog"
+            )
     if private_names & master_names:
         raise RuntimeError("Private configuration appears in Parquet columns")
     for checkpoint_file in source_checkpoint_files:

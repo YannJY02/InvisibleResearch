@@ -477,6 +477,13 @@ fetch_crossref_directory <- function() {
     page_summaries[[length(page_summaries) + 1L]] <- checkpoint[
       setdiff(names(checkpoint), c("cursor", "next_cursor", "items"))
     ]
+    retrieved_rows <- sum(map_int(page_summaries, "item_count"))
+    if (retrieved_rows > total_results) {
+      stop(
+        "Crossref pagination exceeded total-results.",
+        call. = FALSE
+      )
+    }
     if (isTRUE(checkpoint$pagination_complete)) break
     if (
       is.null(checkpoint$next_cursor) ||
@@ -692,6 +699,60 @@ crossref_catalog_from_pages <- function(page_files) {
     rows = bind_rows(catalog_pages),
     source_fields = sort(source_fields)
   )
+}
+
+validate_crossref_catalog_pointers <- function(catalog, page_files) {
+  catalog_rows_by_page <- split(
+    seq_len(nrow(catalog)),
+    catalog$checkpoint_file
+  )
+  checkpoint_keys <- character()
+
+  for (page_file in page_files) {
+    checkpoint <- readRDS(file.path(crossref_page_dir, page_file))
+    page_keys <- vapply(
+      checkpoint$items,
+      crossref_key,
+      character(1)
+    )
+    checkpoint_keys <- union(
+      checkpoint_keys,
+      page_keys[nzchar(page_keys)]
+    )
+
+    catalog_rows <- catalog_rows_by_page[[page_file]]
+    if (is.null(catalog_rows)) next
+    record_indices <- as.integer(catalog$record_index[catalog_rows])
+    if (
+      anyNA(record_indices) ||
+        any(record_indices < 1L | record_indices > length(page_keys))
+    ) {
+      stop(
+        "Crossref catalog contains an invalid record index.",
+        call. = FALSE
+      )
+    }
+    if (!identical(
+      unname(catalog$crossref_candidate_issn_set[catalog_rows]),
+      unname(page_keys[record_indices])
+    )) {
+      stop(
+        "Crossref catalog pointer does not resolve to its ISSN set.",
+        call. = FALSE
+      )
+    }
+  }
+
+  if (!setequal(
+    catalog$crossref_candidate_issn_set,
+    checkpoint_keys
+  )) {
+    stop(
+      "Crossref catalog does not cover every checkpoint candidate.",
+      call. = FALSE
+    )
+  }
+  TRUE
 }
 
 index_crossref_catalog <- function(catalog) {
@@ -1044,6 +1105,10 @@ if (run_mode == "sample") {
     crossref_directory$page_files
   )
   crossref_catalog <- crossref_catalog_contract$rows
+  crossref_catalog_valid <- validate_crossref_catalog_pointers(
+    crossref_catalog,
+    crossref_directory$page_files
+  )
   crossref_index <- index_crossref_catalog(crossref_catalog)
   crossref_matches <- map(
     input_issns,
@@ -1422,6 +1487,7 @@ stopifnot(
     "index_candidates_by_issn",
     "candidates_for_issns",
     "crossref_catalog_from_pages",
+    "validate_crossref_catalog_pointers",
     "index_crossref_catalog",
     "match_crossref_catalog",
     "expand_candidate_fields",
@@ -1566,6 +1632,7 @@ if (run_mode == "sample") {
     parquet_contract$columns == length(output_columns),
     source_parquet_contract$rows == length(openalex_sources),
     crossref_parquet_contract$rows == nrow(crossref_catalog),
+    isTRUE(crossref_catalog_valid),
     parquet_validation$master_rows == 98273L,
     parquet_validation$unique_identities == 98273L,
     parquet_validation$openalex_catalog_rows == length(openalex_sources),

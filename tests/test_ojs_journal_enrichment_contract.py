@@ -4,9 +4,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parents[1]
 ANALYSIS_DIR = PROJECT_ROOT / "research" / "ojs-journal-metadata" / "analysis"
 QMD_PATH = ANALYSIS_DIR / "ojs_journal_enrichment.qmd"
-DISAGREEMENT_OWNER_DIR = (
-    PROJECT_ROOT / "research" / "ojs-journal-disagreement-analysis"
-)
+DISAGREEMENT_OWNER_DIR = PROJECT_ROOT / "research" / "ojs-journal-metadata"
 DISAGREEMENT_ANALYSIS_DIR = DISAGREEMENT_OWNER_DIR / "analysis"
 DISAGREEMENT_QMD_PATH = (
     DISAGREEMENT_ANALYSIS_DIR / "ojs_journal_disagreement_analysis.qmd"
@@ -45,13 +43,14 @@ def test_enrichment_produces_one_wide_master():
 
 
 def test_disagreement_analysis_is_separate_and_offline():
-    assert not (ANALYSIS_DIR / "ojs_journal_disagreement_analysis.qmd").exists()
-    assert not (ANALYSIS_DIR / "render_disagreement.sh").exists()
+    assert not (
+        PROJECT_ROOT / "research" / "ojs-journal-disagreement-analysis"
+    ).exists()
     assert DISAGREEMENT_RENDER_PATH.stat().st_mode & 0o111
     owner_readme = (DISAGREEMENT_OWNER_DIR / "README.md").read_text()
     for heading in ("## Question", "## Referenced inputs", "## Run"):
         assert heading in owner_readme
-    assert "ojs-journal-disagreement-analysis" in (
+    assert "ojs-journal-metadata" in (
         PROJECT_ROOT / "research" / "README.md"
     ).read_text()
 

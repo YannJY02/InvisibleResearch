@@ -2,12 +2,16 @@
 set -eu
 
 analysis_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-enrichment_artifact_dir="$analysis_dir/../artifacts/ojs_journal_enrichment"
+enrichment_artifact_dir="$analysis_dir/../../ojs-journal-metadata/artifacts/ojs_journal_enrichment"
 artifact_dir="$analysis_dir/../artifacts/ojs_journal_disagreement_analysis"
 render_source_dir="$artifact_dir/render-source"
 export R_LIBS_USER="$enrichment_artifact_dir/renv-library"
 
-mkdir -p "$render_source_dir" "$R_LIBS_USER"
+test -d "$R_LIBS_USER" || {
+  echo "Restore the enrichment R environment before this analysis." >&2
+  exit 1
+}
+mkdir -p "$render_source_dir"
 cp "$analysis_dir/ojs_journal_disagreement_analysis.qmd" "$render_source_dir/"
 cd "$render_source_dir"
 quarto render ojs_journal_disagreement_analysis.qmd \

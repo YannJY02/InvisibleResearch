@@ -24,6 +24,8 @@ OWNER_NOTEBOOKS = {
         "csv_parquet_semantic_parity_validation.ipynb",
         "openalex_by_year_to_parquet.ipynb",
     },
+    "ojs-journal-disagreement-analysis": set(),
+    "ojs-journal-metadata": set(),
     "scimago-openalex-coverage": {
         "merge_sjr_communication_1999_2024.ipynb",
         "scim_openalex_coverage_1999_2024.ipynb",
@@ -42,6 +44,8 @@ OWNER_ANALYSES = {
         "validate_row_counts.py",
         "validate_semantic_parity.py",
     },
+    "ojs-journal-disagreement-analysis": set(),
+    "ojs-journal-metadata": {"enrich_openalex.py"},
     "scimago-openalex-coverage": {"coverage.py", "match_by_issn.py", "merge_sjr.py"},
 }
 
@@ -108,7 +112,9 @@ def test_all_exploratory_notebooks_have_named_owner_contracts() -> None:
 
 
 def test_notebook_launch_commands_include_shared_source_path() -> None:
-    for owner in OWNER_NOTEBOOKS:
+    for owner, notebooks in OWNER_NOTEBOOKS.items():
+        if not notebooks:
+            continue
         readme = (PROJECT_ROOT / "research" / owner / "README.md").read_text(
             encoding="utf-8"
         )

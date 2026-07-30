@@ -5,10 +5,17 @@ work here remains **Exploratory Analysis**.
 
 ## Question
 
-How consistently can exact ISSNs connect pinned PKP OJS records to OpenAlex
-Sources and Crossref journals, and what source-specific disagreements remain?
+How can exact ISSNs connect pinned PKP OJS records to OpenAlex Sources and
+Crossref journals in one reusable wide master without dropping source fields
+or PKP identities?
 
-## Reproduce the V7 Journal Enrichment
+## Referenced inputs
+
+- PKP Beacon V7 Dataverse file `14084919`
+- OpenAlex Sources
+- Crossref journals
+
+## Run
 
 The current explanatory notebook pins PKP V7 Dataverse file `14084919` at MD5
 `3a4ad8ae1ebfcc2b991aaf55b2d82c92`. It downloads the file when absent, checks
@@ -67,19 +74,10 @@ file, reads it back to verify rows, columns, and PKP identities, and only then
 promotes it. RDS source caches and checkpoints are internal resumability
 artifacts, not additional data deliverables.
 
-The enrichment QMD stops after producing and checking that wide master. Run the
-complete exploratory difference analysis separately:
-
-```bash
-cd research/ojs-journal-metadata/analysis
-./render_disagreement.sh
-```
-
-This offline analysis reads only the validated full master; it makes no API
-requests. It writes the row-level disagreement audit and category summary under
-`artifacts/ojs_journal_disagreement_analysis/`, and retains the title, ISSN,
-OJS, DOAJ, country, identity, and OpenAlex-by-Crossref comparisons with their
-eligible denominators and three descriptive charts.
+The enrichment QMD stops after producing and checking that wide master. The
+complete offline analysis lives in the separate
+[OJS Journal Disagreement Analysis](../ojs-journal-disagreement-analysis/)
+research owner.
 
 Delete generated reports, CSVs, or checkpoints when local storage is no longer
 needed; rerunning the same command recreates outputs and reuses only compatible

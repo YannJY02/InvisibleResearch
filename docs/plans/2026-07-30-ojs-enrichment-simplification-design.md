@@ -29,7 +29,7 @@ are not formal data deliverables.
 
 ## Disagreement analysis notebook
 
-`research/ojs-journal-metadata/analysis/ojs_journal_disagreement_analysis.qmd`
+`research/ojs-journal-disagreement-analysis/analysis/ojs_journal_disagreement_analysis.qmd`
 will read the validated wide master and preserve the existing exploratory
 analysis:
 
@@ -64,4 +64,3 @@ The retained public seam is a complete render plus artifact checks:
 - no API credentials or `admin_email` appear in outputs; and
 - caches may be deleted and rebuilt without changing the formal output
   contract.
-

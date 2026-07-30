@@ -47,9 +47,13 @@ def test_enrichment_produces_one_wide_master():
 def test_disagreement_analysis_is_separate_and_offline():
     assert not (ANALYSIS_DIR / "ojs_journal_disagreement_analysis.qmd").exists()
     assert not (ANALYSIS_DIR / "render_disagreement.sh").exists()
+    assert DISAGREEMENT_RENDER_PATH.stat().st_mode & 0o111
     owner_readme = (DISAGREEMENT_OWNER_DIR / "README.md").read_text()
     for heading in ("## Question", "## Referenced inputs", "## Run"):
         assert heading in owner_readme
+    assert "ojs-journal-disagreement-analysis" in (
+        PROJECT_ROOT / "research" / "README.md"
+    ).read_text()
 
     enrichment = QMD_PATH.read_text()
     disagreement = DISAGREEMENT_QMD_PATH.read_text()
@@ -68,6 +72,8 @@ def test_disagreement_analysis_is_separate_and_offline():
     assert "file.rename(temporary_path, path)" in disagreement
     assert "ojs_journal_disagreement_analysis" in disagreement
     assert "ojs_journal_disagreement_analysis" in render
+    assert 'test -d "$R_LIBS_USER"' in render
+    assert 'mkdir -p "$render_source_dir" "$R_LIBS_USER"' not in render
     for fragment in (
         "api.openalex.org",
         "api.crossref.org",

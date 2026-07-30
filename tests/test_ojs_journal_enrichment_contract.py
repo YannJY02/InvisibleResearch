@@ -1,18 +1,18 @@
 from pathlib import Path
 
 
-ANALYSIS_DIR = (
-    Path(__file__).parents[1]
-    / "research"
-    / "ojs-journal-metadata"
-    / "analysis"
-)
+PROJECT_ROOT = Path(__file__).parents[1]
+ANALYSIS_DIR = PROJECT_ROOT / "research" / "ojs-journal-metadata" / "analysis"
 QMD_PATH = ANALYSIS_DIR / "ojs_journal_enrichment.qmd"
+DISAGREEMENT_OWNER_DIR = (
+    PROJECT_ROOT / "research" / "ojs-journal-disagreement-analysis"
+)
+DISAGREEMENT_ANALYSIS_DIR = DISAGREEMENT_OWNER_DIR / "analysis"
 DISAGREEMENT_QMD_PATH = (
-    ANALYSIS_DIR / "ojs_journal_disagreement_analysis.qmd"
+    DISAGREEMENT_ANALYSIS_DIR / "ojs_journal_disagreement_analysis.qmd"
 )
 FULL_RENDER_PATH = ANALYSIS_DIR / "render_full.sh"
-DISAGREEMENT_RENDER_PATH = ANALYSIS_DIR / "render_disagreement.sh"
+DISAGREEMENT_RENDER_PATH = DISAGREEMENT_ANALYSIS_DIR / "render_disagreement.sh"
 
 
 def test_full_pipeline_has_no_cross_language_conversion_layer():
@@ -45,6 +45,12 @@ def test_enrichment_produces_one_wide_master():
 
 
 def test_disagreement_analysis_is_separate_and_offline():
+    assert not (ANALYSIS_DIR / "ojs_journal_disagreement_analysis.qmd").exists()
+    assert not (ANALYSIS_DIR / "render_disagreement.sh").exists()
+    owner_readme = (DISAGREEMENT_OWNER_DIR / "README.md").read_text()
+    for heading in ("## Question", "## Referenced inputs", "## Run"):
+        assert heading in owner_readme
+
     enrichment = QMD_PATH.read_text()
     disagreement = DISAGREEMENT_QMD_PATH.read_text()
     render = DISAGREEMENT_RENDER_PATH.read_text()

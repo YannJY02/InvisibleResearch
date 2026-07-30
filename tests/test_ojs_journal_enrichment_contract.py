@@ -68,6 +68,8 @@ def test_disagreement_analysis_is_separate_and_offline():
 
     assert "pkp-ojs-multisource-enriched.csv.gz" in disagreement
     assert "is_missing_value(left) || is_missing_value(right)" in disagreement
+    assert 'category = "unmapped_nonmissing"' in disagreement
+    assert "match(row_identity(sample_spec), row_identity(audit))" in disagreement
     assert "file.rename(temporary_path, path)" in disagreement
     assert "ojs_journal_disagreement_analysis" in disagreement
     assert "ojs_journal_disagreement_analysis" in render

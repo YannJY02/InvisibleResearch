@@ -277,6 +277,7 @@ pkp_country_code <- countrycode::countrycode(
   destination = "iso2c",
   warn = FALSE
 )
+country_mapping_failures <- sum(!pkp_country_missing & is.na(pkp_country_code))
 openalex_country_code <- toupper(master$openalex_country_code)
 country_evidence_comparison <- map2_chr(
   pkp_country_code,
@@ -368,6 +369,15 @@ source_status_counts <- as_tibble(as.data.frame(table(
     percent = round(100 * count / denominator, 3)
   )
 
+country_mapping_summary <- tibble(
+  dimension = "country_mapping",
+  category = "unmapped_nonmissing",
+  denominator_name = "pkp_country_nonmissing_rows",
+  denominator = sum(!pkp_country_missing),
+  count = country_mapping_failures,
+  percent = round(100 * count / denominator, 3)
+)
+
 metadata_disagreement_counts <- c(
   normalized_title = sum(title_comparison == "different"),
   issn_set = sum(issn_set_comparison == "different"),
@@ -431,6 +441,7 @@ audit_summary <- bind_rows(
     "identity_matched_openalex_journals"
   ),
   metadata_disagreement_summary,
+  country_mapping_summary,
   source_status_counts
 )
 
@@ -566,22 +577,52 @@ audit_summary |>
 ```{r}
 #| label: disagreement-review
 
-sample_context_names <- c(
+sample_spec <- tribble(
+  ~context_name, ~oai_url, ~repository_name, ~set_spec,
   "Kuwait Journal of Science",
+  "https://journalskuwait.org/kjs/index.php/index/oai",
+  "Kuwait Journal of Science",
+  "KJS",
   "Cakrawala",
+  "https://cakrawalajournal.org/index.php/index/oai",
+  "CAKRAWALA",
+  "cakrawala",
   "Sintesa: Jurnal Ilmu Pendidikan",
+  "https://sintesa.stkip-arrahmaniyah.ac.id/index.php/index/oai",
+  "Sintesa: Jurnal Ilmu Pendidikan STKIP Arrahmaniyah Depok",
+  "sintesa",
   "CARAKA: Jurnal Teologi Biblika dan Praktika",
+  "https://ojs.sttibc.ac.id/index.php/index/oai",
+  "CARAKA:Jurnal Teologi",
+  "ibc",
   "Jurnal Tata Kelola dan Akuntabilitas Keuangan Negara",
+  "https://jurnal.bpk.go.id/index.php/index/oai",
+  "Open Journal Systems",
+  "TAKEN",
   "JOEEL (Journal of English Education and Literature)",
+  "https://journal.stkippamanetalino.ac.id/index.php/index/oai",
+  "Rumah Jurnal STKIP Pamane Talino Ngabang",
+  "bahasa-inggris",
   "Malaysian Journal of Paediatrics and Child Health",
+  "https://mpaeds.my/journals/index.php/index/oai",
+  "NA",
+  "MJPCH",
   "Jami Scientific Research Quarterly Journal",
+  "https://journals.jami.edu.af/index.php/index/oai",
+  "Jami University Press",
+  "jsrqj",
   "Journal of Polymer & Composites",
-  "JURNAL TEKNIK PERTAMBANGAN"
+  "https://engineeringjournals.stmjournals.in/index.php/index/oai",
+  "Engineering Journals",
+  "JoPC",
+  "JURNAL TEKNIK PERTAMBANGAN",
+  "https://e-journal.upr.ac.id/index.php/index/oai",
+  "Journal Online Universitas Palangka Raya",
+  "JTP"
 )
-review_rows <- audit[
-  match(sample_context_names, audit$context_name),
-]
-stopifnot(!anyNA(review_rows$context_name))
+sample_positions <- match(row_identity(sample_spec), row_identity(audit))
+stopifnot(!anyNA(sample_positions))
+review_rows <- audit[sample_positions, ]
 
 htmltools::div(
   style = "overflow-x: auto;",

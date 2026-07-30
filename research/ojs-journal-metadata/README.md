@@ -3,12 +3,32 @@
 This owner investigates journal-level enrichment for PKP Beacon records. All
 work here remains **Exploratory Analysis**.
 
+## Question
+
+How consistently can exact ISSNs connect pinned PKP OJS records to OpenAlex
+Sources and Crossref journals, and what source-specific disagreements remain?
+
 ## Reproduce the V7 Journal Enrichment
 
 The current explanatory notebook pins PKP V7 Dataverse file `14084919` at MD5
 `3a4ad8ae1ebfcc2b991aaf55b2d82c92`. It downloads the file when absent, checks
 the 98,273-row release contract, and selects ten fixed source rows without a
 private `DATA_ROOT`.
+
+The qualified environment is R 4.5.2, Quarto 1.6.32, and the package versions
+recorded in `analysis/renv.lock`. The render fails clearly when that environment
+is missing or different; it never installs changing CRAN packages during
+analysis. Python, PyArrow, and `uv` are not required.
+
+Restore the recorded R packages before the first render:
+
+```bash
+cd research/ojs-journal-metadata/analysis
+Rscript -e 'install.packages("renv", repos="https://cloud.r-project.org")'
+mkdir -p ../artifacts/ojs_journal_enrichment/renv-library
+R_LIBS_USER=../artifacts/ojs_journal_enrichment/renv-library \
+  Rscript -e 'renv::restore(lockfile="renv.lock", library=Sys.getenv("R_LIBS_USER"), prompt=FALSE)'
+```
 
 ```bash
 cd research/ojs-journal-metadata/analysis
@@ -34,32 +54,40 @@ complete checkpoints whose V7 checksum and exact batch contents match. It
 also retrieves the complete Crossref journals directory in sequential
 1,000-record pages below the polite-pool limit. Each completed page is saved
 under `full-v7/crossref-pages/`, and the run stops only after the short final
-page and `total-results` reconcile. `CROSSREF_MAILTO` is sent as process
-configuration but is not stored in any generated artifact.
+page and `total-results` reconcile. `OPENALEX_API_KEY` and `CROSSREF_MAILTO`
+are required only when the corresponding cache/checkpoint is missing; they are
+never stored in generated artifacts.
 
-The qualified 2026-07-29 run retrieved 168,654 Crossref journal records in 169
-pages. It writes one 30-column row for each of the 98,273 PKP V7 rows in the
-Zstandard-compressed `pkp-ojs-multisource-enriched.parquet` master. Candidate
-identities join to `openalex-sources.parquet` and `crossref-journals.parquet`;
-those compact catalogs point to checkpoints containing the complete source
-records rather than duplicating large JSON in the master. The chunked NDJSON
-staging files are deleted only after PyArrow verifies the master identities,
-status counts, catalog keys, checkpoint references, row counts, and schemas.
-The V6 sections below document the earlier Python pipeline.
+The qualified full run retrieves the complete Crossref directory in 169 pages.
+It writes one compact row for each PKP V7 row to
+`pkp-ojs-multisource-enriched.csv.gz`. Candidate identities resolve through
+`openalex-source-index.csv.gz` and `crossref-journal-index.csv.gz` to the
+complete RDS checkpoints. The QMD writes each table to a temporary compressed
+CSV, reads it back to verify its rows, schema, and PKP identities, and only then
+promotes it. There is no Parquet conversion layer, NDJSON staging, generated
+schema file, or duplicated validation manifest.
+
+On the qualified 98,273-row master, CSV.gz writes in about one second and reads
+in about one second or less. A dependency-free native R Parquet benchmark read
+faster but produced a file roughly three times larger, so CSV.gz remains the
+simpler qualified format at this scale. Reconsider native R Parquet if the
+cohort grows substantially or repeated column-selective reads become material;
+do not restore a Python conversion layer.
 
 Both commands also write
-`pkp-openalex-disagreement-audit.csv` and
+`pkp-openalex-disagreement-audit.csv` in sample mode or the compressed
+`pkp-openalex-disagreement-audit.csv.gz` in full mode, plus
 `pkp-openalex-disagreement-summary.csv` in their mode-specific artifact
 directory. The full audit has one compact, traceable row per PKP V7 identity;
 the summary records each category's eligible denominator and includes the
 OpenAlex-by-Crossref status cross-tabulation. The report shows counts and
 percentages, three descriptive charts, and the fixed ten-row V7 review table.
 It omits long JSON from the table only: complete source records remain in the
-ignored checkpoints and resolve through the compact Parquet catalogs.
+ignored checkpoints and resolve through the compact compressed CSV indexes.
 
-Delete generated reports, CSVs, Parquet files, or checkpoints when local
-storage is no longer needed; rerunning the same command recreates outputs and
-reuses any complete compatible checkpoints left in place. Title, ISSN, OJS,
+Delete generated reports, CSVs, or checkpoints when local storage is no longer
+needed; rerunning the same command recreates outputs and reuses only compatible
+versioned caches/checkpoints. Title, ISSN, OJS,
 DOAJ, and country differences are source-specific metadata evidence, not proof
 that either source is wrong. PKP country is inferred, absent DOAJ evidence is
 not a negative assertion, and all results remain **Exploratory Analysis**.

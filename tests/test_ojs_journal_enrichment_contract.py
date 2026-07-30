@@ -10,11 +10,11 @@ ANALYSIS_DIR = (
 QMD_PATH = ANALYSIS_DIR / "ojs_journal_enrichment.qmd"
 
 
-def test_full_pipeline_has_no_python_parquet_conversion_layer():
+def test_full_pipeline_has_no_cross_language_conversion_layer():
     qmd = QMD_PATH.read_text()
 
     assert not (ANALYSIS_DIR / "ndjson_to_parquet.py").exists()
-    for fragment in ("pyarrow", ".parquet", ".ndjson", "parquet-validation", "uv <-"):
+    for fragment in ("pyarrow", ".ndjson", "parquet-validation", "uv <-"):
         assert fragment not in qmd
 
 

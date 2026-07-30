@@ -24,7 +24,6 @@ OWNER_NOTEBOOKS = {
         "csv_parquet_semantic_parity_validation.ipynb",
         "openalex_by_year_to_parquet.ipynb",
     },
-    "ojs-journal-disagreement-analysis": set(),
     "ojs-journal-metadata": set(),
     "scimago-openalex-coverage": {
         "merge_sjr_communication_1999_2024.ipynb",
@@ -44,7 +43,6 @@ OWNER_ANALYSES = {
         "validate_row_counts.py",
         "validate_semantic_parity.py",
     },
-    "ojs-journal-disagreement-analysis": set(),
     "ojs-journal-metadata": {"enrich_openalex.py"},
     "scimago-openalex-coverage": {"coverage.py", "match_by_issn.py", "merge_sjr.py"},
 }

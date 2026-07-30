@@ -2,7 +2,7 @@
 set -eu
 
 analysis_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-enrichment_artifact_dir="$analysis_dir/../../ojs-journal-metadata/artifacts/ojs_journal_enrichment"
+enrichment_artifact_dir="$analysis_dir/../artifacts/ojs_journal_enrichment"
 artifact_dir="$analysis_dir/../artifacts/ojs_journal_disagreement_analysis"
 render_source_dir="$artifact_dir/render-source"
 export R_LIBS_USER="$enrichment_artifact_dir/renv-library"

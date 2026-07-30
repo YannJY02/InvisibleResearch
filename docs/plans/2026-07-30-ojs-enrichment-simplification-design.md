@@ -29,7 +29,7 @@ are not formal data deliverables.
 
 ## Disagreement analysis notebook
 
-`research/ojs-journal-disagreement-analysis/analysis/ojs_journal_disagreement_analysis.qmd`
+`research/ojs-journal-metadata/analysis/ojs_journal_disagreement_analysis.qmd`
 will read the validated wide master and preserve the existing exploratory
 analysis:
 

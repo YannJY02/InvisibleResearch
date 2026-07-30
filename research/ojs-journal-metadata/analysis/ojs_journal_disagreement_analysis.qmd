@@ -46,8 +46,6 @@ library(tibble)
 
 enrichment_artifact_dir <- file.path(
   "..",
-  "..",
-  "ojs-journal-metadata",
   "artifacts",
   "ojs_journal_enrichment"
 )

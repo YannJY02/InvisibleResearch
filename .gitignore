@@ -103,6 +103,8 @@ data/validation/validation_progress.json
 research/*/artifacts/
 research/*/analysis/*.html
 research/*/analysis/*_files/
+research/*/analysis/.Rhistory
+research/*/analysis/rsconnect/
 
 # Raw Intake Inbox bytes are local-only and non-authoritative.
 inbox/*

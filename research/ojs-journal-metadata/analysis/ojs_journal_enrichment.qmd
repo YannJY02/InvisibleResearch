@@ -1881,6 +1881,10 @@ stopifnot(
   !"admin_email" %in% output_columns,
   nrow(audit) == output_rows,
   identical(audit$identity_outcome, identity_outcome),
+  identical(
+    pkp_doaj_evidence,
+    !is_missing_identifier(ojs_rows$best_doaj_url)
+  ),
   setequal(
     audit_summary$category[audit_summary$dimension == "identity_outcome"],
     identity_categories
@@ -2034,6 +2038,11 @@ if (run_mode == "sample") {
       "not_attempted"
     )),
     !any(base_result$crossref_match_status == "api_error"),
+    endsWith(output_path, ".csv.gz"),
+    all(c(
+      "openalex_display_name",
+      "crossref_title"
+    ) %in% names(review_result)),
     identical(run_metadata$output$format, "parquet"),
     parquet_contract$columns == length(output_columns),
     source_parquet_contract$rows == length(openalex_sources),

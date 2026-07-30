@@ -271,3 +271,51 @@ line-coverage framework was added. The repository suite still has the same two
 baseline failures: this owner lacked `## Question` before #102, and the
 publication-compendium allowlist already excluded tracked literature notes.
 These unrelated governance changes remain outside #102.
+
+## 2026-07-30 post-delivery simplification
+
+Source: the user's audit request and the strengthened Academic Analysis Code
+rules in `AGENTS.md`. This work supersedes the earlier Parquet conversion
+contract without changing the pinned V7 input, exact-ISSN method, checkpoints,
+or exploratory authority.
+
+### User journey
+
+As a researcher, I can reproduce the sample or full analysis with one R and
+Quarto environment, inspect compact tabular outputs without a Python conversion
+layer, and trace every reported result to versioned caches and validated files.
+
+### Task report
+
+| Stage | Commit | Command | Evidence |
+|---|---|---|---|
+| RED | `d7bbb97` | `uv run --with pytest pytest tests/test_ojs_journal_enrichment_contract.py -q` | Expected failure: two tests rejected the Python converter and missing CSV.gz contract. |
+| GREEN | `832e995` | `./render_sample.sh`; `./render_full.sh` | PASS: both reports rendered from compatible caches; the full run wrote and re-read all five compressed/tabular artifacts before promotion. |
+| Independent reconciliation | `832e995` | Separate R read of the final master, audit, summary, and metadata | PASS: 98,273 rows, 30 master columns, unique PKP compound identities, 4,918 DOAJ disagreements, and 8,270 title disagreements. |
+| Static contract | `832e995` | Targeted pytest; QMD extraction plus R `parse()`; `sh -n`; `git diff --check` | PASS: 2 tests and all syntax checks. |
+| Dual review | `origin/main...832e995` | Standards and Spec reviews, followed by focused re-review | PASS on both axes with no remaining P0, P1, or P2 findings. |
+| Repository regression | `832e995` | Full pytest run with the lightweight declared dependencies available | 25 passed; four unrelated owner/dependency baseline checks remained outside this pipeline contract. |
+
+### Format decision
+
+The actual 98,273-row, 30-column master was benchmarked on the qualification
+machine. CSV.gz occupied 8,771,547 bytes, wrote in 0.946 seconds, and read in
+0.541–1.072 seconds. Dependency-free native R Parquet read in 0.153–0.181
+seconds and wrote in 0.219–0.244 seconds, but occupied 24,852,887 bytes with
+dictionary encoding or 35,250,655 bytes without it. At this scale the
+sub-second speed difference does not justify the larger artifact or another
+dependency, so CSV.gz is the qualified format. Native R Parquet should be
+reconsidered if the cohort becomes substantially larger or repeated
+column-selective reads become material; a Python conversion layer is not part
+of that upgrade path.
+
+### Correctness and artifact changes
+
+The DOAJ comparison now treats the V7 literal `NA` as missing evidence. The
+54,153 identity-matched OpenAlex journals contain 6,385 rows with evidence in
+both sources, 662 PKP-only rows, 4,256 OpenAlex-only rows, and 42,850 rows with
+neither observed; the corrected disagreement rate is 9.082%, not the previous
+80% result. Full source objects remain only in atomic RDS checkpoints. The
+tracked generated HTML and Quarto dependency directory were removed, and all
+future reports, caches, package libraries, and profiles remain under the
+owner's ignored `artifacts/ojs_journal_enrichment/` directory.

@@ -101,6 +101,8 @@ data/validation/validation_progress.json
 
 # Regenerable outputs owned by Exploratory Analysis lanes.
 research/*/artifacts/
+research/*/analysis/*.html
+research/*/analysis/*_files/
 
 # Raw Intake Inbox bytes are local-only and non-authoritative.
 inbox/*

@@ -12,6 +12,7 @@ DISAGREEMENT_QMD_PATH = (
     ANALYSIS_DIR / "ojs_journal_disagreement_analysis.qmd"
 )
 FULL_RENDER_PATH = ANALYSIS_DIR / "render_full.sh"
+DISAGREEMENT_RENDER_PATH = ANALYSIS_DIR / "render_disagreement.sh"
 
 
 def test_full_pipeline_has_no_cross_language_conversion_layer():
@@ -28,6 +29,11 @@ def test_enrichment_produces_one_wide_master():
 
     assert "pkp-ojs-multisource-enriched.csv.gz" in qmd
     assert "expand_candidate_fields" in qmd
+    assert "_candidates__json" in qmd
+    assert "length(match$candidates) > 1L" in qmd
+    assert "deduplicate = FALSE" in qmd
+    assert "seen_keys" not in qmd
+    assert 'prefix, "_candidate_"' not in qmd
     for filename in (
         "openalex-source-index.csv.gz",
         "crossref-journal-index.csv.gz",
@@ -41,6 +47,7 @@ def test_enrichment_produces_one_wide_master():
 def test_disagreement_analysis_is_separate_and_offline():
     enrichment = QMD_PATH.read_text()
     disagreement = DISAGREEMENT_QMD_PATH.read_text()
+    render = DISAGREEMENT_RENDER_PATH.read_text()
 
     for fragment in (
         "identity_outcome",
@@ -51,6 +58,10 @@ def test_disagreement_analysis_is_separate_and_offline():
         assert fragment in disagreement
 
     assert "pkp-ojs-multisource-enriched.csv.gz" in disagreement
+    assert "is_missing_value(left) || is_missing_value(right)" in disagreement
+    assert "file.rename(temporary_path, path)" in disagreement
+    assert "ojs_journal_disagreement_analysis" in disagreement
+    assert "ojs_journal_disagreement_analysis" in render
     for fragment in (
         "api.openalex.org",
         "api.crossref.org",

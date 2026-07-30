@@ -319,3 +319,42 @@ neither observed; the corrected disagreement rate is 9.082%, not the previous
 tracked generated HTML and Quarto dependency directory were removed, and all
 future reports, caches, package libraries, and profiles remain under the
 owner's ignored `artifacts/ojs_journal_enrichment/` directory.
+
+## 2026-07-30 wide master and separated difference analysis
+
+The user confirmed that the full difference analysis remains valuable but is
+not part of enrichment. The enrichment QMD now has one formal data deliverable:
+a wide CSV.gz master. A separate offline QMD reads that master and owns all
+difference classifications, summaries, charts, and review output.
+
+### Task report
+
+| Stage | Commit or command | Evidence |
+|---|---|---|
+| RED | `c973d5b`; targeted pytest | Two expected failures showed that enrichment still emitted analysis artifacts and the separate QMD did not exist. A follow-up RED rejected dynamic candidate-number columns. |
+| Static GREEN | `uv run --with pytest pytest tests/test_ojs_journal_enrichment_contract.py -q`; extracted R `parse()`; `sh -n`; `git diff --check` | PASS: 3 tests, both QMD R programs, both shell entry points, and whitespace checks. |
+| Sample GREEN | `./render_sample.sh` with compatible source caches | PASS: the fixed ten-row path generated and validated the same wide-master contract in 29 seconds. |
+| Full master GREEN | `./render_full.sh` with all 1,031 OpenAlex batches and 169 Crossref pages reused | PASS after review fixes: the promoted CSV.gz contains 98,273 unique PKP identities and 80 columns, is about 95 MB compressed, preserves same-ISSN Crossref records, and passed post-write row, column, and identity checks. |
+| Difference-analysis GREEN | `./render_disagreement.sh` | PASS after review fixes: the offline QMD read the master, treated empty source values as missing evidence, reconciled all denominators, and atomically wrote a 98,273-row audit, summary CSV, three charts, and the fixed ten-row review under its own artifact directory. |
+| Repository regression | `uv run --with pytest --with pandas --with pyarrow pytest -q` | 22 passed. Eight failures were outside this owner: five arose from undeclared optional packages in the lightweight test environment and three were existing owner/compendium/author-experience baseline failures. |
+
+### Simplification boundary
+
+The master expands the primary exact-ISSN candidate's 37 observed OpenAlex and
+11 observed Crossref top-level fields. Scalar values become ordinary cells and
+nested values remain JSON. Only genuinely ambiguous rows duplicate complete
+candidate sets as JSON: 221 OpenAlex rows and 439 Crossref rows. This avoids
+dynamic `candidate_2`, `candidate_3`, and later columns without discarding
+ambiguous source records.
+
+The final master has 439 Crossref multi-candidate rows after removing the
+incorrect ISSN-set deduplication. Crossref states reconcile to 52,591
+consistent, 439 inconsistent, 19,054 unmatched, and 26,189 not attempted.
+The corrected country comparison has 27,316 same, 2,668 different, and 24,169
+not-observed rows.
+
+The final cache-only render took about 40 minutes on the qualification machine;
+most time was spent serializing nested source fields. That is the accepted cost
+of the requested lossless wide master, not a reason to restore Parquet,
+pointer catalogs, a Python conversion layer, or analysis logic in the
+enrichment QMD.

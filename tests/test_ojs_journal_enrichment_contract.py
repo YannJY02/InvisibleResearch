@@ -8,6 +8,10 @@ ANALYSIS_DIR = (
     / "analysis"
 )
 QMD_PATH = ANALYSIS_DIR / "ojs_journal_enrichment.qmd"
+DISAGREEMENT_QMD_PATH = (
+    ANALYSIS_DIR / "ojs_journal_disagreement_analysis.qmd"
+)
+FULL_RENDER_PATH = ANALYSIS_DIR / "render_full.sh"
 
 
 def test_full_pipeline_has_no_cross_language_conversion_layer():
@@ -18,13 +22,39 @@ def test_full_pipeline_has_no_cross_language_conversion_layer():
         assert fragment not in qmd
 
 
-def test_full_pipeline_declares_compressed_tabular_outputs():
+def test_enrichment_produces_one_wide_master():
     qmd = QMD_PATH.read_text()
+    render = FULL_RENDER_PATH.read_text()
 
+    assert "pkp-ojs-multisource-enriched.csv.gz" in qmd
+    assert "expand_candidate_fields" in qmd
     for filename in (
-        "pkp-ojs-multisource-enriched.csv.gz",
         "openalex-source-index.csv.gz",
         "crossref-journal-index.csv.gz",
-        "pkp-openalex-disagreement-audit.csv.gz",
+        "pkp-openalex-disagreement-audit.csv",
+        "pkp-openalex-disagreement-summary.csv",
     ):
-        assert filename in qmd
+        assert filename not in qmd
+        assert filename not in render
+
+
+def test_disagreement_analysis_is_separate_and_offline():
+    enrichment = QMD_PATH.read_text()
+    disagreement = DISAGREEMENT_QMD_PATH.read_text()
+
+    for fragment in (
+        "identity_outcome",
+        "metadata_disagreement_summary",
+        "country_evidence_comparison",
+    ):
+        assert fragment not in enrichment
+        assert fragment in disagreement
+
+    assert "pkp-ojs-multisource-enriched.csv.gz" in disagreement
+    for fragment in (
+        "api.openalex.org",
+        "api.crossref.org",
+        "OPENALEX_API_KEY",
+        "CROSSREF_MAILTO",
+    ):
+        assert fragment not in disagreement

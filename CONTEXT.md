@@ -37,6 +37,12 @@ Research-facing code in `research/**`, `papers/**/analysis/**`, QMD/Rmd files, a
 **Journal Enrichment Sample**:
 A bounded, source-authentic, purposively selected subset of PKP OJS journal rows used to exercise the same source-specific enrichment contract intended for the full cohort. It validates merge branches but is not a representative sample, the full `invisibleinfo/invisible-research#6` pipeline, or a Paper Analysis designation.
 
+**Full-Cohort Journal Enrichment**:
+An Exploratory Analysis that preserves every PKP/OJS journal row in a pinned Artifact Version while recording source-specific exact-ISSN outcomes and available metadata from each enrichment source.
+
+**PKP–OpenAlex Disagreement Audit**:
+An audit that separates exact-ISSN identity outcomes from metadata differences between PKP and OpenAlex, preserving both aggregate frequencies and the affected journal rows without treating every difference as an identity error.
+
 **Strict OpenAlex Coverage**:
 Among OJS journal rows with a valid ISSN, the journal has one unique exact-ISSN match to an OpenAlex Source. Ambiguous matches are reported separately, and rows without a valid ISSN belong to Identifier Availability rather than OpenAlex noncoverage.
 

@@ -1,0 +1,640 @@
+---
+title: "PKP–OpenAlex disagreement analysis"
+format: html
+execute:
+  echo: true
+  warning: true
+  message: false
+---
+
+This exploratory analysis reads the validated PKP V7 wide master produced by
+`ojs_journal_enrichment.qmd`. It compares source-specific evidence without
+treating either source as authoritative and without interpreting source absence
+as a causal measure of journal invisibility.
+
+## Load the wide master
+
+```{r}
+#| label: load-master
+
+required_packages <- c(
+  "countrycode",
+  "dplyr",
+  "ggplot2",
+  "jsonlite",
+  "purrr",
+  "readr",
+  "reactable",
+  "tibble"
+)
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages)) {
+  stop(
+    paste("Install the documented R environment. Missing:",
+      paste(missing_packages, collapse = ", ")),
+    call. = FALSE
+  )
+}
+
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(readr)
+library(tibble)
+
+enrichment_artifact_dir <- file.path(
+  "..",
+  "artifacts",
+  "ojs_journal_enrichment"
+)
+master_path <- file.path(
+  enrichment_artifact_dir,
+  "full-v7",
+  "pkp-ojs-multisource-enriched.csv.gz"
+)
+analysis_dir <- file.path(
+  "..",
+  "artifacts",
+  "ojs_journal_disagreement_analysis"
+)
+audit_path <- file.path(
+  analysis_dir,
+  "pkp-openalex-disagreement-audit.csv.gz"
+)
+audit_summary_path <- file.path(
+  analysis_dir,
+  "pkp-openalex-disagreement-summary.csv"
+)
+dir.create(analysis_dir, recursive = TRUE, showWarnings = FALSE)
+
+if (!file.exists(master_path)) {
+  stop("Run render_full.sh before this analysis.", call. = FALSE)
+}
+master <- read_csv(
+  master_path,
+  col_types = cols(.default = col_character()),
+  na = character(),
+  show_col_types = FALSE
+)
+
+required_columns <- c(
+  "oai_url",
+  "repository_name",
+  "set_spec",
+  "context_name",
+  "issn",
+  "country",
+  "best_doaj_url",
+  "identifier_status",
+  "openalex_input_issns",
+  "openalex_matched_issns",
+  "openalex_match_status",
+  "openalex_candidate_count",
+  "openalex_candidate_ids",
+  "openalex_type",
+  "openalex_display_name",
+  "openalex_alternate_titles",
+  "openalex_issn",
+  "openalex_issn_l",
+  "openalex_is_ojs",
+  "openalex_is_in_doaj",
+  "openalex_country_code",
+  "crossref_match_status",
+  "crossref_candidate_count",
+  "crossref_candidate_issn_sets"
+)
+row_identity <- function(data) {
+  paste(data$oai_url, data$repository_name, data$set_spec, sep = "\r")
+}
+stopifnot(
+  nrow(master) == 98273L,
+  all(required_columns %in% names(master)),
+  !anyDuplicated(row_identity(master)),
+  !"admin_email" %in% names(master)
+)
+```
+
+## Classify identity and metadata differences
+
+Only rows with one exact-ISSN OpenAlex journal identity enter the metadata
+comparisons. Missing or ineligible evidence remains `not_observed`.
+
+```{r}
+#| label: classify-disagreements
+
+is_missing_value <- function(value) {
+  is.na(value) |
+    !nzchar(trimws(value)) |
+    toupper(trimws(value)) == "NA"
+}
+
+normalize_issn <- function(value) {
+  if (length(value) != 1L || is.na(value)) return(NA_character_)
+  compact <- gsub("[^0-9X]", "", toupper(trimws(as.character(value))))
+  if (!grepl("^[0-9]{7}[0-9X]$", compact)) return(NA_character_)
+
+  digits <- as.integer(strsplit(substr(compact, 1, 7), "")[[1]])
+  check_value <- (11 - sum(digits * 8:2) %% 11) %% 11
+  expected <- if (check_value == 10) "X" else as.character(check_value)
+  if (substr(compact, 8, 8) != expected) return(NA_character_)
+
+  paste0(substr(compact, 1, 4), "-", substr(compact, 5, 8))
+}
+
+json_values <- function(value) {
+  if (is_missing_value(value)) return(character())
+  parsed <- tryCatch(
+    jsonlite::fromJSON(value, simplifyVector = TRUE),
+    error = function(error) {
+      stop("Wide master contains invalid source JSON.", call. = FALSE)
+    }
+  )
+  as.character(unlist(parsed, use.names = FALSE))
+}
+
+pipe_values <- function(value) {
+  if (is_missing_value(value)) return(character())
+  strsplit(value, "|", fixed = TRUE)[[1]]
+}
+
+normalize_title <- function(value) {
+  if (is_missing_value(value)) return(NA_character_)
+  gsub("[[:punct:][:space:]]", "", tolower(enc2utf8(value)))
+}
+
+comparison_state <- function(left, right) {
+  if (is_missing_value(left) || is_missing_value(right)) {
+    return("not_observed")
+  }
+  if (identical(left, right)) "same" else "different"
+}
+stopifnot(
+  comparison_state("", "US") == "not_observed",
+  comparison_state("US", "") == "not_observed",
+  comparison_state("US", "US") == "same",
+  comparison_state("US", "GB") == "different"
+)
+
+category_summary <- function(
+  values,
+  categories,
+  dimension,
+  denominator_name
+) {
+  counts <- table(factor(values, levels = categories))
+  denominator <- length(values)
+  tibble(
+    dimension = dimension,
+    category = names(counts),
+    denominator_name = denominator_name,
+    denominator = denominator,
+    count = as.integer(counts),
+    percent = round(100 * count / denominator, 3)
+  )
+}
+
+candidate_count <- as.integer(master$openalex_candidate_count)
+input_issn_sets <- map_chr(master$openalex_input_issns, \(value) {
+  paste(sort(pipe_values(value)), collapse = "|")
+})
+matched_issn_sets <- map_chr(master$openalex_matched_issns, \(value) {
+  paste(sort(pipe_values(value)), collapse = "|")
+})
+openalex_source_issn_sets <- map2_chr(
+  master$openalex_issn,
+  master$openalex_issn_l,
+  \(issns, issn_l) {
+    values <- c(json_values(issns), issn_l)
+    normalized <- vapply(values, normalize_issn, character(1))
+    paste(sort(unique(normalized[!is.na(normalized)])), collapse = "|")
+  }
+)
+
+identity_outcome <- case_when(
+  master$identifier_status != "valid" ~ "no_valid_issn",
+  master$openalex_match_status == "api_error" ~ "api_error",
+  candidate_count == 0L ~ "valid_issn_unmatched",
+  candidate_count > 1L ~ "conflicting_source_ids",
+  is_missing_value(master$openalex_type) |
+    tolower(master$openalex_type) != "journal" ~ "non_journal_source",
+  input_issn_sets != matched_issn_sets ~ "partial_issn_agreement",
+  TRUE ~ "consistent"
+)
+identity_matched <- identity_outcome %in% c(
+  "consistent",
+  "partial_issn_agreement"
+)
+
+pkp_normalized_titles <- map_chr(master$context_name, normalize_title)
+openalex_normalized_titles <- map2(
+  master$openalex_display_name,
+  master$openalex_alternate_titles,
+  \(display_name, alternate_titles) {
+    titles <- c(display_name, json_values(alternate_titles))
+    normalized <- unique(na.omit(map_chr(titles, normalize_title)))
+    normalized[nzchar(normalized)]
+  }
+)
+title_comparison <- map2_chr(
+  pkp_normalized_titles,
+  openalex_normalized_titles,
+  \(pkp_title, openalex_titles) {
+    if (!length(openalex_titles) || is.na(pkp_title)) return("not_observed")
+    if (pkp_title %in% openalex_titles) "same" else "different"
+  }
+)
+title_comparison[!identity_matched] <- "not_observed"
+
+issn_set_comparison <- map2_chr(
+  input_issn_sets,
+  openalex_source_issn_sets,
+  comparison_state
+)
+issn_set_comparison[!identity_matched] <- "not_observed"
+
+ojs_evidence_comparison <- case_when(
+  !identity_matched | is_missing_value(master$openalex_is_ojs) ~ "not_observed",
+  master$openalex_is_ojs == "TRUE" ~ "same",
+  TRUE ~ "different"
+)
+
+pkp_doaj_evidence <- !is_missing_value(master$best_doaj_url)
+openalex_doaj_evidence <- master$openalex_is_in_doaj
+doaj_evidence_comparison <- case_when(
+  !identity_matched | is_missing_value(openalex_doaj_evidence) ~ "not_observed",
+  pkp_doaj_evidence & openalex_doaj_evidence == "TRUE" ~ "both_observed",
+  pkp_doaj_evidence ~ "pkp_only",
+  openalex_doaj_evidence == "TRUE" ~ "openalex_only",
+  TRUE ~ "neither_observed"
+)
+
+pkp_country_missing <- is_missing_value(master$country)
+pkp_country_code <- countrycode::countrycode(
+  master$country,
+  origin = "country.name",
+  destination = "iso2c",
+  warn = FALSE
+)
+country_mapping_failures <- sum(!pkp_country_missing & is.na(pkp_country_code))
+openalex_country_code <- toupper(master$openalex_country_code)
+country_evidence_comparison <- map2_chr(
+  pkp_country_code,
+  openalex_country_code,
+  comparison_state
+)
+country_evidence_comparison[!identity_matched] <- "not_observed"
+
+audit <- master |>
+  transmute(
+    oai_url,
+    repository_name,
+    set_spec,
+    context_name,
+    issn,
+    identifier_status,
+    openalex_input_issns,
+    openalex_matched_issns,
+    openalex_match_status,
+    openalex_candidate_count,
+    openalex_candidate_ids,
+    crossref_match_status,
+    crossref_candidate_count,
+    crossref_candidate_issn_sets,
+    identity_outcome,
+    openalex_source_type = openalex_type,
+    openalex_display_name,
+    pkp_normalized_title = pkp_normalized_titles,
+    openalex_normalized_titles = map_chr(
+      openalex_normalized_titles,
+      paste,
+      collapse = "|"
+    ),
+    title_comparison,
+    pkp_issn_set = input_issn_sets,
+    openalex_issn_set = openalex_source_issn_sets,
+    issn_set_comparison,
+    ojs_evidence_comparison,
+    pkp_doaj_evidence,
+    openalex_doaj_evidence,
+    doaj_evidence_comparison,
+    pkp_country = country,
+    pkp_country_code,
+    openalex_country_code,
+    country_evidence_comparison
+  )
+```
+
+## Summarize and validate
+
+```{r}
+#| label: summarize-and-validate
+
+identity_categories <- c(
+  "consistent",
+  "partial_issn_agreement",
+  "conflicting_source_ids",
+  "non_journal_source",
+  "valid_issn_unmatched",
+  "no_valid_issn",
+  "api_error"
+)
+comparison_categories <- c("same", "different", "not_observed")
+status_categories <- c(
+  "consistent",
+  "inconsistent",
+  "unmatched",
+  "not_attempted",
+  "api_error"
+)
+matched_denominator <- sum(identity_matched)
+
+source_status_counts <- as_tibble(as.data.frame(table(
+  openalex = factor(
+    audit$openalex_match_status,
+    levels = status_categories
+  ),
+  crossref = factor(
+    audit$crossref_match_status,
+    levels = status_categories
+  )
+))) |>
+  transmute(
+    dimension = "source_status_crosstab",
+    category = paste0("openalex=", openalex, "|crossref=", crossref),
+    denominator_name = "all_pkp_v7_rows",
+    denominator = nrow(audit),
+    count = as.integer(Freq),
+    percent = round(100 * count / denominator, 3)
+  )
+
+country_mapping_summary <- tibble(
+  dimension = "country_mapping",
+  category = "unmapped_nonmissing",
+  denominator_name = "pkp_country_nonmissing_rows",
+  denominator = sum(!pkp_country_missing),
+  count = country_mapping_failures,
+  percent = round(100 * count / denominator, 3)
+)
+
+metadata_disagreement_counts <- c(
+  normalized_title = sum(title_comparison == "different"),
+  issn_set = sum(issn_set_comparison == "different"),
+  ojs_evidence = sum(ojs_evidence_comparison == "different"),
+  doaj_evidence = sum(doaj_evidence_comparison %in% c(
+    "pkp_only",
+    "openalex_only"
+  )),
+  country_evidence = sum(country_evidence_comparison == "different")
+)
+metadata_disagreement_summary <- tibble(
+  dimension = "metadata_disagreement",
+  category = names(metadata_disagreement_counts),
+  denominator_name = "identity_matched_openalex_journals",
+  denominator = matched_denominator,
+  count = as.integer(metadata_disagreement_counts),
+  percent = round(100 * count / denominator, 3)
+)
+
+audit_summary <- bind_rows(
+  category_summary(
+    identity_outcome,
+    identity_categories,
+    "identity_outcome",
+    "all_pkp_v7_rows"
+  ),
+  category_summary(
+    title_comparison[identity_matched],
+    comparison_categories,
+    "normalized_title",
+    "identity_matched_openalex_journals"
+  ),
+  category_summary(
+    issn_set_comparison[identity_matched],
+    comparison_categories,
+    "issn_set",
+    "identity_matched_openalex_journals"
+  ),
+  category_summary(
+    ojs_evidence_comparison[identity_matched],
+    comparison_categories,
+    "ojs_evidence",
+    "identity_matched_openalex_journals"
+  ),
+  category_summary(
+    doaj_evidence_comparison[identity_matched],
+    c(
+      "both_observed",
+      "pkp_only",
+      "openalex_only",
+      "neither_observed",
+      "not_observed"
+    ),
+    "doaj_evidence",
+    "identity_matched_openalex_journals"
+  ),
+  category_summary(
+    country_evidence_comparison[identity_matched],
+    comparison_categories,
+    "country_evidence",
+    "identity_matched_openalex_journals"
+  ),
+  metadata_disagreement_summary,
+  country_mapping_summary,
+  source_status_counts
+)
+
+metadata_dimensions <- c(
+  "normalized_title",
+  "issn_set",
+  "ojs_evidence",
+  "doaj_evidence",
+  "country_evidence"
+)
+metadata_reconciliation <- audit_summary |>
+  filter(dimension %in% metadata_dimensions) |>
+  group_by(dimension) |>
+  summarise(
+    denominator = unique(denominator),
+    count = sum(count),
+    .groups = "drop"
+  )
+stopifnot(
+  nrow(audit) == nrow(master),
+  identical(audit$identity_outcome, identity_outcome),
+  sum(audit_summary$count[
+    audit_summary$dimension == "identity_outcome"
+  ]) == nrow(master),
+  nrow(metadata_reconciliation) == length(metadata_dimensions),
+  all(metadata_reconciliation$denominator == matched_denominator),
+  all(metadata_reconciliation$count == matched_denominator),
+  sum(audit_summary$count[
+    audit_summary$dimension == "source_status_crosstab"
+  ]) == nrow(master),
+  all(is.finite(audit_summary$percent))
+)
+
+write_csv_atomic <- function(data, path) {
+  temporary_path <- paste0(
+    path,
+    ".tmp",
+    if (endsWith(path, ".gz")) ".gz" else ""
+  )
+  unlink(temporary_path)
+  write_csv(data, temporary_path, na = "")
+  observed <- read_csv(
+    temporary_path,
+    col_types = cols(.default = col_character()),
+    na = character(),
+    show_col_types = FALSE
+  )
+  stopifnot(
+    nrow(observed) == nrow(data),
+    identical(names(observed), names(data))
+  )
+  if (!file.rename(temporary_path, path)) {
+    stop("Could not promote validated analysis output.", call. = FALSE)
+  }
+}
+write_csv_atomic(audit, audit_path)
+write_csv_atomic(audit_summary, audit_summary_path)
+stopifnot(file.exists(audit_path), file.exists(audit_summary_path))
+```
+
+## Identity outcomes
+
+These categories describe exact-ISSN identity evidence. They do not establish
+which source is correct and do not explain why a difference exists.
+
+```{r}
+#| label: identity-outcome-chart
+#| fig-width: 9
+#| fig-height: 5
+
+audit_summary |>
+  filter(dimension == "identity_outcome") |>
+  ggplot(aes(x = reorder(category, count), y = count)) +
+  geom_col() +
+  geom_text(
+    aes(label = sprintf("%s (%.2f%%)", count, percent)),
+    hjust = -0.05,
+    size = 3
+  ) +
+  coord_flip(clip = "off") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.18))) +
+  labs(x = NULL, y = "PKP V7 rows") +
+  theme_minimal()
+```
+
+## Metadata comparisons
+
+Title comparison uses the PKP title against the OpenAlex display name and
+alternate titles. PKP country is inferred metadata, not authoritative
+publisher location. Absent DOAJ evidence is not a negative assertion.
+
+```{r}
+#| label: metadata-disagreement-chart
+#| fig-width: 9
+#| fig-height: 4.5
+
+metadata_disagreement_summary |>
+  ggplot(aes(x = reorder(category, count), y = count)) +
+  geom_col() +
+  geom_text(
+    aes(label = sprintf("%s (%.2f%%)", count, percent)),
+    hjust = -0.05,
+    size = 3
+  ) +
+  coord_flip(clip = "off") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.18))) +
+  labs(x = NULL, y = "Identity-matched OpenAlex journals") +
+  theme_minimal()
+```
+
+## OpenAlex and Crossref match states
+
+```{r}
+#| label: source-status-heatmap
+#| fig-width: 9
+#| fig-height: 6
+
+audit_summary |>
+  filter(dimension == "source_status_crosstab") |>
+  mutate(
+    openalex = sub("\\|.*$", "", sub("^openalex=", "", category)),
+    crossref = sub("^.*\\|crossref=", "", category)
+  ) |>
+  ggplot(aes(x = openalex, y = crossref, fill = count)) +
+  geom_tile() +
+  geom_text(aes(label = sprintf("%s\n%.2f%%", count, percent)), size = 3) +
+  labs(x = "OpenAlex match state", y = "Crossref match state", fill = "Rows") +
+  theme_minimal()
+```
+
+## Purposive ten-row review
+
+```{r}
+#| label: disagreement-review
+
+sample_spec <- tribble(
+  ~context_name, ~oai_url, ~repository_name, ~set_spec,
+  "Kuwait Journal of Science",
+  "https://journalskuwait.org/kjs/index.php/index/oai",
+  "Kuwait Journal of Science",
+  "KJS",
+  "Cakrawala",
+  "https://cakrawalajournal.org/index.php/index/oai",
+  "CAKRAWALA",
+  "cakrawala",
+  "Sintesa: Jurnal Ilmu Pendidikan",
+  "https://sintesa.stkip-arrahmaniyah.ac.id/index.php/index/oai",
+  "Sintesa: Jurnal Ilmu Pendidikan STKIP Arrahmaniyah Depok",
+  "sintesa",
+  "CARAKA: Jurnal Teologi Biblika dan Praktika",
+  "https://ojs.sttibc.ac.id/index.php/index/oai",
+  "CARAKA:Jurnal Teologi",
+  "ibc",
+  "Jurnal Tata Kelola dan Akuntabilitas Keuangan Negara",
+  "https://jurnal.bpk.go.id/index.php/index/oai",
+  "Open Journal Systems",
+  "TAKEN",
+  "JOEEL (Journal of English Education and Literature)",
+  "https://journal.stkippamanetalino.ac.id/index.php/index/oai",
+  "Rumah Jurnal STKIP Pamane Talino Ngabang",
+  "bahasa-inggris",
+  "Malaysian Journal of Paediatrics and Child Health",
+  "https://mpaeds.my/journals/index.php/index/oai",
+  "NA",
+  "MJPCH",
+  "Jami Scientific Research Quarterly Journal",
+  "https://journals.jami.edu.af/index.php/index/oai",
+  "Jami University Press",
+  "jsrqj",
+  "Journal of Polymer & Composites",
+  "https://engineeringjournals.stmjournals.in/index.php/index/oai",
+  "Engineering Journals",
+  "JoPC",
+  "JURNAL TEKNIK PERTAMBANGAN",
+  "https://e-journal.upr.ac.id/index.php/index/oai",
+  "Journal Online Universitas Palangka Raya",
+  "JTP"
+)
+sample_positions <- match(row_identity(sample_spec), row_identity(audit))
+stopifnot(!anyNA(sample_positions))
+review_rows <- audit[sample_positions, ]
+
+htmltools::div(
+  style = "overflow-x: auto;",
+  reactable::reactable(
+    review_rows,
+    searchable = TRUE,
+    filterable = TRUE,
+    pagination = TRUE,
+    defaultPageSize = 10,
+    resizable = TRUE,
+    compact = TRUE,
+    fullWidth = FALSE
+  )
+)
+```

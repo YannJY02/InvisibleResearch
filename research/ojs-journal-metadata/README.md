@@ -5,10 +5,17 @@ work here remains **Exploratory Analysis**.
 
 ## Question
 
-How consistently can exact ISSNs connect pinned PKP OJS records to OpenAlex
-Sources and Crossref journals, and what source-specific disagreements remain?
+How can exact ISSNs connect pinned PKP OJS records to OpenAlex Sources and
+Crossref journals in one reusable wide master without dropping source fields
+or PKP identities?
 
-## Reproduce the V7 Journal Enrichment
+## Referenced inputs
+
+- PKP Beacon V7 Dataverse file `14084919`
+- OpenAlex Sources
+- Crossref journals
+
+## Run
 
 The current explanatory notebook pins PKP V7 Dataverse file `14084919` at MD5
 `3a4ad8ae1ebfcc2b991aaf55b2d82c92`. It downloads the file when absent, checks
@@ -35,7 +42,7 @@ cd research/ojs-journal-metadata/analysis
 OPENALEX_API_KEY=... ./render_sample.sh
 ```
 
-The input, source caches, enriched artifact, run metadata, and rendered report stay
+The input, source caches, wide master, run metadata, and rendered report stay
 under `research/ojs-journal-metadata/artifacts/ojs_journal_enrichment/`, which
 is ignored. This command always runs sample mode; it cannot start a full-cohort
 retrieval.
@@ -58,39 +65,35 @@ page and `total-results` reconcile. `OPENALEX_API_KEY` and `CROSSREF_MAILTO`
 are required only when the corresponding cache/checkpoint is missing; they are
 never stored in generated artifacts.
 
-The qualified full run retrieves the complete Crossref directory in 169 pages.
-It writes one compact row for each PKP V7 row to
-`pkp-ojs-multisource-enriched.csv.gz`. Candidate identities resolve through
-`openalex-source-index.csv.gz` and `crossref-journal-index.csv.gz` to the
-complete RDS checkpoints. The QMD writes each table to a temporary compressed
-CSV, reads it back to verify its rows, schema, and PKP identities, and only then
-promotes it. There is no Parquet conversion layer, NDJSON staging, generated
-schema file, or duplicated validation manifest.
+The qualified full run retrieves the complete Crossref directory in 169 pages
+and writes one wide row for each PKP V7 row to
+`pkp-ojs-multisource-enriched.csv.gz`. Every observed top-level OpenAlex and
+Crossref field becomes a column. Nested values and multiple candidate records
+remain losslessly encoded as JSON cells. The QMD writes the CSV to a temporary
+file, reads it back to verify rows, columns, and PKP identities, and only then
+promotes it. RDS source caches and checkpoints are internal resumability
+artifacts, not additional data deliverables.
 
-On the qualified 98,273-row master, CSV.gz writes in about one second and reads
-in about one second or less. A dependency-free native R Parquet benchmark read
-faster but produced a file roughly three times larger, so CSV.gz remains the
-simpler qualified format at this scale. Reconsider native R Parquet if the
-cohort grows substantially or repeated column-selective reads become material;
-do not restore a Python conversion layer.
+The enrichment QMD stops after producing and checking that wide master. Run the
+complete exploratory difference analysis separately:
 
-Both commands also write
-`pkp-openalex-disagreement-audit.csv` in sample mode or the compressed
-`pkp-openalex-disagreement-audit.csv.gz` in full mode, plus
-`pkp-openalex-disagreement-summary.csv` in their mode-specific artifact
-directory. The full audit has one compact, traceable row per PKP V7 identity;
-the summary records each category's eligible denominator and includes the
-OpenAlex-by-Crossref status cross-tabulation. The report shows counts and
-percentages, three descriptive charts, and the fixed ten-row V7 review table.
-It omits long JSON from the table only: complete source records remain in the
-ignored checkpoints and resolve through the compact compressed CSV indexes.
+```bash
+cd research/ojs-journal-metadata/analysis
+./render_disagreement.sh
+```
+
+This offline analysis reads only the validated full master; it makes no API
+requests. It writes the row-level disagreement audit and category summary under
+`artifacts/ojs_journal_disagreement_analysis/`, and retains the title, ISSN,
+OJS, DOAJ, country, identity, and OpenAlex-by-Crossref comparisons with their
+eligible denominators and three descriptive charts.
 
 Delete generated reports, CSVs, or checkpoints when local storage is no longer
 needed; rerunning the same command recreates outputs and reuses only compatible
-versioned caches/checkpoints. Title, ISSN, OJS,
-DOAJ, and country differences are source-specific metadata evidence, not proof
-that either source is wrong. PKP country is inferred, absent DOAJ evidence is
-not a negative assertion, and all results remain **Exploratory Analysis**.
+versioned caches/checkpoints. Title, ISSN, OJS, DOAJ, and country differences
+are source-specific metadata evidence, not proof that either source is wrong.
+PKP country is inferred, absent DOAJ evidence is not a negative assertion, and
+all results remain **Exploratory Analysis**.
 
 ## PKP input decision
 

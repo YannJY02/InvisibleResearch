@@ -707,11 +707,6 @@ serialize_json <- function(value) {
   ))
 }
 
-deduplicate_identical_candidates <- function(candidates) {
-  fingerprints <- map_chr(candidates, serialize_json)
-  candidates[!duplicated(fingerprints)]
-}
-
 dataframe_value <- function(value) {
   if (is.null(value)) return(NA_character_)
   if (is.atomic(value) && length(value) == 1L) {
@@ -950,9 +945,10 @@ if (run_mode == "sample") {
     )
     journals
   }
-  crossref_candidates <- deduplicate_identical_candidates(
-    unname(compact(crossref_journals))
-  )
+  crossref_candidates <- deduplicate_candidates(
+    unname(compact(crossref_journals)),
+    serialize_json
+  )$candidates
   crossref_snapshot_times <- if (crossref_cache_hit) {
     crossref_cache$retrieved_at
   } else {

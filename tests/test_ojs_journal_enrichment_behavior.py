@@ -26,7 +26,7 @@ library(tibble)
 
 wanted <- c(
   "classify_status",
-  "deduplicate_identical_candidates",
+  "deduplicate_candidates",
   "serialize_json",
   "dataframe_value",
   "expand_candidate_fields",
@@ -80,11 +80,10 @@ different_candidate <- list(
   title = "Different journal",
   ISSN = list("2307-4108")
 )
-deduplicated <- deduplicate_identical_candidates(list(
-  candidate,
-  candidate,
-  different_candidate
-))
+deduplicated <- deduplicate_candidates(
+  list(candidate, candidate, different_candidate),
+  serialize_json
+)$candidates
 stopifnot(
   length(deduplicated) == 2L,
   identical(dataframe_value(list()), "[]")

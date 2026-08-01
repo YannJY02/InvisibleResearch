@@ -1042,9 +1042,6 @@ previous pair untouched; ordinary promotion failures roll back both files.
 ```{r}
 #| label: pre-promotion-validation
 
-has_source_field <- function(prefix, field) {
-  paste(prefix, field, sep = "_") %in% output_columns
-}
 candidate_json_is_valid <- function(matches, json_values) {
   map2_lgl(matches, json_values, \(match, json_value) {
     candidate_count <- length(match$candidates)
@@ -1075,12 +1072,8 @@ stopifnot(
     "crossref_candidate_issn_sets",
     "crossref_candidates__json"
   ) %in% output_columns),
-  all(map_lgl(openalex_fields, \(field) {
-    has_source_field("openalex", field)
-  })),
-  all(map_lgl(crossref_fields, \(field) {
-    has_source_field("crossref", field)
-  })),
+  all(paste("openalex", openalex_fields, sep = "_") %in% output_columns),
+  all(paste("crossref", crossref_fields, sep = "_") %in% output_columns),
   sum(openalex_status_counts) == output_rows,
   sum(crossref_status_counts) == output_rows,
   identical(

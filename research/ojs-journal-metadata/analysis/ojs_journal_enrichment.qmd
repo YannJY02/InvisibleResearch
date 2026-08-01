@@ -76,7 +76,6 @@ required_package_versions <- vapply(
   \(package) lockfile$Packages[[package]]$Version,
   character(1)
 )
-names(required_package_versions) <- required_packages
 installed_package_versions <- vapply(
   required_packages,
   \(package) as.character(packageVersion(package)),
@@ -105,10 +104,7 @@ if (file.exists(project_env_path)) {
 crossref_mailto <- Sys.getenv("CROSSREF_MAILTO")
 
 pkp_version <- 7L
-pkp_url <- paste0(
-  "https://dataverse.harvard.edu/api/access/datafile/14084919",
-  "?format=original"
-)
+pkp_url <- "https://dataverse.harvard.edu/api/access/datafile/14084919?format=original"
 pkp_md5 <- "3a4ad8ae1ebfcc2b991aaf55b2d82c92"
 artifact_dir <- file.path("..", "artifacts", "ojs_journal_enrichment")
 input_dir <- file.path(artifact_dir, "pkp-v7")

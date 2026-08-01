@@ -32,6 +32,7 @@ wanted <- c(
   "expand_candidate_fields",
   "normalize_issn",
   "promote_artifact_pair",
+  "read_rds_or_null",
   "source_issns"
 )
 for (expression in parse(file = purl_path)) {
@@ -109,6 +110,20 @@ source <- list(
   issn_l = "2307-4116"
 )
 stopifnot(identical(source_issns(source), "2307-4108"))
+'''
+    )
+
+
+def test_rds_cache_reader_handles_missing_corrupt_and_valid_files():
+    run_r_contract(
+        r'''
+path <- tempfile()
+on.exit(unlink(path), add = TRUE)
+stopifnot(is.null(read_rds_or_null(path)))
+writeLines("not an RDS file", path)
+stopifnot(is.null(read_rds_or_null(path)))
+saveRDS(list(valid = TRUE), path)
+stopifnot(isTRUE(read_rds_or_null(path)$valid))
 '''
     )
 

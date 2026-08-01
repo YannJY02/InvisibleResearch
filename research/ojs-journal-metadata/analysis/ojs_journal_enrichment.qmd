@@ -323,6 +323,11 @@ save_rds_atomic <- function(value, path) {
   invisible(path)
 }
 
+read_rds_or_null <- function(path) {
+  if (!file.exists(path)) return(NULL)
+  tryCatch(readRDS(path), error = \(error) NULL)
+}
+
 fetch_crossref_journal <- function(issn) {
   response <- request(paste0("https://api.crossref.org/journals/", issn)) |>
     req_user_agent(
@@ -378,11 +383,7 @@ fetch_crossref_directory <- function() {
   repeat {
     page_file <- sprintf("page-%04d.rds", page_index)
     checkpoint_path <- file.path(crossref_page_dir, page_file)
-    checkpoint <- if (file.exists(checkpoint_path)) {
-      tryCatch(readRDS(checkpoint_path), error = \(error) NULL)
-    } else {
-      NULL
-    }
+    checkpoint <- read_rds_or_null(checkpoint_path)
     reusable <- is.list(checkpoint) &&
       identical(checkpoint$contract_version, cache_contract_version) &&
       identical(checkpoint$page_index, page_index) &&
@@ -775,11 +776,7 @@ if (run_mode == "full") {
       openalex_batch_dir,
       sprintf("batch-%04d.rds", batch_index)
     )
-    checkpoint <- if (file.exists(checkpoint_path)) {
-      tryCatch(readRDS(checkpoint_path), error = \(error) NULL)
-    } else {
-      NULL
-    }
+    checkpoint <- read_rds_or_null(checkpoint_path)
     reusable <- is.list(checkpoint) &&
       identical(checkpoint$contract_version, cache_contract_version) &&
       identical(checkpoint$pkp_version, pkp_version) &&
@@ -819,6 +816,7 @@ if (run_mode == "full") {
       "fetch_openalex_page",
       "fetch_openalex_batch",
       "save_rds_atomic",
+      "read_rds_or_null",
       "process_batch"
     ),
     envir = environment()
@@ -841,11 +839,7 @@ if (run_mode == "full") {
     \(batch) map_chr(batch$pages, "retrieved_at")
   ))
 } else {
-  openalex_cache <- if (file.exists(openalex_cache_path)) {
-    tryCatch(readRDS(openalex_cache_path), error = \(error) NULL)
-  } else {
-    NULL
-  }
+  openalex_cache <- read_rds_or_null(openalex_cache_path)
   openalex_cache_hit <- is.list(openalex_cache) &&
     identical(openalex_cache$contract_version, cache_contract_version) &&
     identical(openalex_cache$pkp_version, pkp_version) &&
@@ -931,11 +925,7 @@ records remain in the candidate JSON column.
 #| label: crossref-enrichment
 
 if (run_mode == "sample") {
-  crossref_cache <- if (file.exists(crossref_cache_path)) {
-    tryCatch(readRDS(crossref_cache_path), error = \(error) NULL)
-  } else {
-    NULL
-  }
+  crossref_cache <- read_rds_or_null(crossref_cache_path)
   crossref_cache_hit <- is.list(crossref_cache) &&
     identical(crossref_cache$contract_version, cache_contract_version) &&
     identical(crossref_cache$pkp_version, pkp_version) &&

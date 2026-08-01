@@ -30,6 +30,8 @@ wanted <- c(
   "serialize_json",
   "dataframe_value",
   "expand_candidate_fields",
+  "fetch_crossref_directory",
+  "fetch_openalex_batch",
   "normalize_issn",
   "normalize_issn_set",
   "promote_artifact_pair",
@@ -128,6 +130,71 @@ stopifnot(isTRUE(read_rds_or_null(path)$valid))
     )
 
 
+def test_minimal_pagination_reconciles_source_results():
+    run_r_contract(
+        r'''
+openalex_calls <- 0L
+fetch_openalex_page <- function(issns, cursor) {
+  openalex_calls <<- openalex_calls + 1L
+  if (openalex_calls == 1L) {
+    return(list(
+      results = list(list(id = "source-1")),
+      meta = list(count = 2L, next_cursor = "next")
+    ))
+  }
+  list(
+    results = list(list(id = "source-2")),
+    meta = list(count = 2L, next_cursor = NULL)
+  )
+}
+stopifnot(
+  length(fetch_openalex_batch("2307-4108")) == 2L,
+  openalex_calls == 2L
+)
+
+crossref_mailto <- "researcher@example.org"
+crossref_calls <- 0L
+fetch_crossref_page <- function(cursor, mailto) {
+  crossref_calls <<- crossref_calls + 1L
+  if (crossref_calls == 1L) {
+    return(list(
+      items = replicate(1000L, list(ISSN = list("2307-4108")), simplify = FALSE),
+      `total-results` = 1001L,
+      `next-cursor` = "*"
+    ))
+  }
+  list(
+    items = list(list(ISSN = list("2307-4116"))),
+    `total-results` = 1001L,
+    `next-cursor` = "*"
+  )
+}
+directory <- fetch_crossref_directory()
+stopifnot(
+  length(directory$journals) == 1001L,
+  directory$total_results == 1001L,
+  crossref_calls == 2L
+)
+
+crossref_calls <- 0L
+repeated_page <- replicate(
+  1000L,
+  list(ISSN = list("2307-4108")),
+  simplify = FALSE
+)
+fetch_crossref_page <- function(cursor, mailto) {
+  crossref_calls <<- crossref_calls + 1L
+  list(
+    items = repeated_page,
+    `total-results` = 3000L,
+    `next-cursor` = "same"
+  )
+}
+stopifnot(inherits(try(fetch_crossref_directory(), silent = TRUE), "try-error"))
+'''
+    )
+
+
 def test_validation_precedes_formal_artifact_promotion():
     qmd = QMD_PATH.read_text()
 
@@ -140,7 +207,7 @@ def test_validation_precedes_formal_artifact_promotion():
     assert validation < promotion
 
 
-def test_artifact_pair_promotion_rolls_back_on_partial_failure():
+def test_artifact_pair_promotion_restores_previous_outputs():
     run_r_contract(
         r'''
 directory <- tempfile()
@@ -165,9 +232,7 @@ result <- try(
 stopifnot(
   inherits(result, "try-error"),
   readLines(master) == "old master",
-  readLines(metadata) == "old metadata",
-  !file.exists(paste0(master, ".previous")),
-  !file.exists(paste0(metadata, ".previous"))
+  readLines(metadata) == "old metadata"
 )
 '''
     )

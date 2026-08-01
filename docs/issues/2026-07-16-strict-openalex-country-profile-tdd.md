@@ -1,5 +1,8 @@
 # Issue 74 TDD evidence
 
+This is a historical V6 record. The retired Python source remains available at
+[commit `d7e6adb`](https://github.com/YannJY02/InvisibleResearch/blob/d7e6adb/research/ojs-journal-metadata/analysis/enrich_openalex.py); current V7 work uses the QMD documented in the owner README.
+
 ## Source and journeys
 
 The guarantees were derived from [issue #74](https://github.com/YannJY02/InvisibleResearch/issues/74) and its parent, issue #73; no separate plan file was used.

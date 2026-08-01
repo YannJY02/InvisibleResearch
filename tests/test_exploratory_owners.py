@@ -43,7 +43,7 @@ OWNER_ANALYSES = {
         "validate_row_counts.py",
         "validate_semantic_parity.py",
     },
-    "ojs-journal-metadata": {"enrich_openalex.py"},
+    "ojs-journal-metadata": set(),
     "scimago-openalex-coverage": {"coverage.py", "match_by_issn.py", "merge_sjr.py"},
 }
 

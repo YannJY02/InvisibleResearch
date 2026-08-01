@@ -24,76 +24,15 @@ This chunk verifies the documented R environment, downloads the pinned PKP V7 in
 ```{r}
 #| label: packages-and-paths
 
-required_r_version <- "4.5.2"
-required_quarto_version <- "1.6.32"
-quarto <- Sys.which("quarto")
-quarto_version <- if (nzchar(quarto)) {
-  trimws(system2(quarto, "--version", stdout = TRUE)[1])
-} else {
-  ""
-}
-if (
-  as.character(getRversion()) != required_r_version ||
-    quarto_version != required_quarto_version
-) {
-  stop(
-    paste(
-      "This analysis requires R",
-      required_r_version,
-      "and Quarto",
-      required_quarto_version
-    ),
-    call. = FALSE
-  )
-}
-
-required_packages <- c(
-  "dplyr",
-  "httr2",
-  "jsonlite",
-  "knitr",
-  "purrr",
-  "readr",
-  "reactable",
-  "rmarkdown",
-  "tibble"
-)
-missing_packages <- required_packages[
-  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
-]
-if (length(missing_packages)) {
-  stop(
-    paste(
-      "Install the documented R environment before rendering. Missing:",
-      paste(missing_packages, collapse = ", ")
-    ),
-    call. = FALSE
-  )
-}
-lockfile <- jsonlite::read_json("renv.lock", simplifyVector = FALSE)
-required_package_versions <- vapply(
-  required_packages,
-  \(package) lockfile$Packages[[package]]$Version,
-  character(1)
-)
-installed_package_versions <- vapply(
-  required_packages,
-  \(package) as.character(packageVersion(package)),
-  character(1)
-)
-if (!identical(installed_package_versions, required_package_versions)) {
-  stop(
-    "Installed package versions differ from the documented environment.",
-    call. = FALSE
-  )
-}
-
 library(dplyr)
 library(httr2)
 library(purrr)
 library(readr)
 library(tibble)
 
+analysis_packages <- c(
+  "curl", "dplyr", "httr2", "jsonlite", "knitr", "purrr", "readr", "tibble"
+)
 run_mode <- Sys.getenv("OJS_ENRICHMENT_MODE", unset = "sample")
 stopifnot(run_mode %in% c("sample", "full"))
 
@@ -125,14 +64,11 @@ metadata_path <- file.path(run_dir, "run-metadata.json")
 openalex_cache_path <- file.path(run_dir, "openalex-sources.rds")
 crossref_cache_path <- file.path(run_dir, "crossref-journals.rds")
 openalex_batch_dir <- file.path(run_dir, "openalex-batches")
-crossref_page_dir <- file.path(run_dir, "crossref-pages")
-cache_contract_version <- 1L
 
 dir.create(input_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 if (run_mode == "full") {
   dir.create(openalex_batch_dir, recursive = TRUE, showWarnings = FALSE)
-  dir.create(crossref_page_dir, recursive = TRUE, showWarnings = FALSE)
 }
 
 download_pkp_input <- function(path) {
@@ -206,12 +142,10 @@ source_issns <- function(source) {
 
 ## Source retrieval
 
-Both modes use the same paginated OpenAlex batch retrieval. Full mode splits the
-103,017 valid ISSNs into deterministic groups of at most 100 and atomically
-checkpoints each group. It also downloads the complete Crossref journal
-directory in sequential 1,000-record cursor pages. Exhausted requests stop the
-run without replacing the previous formal output; the next run resumes from
-completed checkpoints.
+Both modes use the same paginated OpenAlex retrieval. Full mode splits the
+103,017 valid ISSNs into groups of at most 100 and caches each completed group.
+It downloads the complete Crossref journal directory in sequential 1,000-record
+cursor pages and caches the completed directory.
 
 Sample mode asks Crossref about each ISSN separately and waits between requests. A Crossref `404` means that no journal record was found.
 
@@ -263,8 +197,7 @@ fetch_openalex_page <- function(
 fetch_openalex_batch <- function(issns) {
   cursor <- "*"
   seen_cursors <- character()
-  pages <- list()
-  page_log <- list()
+  sources <- list()
   total_results <- NULL
 
   repeat {
@@ -274,35 +207,19 @@ fetch_openalex_batch <- function(issns) {
     seen_cursors <- c(seen_cursors, cursor)
 
     page <- fetch_openalex_page(issns, cursor)
-    results <- page$results
-    observed_total <- as.integer(page$meta$count)
     if (is.null(total_results)) {
-      total_results <- observed_total
-    } else if (!identical(total_results, observed_total)) {
-      stop("OpenAlex result count changed during pagination.", call. = FALSE)
+      total_results <- as.integer(page$meta$count)
     }
     next_cursor <- page$meta$next_cursor
-    pages[[length(pages) + 1L]] <- results
-    page_log[[length(page_log) + 1L]] <- list(
-      result_count = length(results),
-      retrieved_at = format(Sys.time(), tz = "UTC", usetz = TRUE)
-    )
+    sources <- c(sources, page$results)
     if (is.null(next_cursor) || !nzchar(next_cursor)) break
     cursor <- next_cursor
   }
 
-  sources <- unlist(pages, recursive = FALSE)
   if (length(sources) != total_results) {
     stop("OpenAlex result count did not reconcile.", call. = FALSE)
   }
-
-  list(
-    status = "complete",
-    issns = issns,
-    sources = sources,
-    pages = page_log,
-    pagination_complete = TRUE
-  )
+  sources
 }
 ```
 
@@ -372,105 +289,48 @@ fetch_crossref_page <- function(cursor, mailto) {
 }
 
 fetch_crossref_directory <- function() {
+  if (!grepl("^[^@[:space:]]+@[^@[:space:]]+$", crossref_mailto)) {
+    stop("Set CROSSREF_MAILTO before retrieving Crossref data.", call. = FALSE)
+  }
+
   cursor <- "*"
-  page_index <- 1L
-  page_summaries <- list()
-  page_files <- character()
+  journals <- list()
+  previous_items <- NULL
   total_results <- NULL
 
   repeat {
-    page_file <- sprintf("page-%04d.rds", page_index)
-    checkpoint_path <- file.path(crossref_page_dir, page_file)
-    checkpoint <- read_rds_or_null(checkpoint_path)
-    reusable <- is.list(checkpoint) &&
-      identical(checkpoint$contract_version, cache_contract_version) &&
-      identical(checkpoint$page_index, page_index) &&
-      identical(checkpoint$cursor, cursor) &&
-      identical(checkpoint$rows_per_page, 1000L) &&
-      identical(checkpoint$status, "complete") &&
-      is.list(checkpoint$items) &&
-      identical(checkpoint$item_count, length(checkpoint$items))
-
-    if (reusable) {
-      checkpoint$reused <- TRUE
-    } else {
-      if (!grepl("^[^@[:space:]]+@[^@[:space:]]+$", crossref_mailto)) {
-        stop(
-          "Set CROSSREF_MAILTO before retrieving Crossref data.",
-          call. = FALSE
-        )
-      }
-      page <- fetch_crossref_page(cursor, crossref_mailto)
-      checkpoint <- list(
-        status = "complete",
-        contract_version = cache_contract_version,
-        page_index = page_index,
-        cursor = cursor,
-        rows_per_page = 1000L,
-        total_results = as.integer(page[["total-results"]]),
-        next_cursor = page[["next-cursor"]],
-        items = page$items,
-        item_count = length(page$items),
-        pagination_complete = length(page$items) < 1000L,
-        retrieved_at = format(Sys.time(), tz = "UTC", usetz = TRUE),
-        reused = FALSE
-      )
-      save_rds_atomic(checkpoint, checkpoint_path)
+    page <- fetch_crossref_page(cursor, crossref_mailto)
+    if (!is.null(previous_items) && identical(page$items, previous_items)) {
+      stop("Crossref repeated a page.", call. = FALSE)
     }
-
     if (is.null(total_results)) {
-      total_results <- checkpoint$total_results
-    } else if (!identical(total_results, checkpoint$total_results)) {
-      stop(
-        "Crossref total-results changed during cursor pagination.",
-        call. = FALSE
-      )
+      total_results <- as.integer(page[["total-results"]])
+    }
+    journals <- c(journals, page$items)
+    previous_items <- page$items
+    if (length(journals) > total_results) {
+      stop("Crossref pagination exceeded total-results.", call. = FALSE)
     }
 
-    page_files <- c(page_files, page_file)
-    page_summaries[[length(page_summaries) + 1L]] <- checkpoint[
-      setdiff(names(checkpoint), c("cursor", "next_cursor", "items"))
-    ]
-    retrieved_rows <- sum(map_int(page_summaries, "item_count"))
-    if (retrieved_rows > total_results) {
-      stop(
-        "Crossref pagination exceeded total-results.",
-        call. = FALSE
-      )
-    }
-    if (isTRUE(checkpoint$pagination_complete)) break
-    if (
-      is.null(checkpoint$next_cursor) ||
-        !nzchar(checkpoint$next_cursor)
-    ) {
-      stop(
-        "Crossref returned a full page without a next cursor.",
-        call. = FALSE
-      )
-    }
+    if (length(page$items) < 1000L) break
 
-    cursor <- checkpoint$next_cursor
-    page_index <- page_index + 1L
+    cursor <- page[["next-cursor"]]
+    if (is.null(cursor) || !nzchar(cursor)) {
+      stop("Crossref returned a full page without a next cursor.", call. = FALSE)
+    }
     Sys.sleep(0.2)
   }
 
-  directory_rows <- sum(map_int(page_summaries, "item_count"))
-  if (directory_rows != total_results) {
+  if (length(journals) != total_results) {
     stop(
       paste0(
         "Crossref directory row count mismatch: ",
-        directory_rows, " != ", total_results
+        length(journals), " != ", total_results
       ),
       call. = FALSE
     )
   }
-  list(
-    status = "complete",
-    rows_per_page = 1000L,
-    directory_rows = directory_rows,
-    pages = page_summaries,
-    page_files = page_files
-  )
+  list(journals = journals, total_results = total_results)
 }
 
 ```
@@ -620,22 +480,6 @@ crossref_key <- function(journal) {
   paste(sort(crossref_issns(journal)), collapse = "|")
 }
 
-crossref_candidates_from_pages <- function(page_files) {
-  candidates <- list()
-
-  for (page_file in page_files) {
-    checkpoint <- readRDS(file.path(crossref_page_dir, page_file))
-    if (checkpoint$status != "complete") {
-      stop("Crossref enrichment encountered an incomplete page.", call. = FALSE)
-    }
-    for (journal in checkpoint$items) {
-      candidates[[length(candidates) + 1L]] <- journal
-    }
-  }
-
-  candidates
-}
-
 deduplicate_candidates <- function(candidates, identity) {
   candidate_ids <- vapply(candidates, identity, character(1))
   keep <- !duplicated(candidate_ids)
@@ -758,106 +602,51 @@ tokens <- sort(unique(unlist(input_issns)))
 
 if (run_mode == "full") {
   token_batches <- split(tokens, ceiling(seq_along(tokens) / 100L))
-  process_batch <- function(batch_index) {
-    batch <- token_batches[[batch_index]]
+  # ponytail: retrieval is sequential because it is an occasional research run;
+  # add bounded parallelism only if fresh full retrieval becomes routine.
+  batch_results <- imap(token_batches, \(batch, batch_index) {
     checkpoint_path <- file.path(
       openalex_batch_dir,
-      sprintf("batch-%04d.rds", batch_index)
+      sprintf("batch-%04d.rds", as.integer(batch_index))
     )
     checkpoint <- read_rds_or_null(checkpoint_path)
-    reusable <- is.list(checkpoint) &&
-      identical(checkpoint$contract_version, cache_contract_version) &&
-      identical(checkpoint$pkp_version, pkp_version) &&
-      identical(checkpoint$input_md5, pkp_md5) &&
-      identical(checkpoint$batch_index, as.integer(batch_index)) &&
+    if (
+      is.list(checkpoint) &&
       identical(checkpoint$issns, batch) &&
-      identical(checkpoint$status, "complete") &&
-      is.list(checkpoint$sources) &&
-      is.list(checkpoint$pages) &&
-      isTRUE(checkpoint$pagination_complete)
-
-    if (reusable) {
-      checkpoint$reused <- TRUE
+        is.list(checkpoint$sources)
+    ) {
       return(checkpoint)
     }
 
-    checkpoint <- fetch_openalex_batch(batch)
-    checkpoint$contract_version <- cache_contract_version
-    checkpoint$pkp_version <- pkp_version
-    checkpoint$input_md5 <- pkp_md5
-    checkpoint$batch_index <- as.integer(batch_index)
-    checkpoint$reused <- FALSE
+    checkpoint <- list(
+      issns = batch,
+      retrieved_at = format(Sys.time(), tz = "UTC", usetz = TRUE),
+      sources = fetch_openalex_batch(batch)
+    )
     save_rds_atomic(checkpoint, checkpoint_path)
     checkpoint
-  }
-  openalex_cluster <- parallel::makeCluster(4L)
-  invisible(parallel::clusterEvalQ(openalex_cluster, library(httr2)))
-  parallel::clusterExport(
-    openalex_cluster,
-    c(
-      "token_batches",
-      "openalex_batch_dir",
-      "pkp_version",
-      "pkp_md5",
-      "cache_contract_version",
-      "retryable_response",
-      "fetch_openalex_page",
-      "fetch_openalex_batch",
-      "save_rds_atomic",
-      "read_rds_or_null",
-      "process_batch"
-    ),
-    envir = environment()
-  )
-  batch_results <- tryCatch(
-    parallel::parLapplyLB(
-      openalex_cluster,
-      seq_along(token_batches),
-      process_batch
-    ),
-    finally = parallel::stopCluster(openalex_cluster)
-  )
-  openalex_cache_hit <- all(map_lgl(batch_results, "reused"))
+  })
   openalex_sources <- unlist(
     map(batch_results, "sources"),
     recursive = FALSE
   )
-  openalex_snapshot_times <- unlist(map(
-    batch_results,
-    \(batch) map_chr(batch$pages, "retrieved_at")
-  ))
 } else {
   openalex_cache <- read_rds_or_null(openalex_cache_path)
-  openalex_cache_hit <- is.list(openalex_cache) &&
-    identical(openalex_cache$contract_version, cache_contract_version) &&
-    identical(openalex_cache$pkp_version, pkp_version) &&
-    identical(openalex_cache$input_md5, pkp_md5) &&
+  openalex_cache_is_valid <- is.list(openalex_cache) &&
     identical(openalex_cache$issns, tokens) &&
     is.list(openalex_cache$sources) &&
-    length(openalex_cache$retrieved_at) >= 1L
-  openalex_sources <- if (openalex_cache_hit) {
-    openalex_cache$sources
+    length(openalex_cache$retrieved_at) == 1L
+  if (openalex_cache_is_valid) {
+    openalex_result <- openalex_cache
   } else {
-    batch <- fetch_openalex_batch(tokens)
-    sources <- batch$sources
-    save_rds_atomic(
-      list(
-        contract_version = cache_contract_version,
-        pkp_version = pkp_version,
-        input_md5 = pkp_md5,
-        issns = tokens,
-        retrieved_at = map_chr(batch$pages, "retrieved_at"),
-        sources = sources
-      ),
-      openalex_cache_path
+    openalex_result <- list(
+      issns = tokens,
+      retrieved_at = format(Sys.time(), tz = "UTC", usetz = TRUE),
+      sources = fetch_openalex_batch(tokens)
     )
-    sources
+    save_rds_atomic(openalex_result, openalex_cache_path)
   }
-  openalex_snapshot_times <- if (openalex_cache_hit) {
-    openalex_cache$retrieved_at
-  } else {
-    map_chr(batch$pages, "retrieved_at")
-  }
+  openalex_sources <- openalex_result$sources
 }
 openalex_sources <- deduplicate_candidates(
   openalex_sources,
@@ -912,59 +701,45 @@ records remain in the candidate JSON column.
 ```{r}
 #| label: crossref-enrichment
 
-if (run_mode == "sample") {
-  crossref_cache <- read_rds_or_null(crossref_cache_path)
-  crossref_cache_hit <- is.list(crossref_cache) &&
-    identical(crossref_cache$contract_version, cache_contract_version) &&
-    identical(crossref_cache$pkp_version, pkp_version) &&
-    identical(crossref_cache$input_md5, pkp_md5) &&
-    identical(crossref_cache$issns, tokens) &&
-    is.list(crossref_cache$journals) &&
-    length(crossref_cache$retrieved_at) == 1L
-  crossref_journals <- if (crossref_cache_hit) {
-    crossref_cache$journals
+crossref_cache <- read_rds_or_null(crossref_cache_path)
+crossref_cache_is_valid <- is.list(crossref_cache) &&
+  is.list(crossref_cache$journals) &&
+  length(crossref_cache$retrieved_at) == 1L &&
+  if (run_mode == "full") {
+    identical(crossref_cache$total_results, length(crossref_cache$journals))
   } else {
-    journals <- set_names(
-      map(tokens, \(token) {
+    identical(crossref_cache$issns, tokens)
+  }
+
+if (crossref_cache_is_valid) {
+  crossref_result <- crossref_cache
+} else {
+  crossref_result <- if (run_mode == "sample") {
+    list(
+      issns = tokens,
+      retrieved_at = format(Sys.time(), tz = "UTC", usetz = TRUE),
+      journals = compact(map(tokens, \(token) {
         journal <- fetch_crossref_journal(token)
         Sys.sleep(0.25)
         journal
-      }),
-      tokens
+      }))
     )
-    crossref_retrieved_at <- format(Sys.time(), tz = "UTC", usetz = TRUE)
-    save_rds_atomic(
-      list(
-        contract_version = cache_contract_version,
-        pkp_version = pkp_version,
-        input_md5 = pkp_md5,
-        issns = tokens,
-        retrieved_at = crossref_retrieved_at,
-        journals = journals
-      ),
-      crossref_cache_path
+  } else {
+    c(
+      list(retrieved_at = format(Sys.time(), tz = "UTC", usetz = TRUE)),
+      fetch_crossref_directory()
     )
-    journals
   }
-  crossref_candidates <- deduplicate_candidates(
-    unname(compact(crossref_journals)),
+  save_rds_atomic(crossref_result, crossref_cache_path)
+}
+
+crossref_candidates <- if (run_mode == "sample") {
+  deduplicate_candidates(
+    unname(compact(crossref_result$journals)),
     serialize_json
   )$candidates
-  crossref_snapshot_times <- if (crossref_cache_hit) {
-    crossref_cache$retrieved_at
-  } else {
-    crossref_retrieved_at
-  }
 } else {
-  crossref_directory <- fetch_crossref_directory()
-  crossref_candidates <- crossref_candidates_from_pages(
-    crossref_directory$page_files
-  )
-  crossref_cache_hit <- all(map_lgl(crossref_directory$pages, "reused"))
-  crossref_snapshot_times <- map_chr(
-    crossref_directory$pages,
-    "retrieved_at"
-  )
+  crossref_result$journals
 }
 
 crossref_index <- index_candidates_by_issn(
@@ -1022,18 +797,12 @@ result <- base_result |>
 output_data <- result
 output_rows <- nrow(result)
 output_columns <- names(result)
-review_result <- if (run_mode == "full") {
-  result[sample_positions, ]
-} else {
-  result
-}
 ```
 
 ### Validate and promote
 
-The formal master and metadata are promoted only after retrieval, matching,
-privacy, and full-cell round-trip checks pass. Validation failures leave the
-previous pair untouched; ordinary promotion failures roll back both files.
+The master is written to a temporary file, read back, and promoted only after
+its rows, fields, match states, candidate JSON, and every serialized cell pass.
 
 ```{r}
 #| label: pre-promotion-validation
@@ -1049,15 +818,10 @@ candidate_json_is_valid <- function(matches, json_values) {
     is.list(parsed) && length(parsed) == candidate_count
   })
 }
-artifact_root <- normalizePath(artifact_dir)
 
 stopifnot(
-  startsWith(normalizePath(input_path), artifact_root),
-  startsWith(normalizePath(output_path, mustWork = FALSE), artifact_root),
-  startsWith(normalizePath(metadata_path, mustWork = FALSE), artifact_root),
   !"admin_email" %in% output_columns,
   output_rows == nrow(ojs_rows),
-  all(nzchar(c(openalex_snapshot_times, crossref_snapshot_times))),
   all(c(
     "openalex_match_status",
     "openalex_candidate_count",
@@ -1109,13 +873,6 @@ if (run_mode == "sample") {
     length(tokens) == 103017L,
     length(token_batches) == 1031L,
     max(lengths(token_batches)) <= 100L,
-    all(map_lgl(batch_results, \(batch) {
-      identical(batch$pkp_version, 7L) &&
-        identical(batch$input_md5, pkp_md5) &&
-        identical(batch$status, "complete") &&
-        isTRUE(batch$pagination_complete) &&
-        length(batch$pages) >= 1L
-    })),
     all(result$crossref_match_status %in% c(
       "unique",
       "ambiguous",
@@ -1153,72 +910,27 @@ stopifnot(
 )
 
 run_metadata <- list(
-  producer = "analysis/ojs_journal_enrichment.qmd",
   run_mode = run_mode,
-  created_at = format(Sys.time(), tz = "UTC", usetz = TRUE),
-  code = list(
-    qmd_md5 = unname(tools::md5sum(knitr::current_input(dir = TRUE))),
-    renv_lock_md5 = unname(tools::md5sum("renv.lock")),
-    cache_contract_version = cache_contract_version
-  ),
   input = list(
     version = pkp_version,
-    dataverse_file_id = 14084919L,
-    md5 = pkp_md5,
-    rows = nrow(raw_input),
-    valid_identifier_rows = sum(lengths(all_input_issns) > 0L),
-    missing_identifier_rows = sum(missing_identifier),
-    distinct_valid_issns = length(unique(unlist(all_input_issns)))
+    md5 = pkp_md5
   ),
   output = list(
     file = basename(output_path),
     md5 = unname(tools::md5sum(temporary_output_path)),
-    format = if (run_mode == "full") "csv.gz" else "csv",
     rows = output_rows,
-    columns = length(output_columns),
-    retained_top_level_fields = list(
-      openalex = openalex_fields,
-      crossref = crossref_fields
-    ),
-    status_counts = list(
-      openalex = as.list(openalex_status_counts),
-      crossref = as.list(crossref_status_counts)
-    )
+    columns = length(output_columns)
   ),
-  retrieval = list(
-    openalex = list(
-      first = min(openalex_snapshot_times),
-      last = max(openalex_snapshot_times)
-    ),
-    crossref = list(
-      first = min(crossref_snapshot_times),
-      last = max(crossref_snapshot_times)
-    )
-  ),
-  openalex = if (run_mode == "full") {
-    list(
-      records = length(openalex_sources),
-      batches = length(batch_results),
-      reused_batches = sum(map_lgl(batch_results, "reused"))
-    )
-  } else {
-    list(records = length(openalex_sources), reused = openalex_cache_hit)
-  },
-  crossref = if (run_mode == "full") {
-    list(
-      records = length(crossref_candidates),
-      pages = length(crossref_directory$pages),
-      rows_per_page = crossref_directory$rows_per_page,
-      reused_pages = sum(map_lgl(crossref_directory$pages, "reused"))
-    )
-  } else {
-    list(records = length(crossref_candidates), reused = crossref_cache_hit)
-  },
   runtime = list(
     r = R.version.string,
     quarto = system2("quarto", "--version", stdout = TRUE)[1],
-    locale = Sys.getlocale(),
-    packages = as.list(installed_package_versions)
+    curl = curl::curl_version()$version,
+    packages = as.list(setNames(
+      vapply(analysis_packages, \(package) {
+        as.character(packageVersion(package))
+      }, character(1)),
+      analysis_packages
+    ))
   )
 )
 
@@ -1230,21 +942,6 @@ jsonlite::write_json(
   auto_unbox = TRUE,
   pretty = TRUE
 )
-metadata_text <- paste(
-  readLines(metadata_temporary_path, warn = FALSE),
-  collapse = "\n"
-)
-private_values <- c(Sys.getenv("OPENALEX_API_KEY"), crossref_mailto)
-private_values <- private_values[nzchar(private_values)]
-stopifnot(
-  !grepl("OPENALEX_API_KEY|CROSSREF_MAILTO", metadata_text),
-  !any(vapply(
-    private_values,
-    \(value) grepl(value, metadata_text, fixed = TRUE),
-    logical(1)
-  ))
-)
-
 promote_artifact_pair <- function(temporary_paths, final_paths) {
   backup_paths <- paste0(final_paths, ".previous")
   if (any(file.exists(backup_paths))) {
@@ -1256,32 +953,27 @@ promote_artifact_pair <- function(temporary_paths, final_paths) {
   on.exit({
     if (!complete) {
       unlink(final_paths[promoted])
-      for (position in rev(which(backed_up))) {
-        if (!file.rename(backup_paths[position], final_paths[position])) {
-          warning("Could not restore a previous formal artifact.")
-        }
+      for (position in which(backed_up)) {
+        file.rename(backup_paths[position], final_paths[position])
       }
     }
   }, add = TRUE)
 
   for (position in seq_along(final_paths)) {
     if (file.exists(final_paths[position])) {
-      if (!file.rename(final_paths[position], backup_paths[position])) {
-        stop("Could not back up a previous formal artifact.", call. = FALSE)
-      }
-      backed_up[position] <- TRUE
+      backed_up[position] <- file.rename(
+        final_paths[position],
+        backup_paths[position]
+      )
+      if (!backed_up[position]) stop("Could not back up an artifact.")
     }
-  }
-  for (position in seq_along(final_paths)) {
     if (!file.rename(temporary_paths[position], final_paths[position])) {
       stop("Could not promote validated artifacts.", call. = FALSE)
     }
     promoted[position] <- TRUE
   }
-
   complete <- TRUE
-  unlink(backup_paths[backed_up])
-  invisible(final_paths)
+  unlink(backup_paths)
 }
 
 promote_artifact_pair(
@@ -1290,76 +982,23 @@ promote_artifact_pair(
 )
 ```
 
-## Run summary
-
-Counts use all rows in the selected run mode. They describe identifier and
-candidate availability, not global OJS coverage.
+## Ten-row validation review
 
 ```{r}
-#| label: run-summary
+#| label: validation-review
 
-bind_rows(
-  tibble(
-    source = "OpenAlex",
-    status = names(openalex_status_counts),
-    count = as.integer(openalex_status_counts)
-  ),
-  tibble(
-    source = "Crossref",
-    status = names(crossref_status_counts),
-    count = as.integer(crossref_status_counts)
-  )
-) |>
+review_result <- if (run_mode == "full") result[sample_positions, ] else result
+review_result |>
+  select(
+    context_name,
+    issn,
+    identifier_status,
+    openalex_match_status,
+    openalex_candidate_count,
+    crossref_match_status,
+    crossref_candidate_count
+  ) |>
   knitr::kable()
-```
-
-## Purposive ten-row review
-
-This searchable, filterable table uses ten rows chosen to exercise known code
-paths. It is not representative and cannot estimate coverage or source
-differences. The table omits long JSON columns; those values remain in the
-wide master.
-
-```{r}
-#| label: interactive-sample-dataframe
-
-is_long_json_column <- function(column) {
-  values <- na.omit(as.character(column))
-  any(
-    nchar(values) > 200L &
-      grepl("^[[:space:]]*[\\[{]", values)
-  )
-}
-long_json_columns <- names(review_result)[
-  endsWith(names(review_result), "__json") |
-    map_lgl(review_result, is_long_json_column)
-]
-review_table <- review_result[
-  setdiff(names(review_result), long_json_columns)
-]
-
-htmltools::div(
-  style = "overflow-x: auto;",
-  reactable::reactable(
-    review_table,
-    searchable = TRUE,
-    filterable = TRUE,
-    pagination = TRUE,
-    defaultPageSize = 10,
-    showPageSizeOptions = TRUE,
-    resizable = TRUE,
-    compact = TRUE,
-    fullWidth = FALSE
-  )
-)
-```
-
-## Complete merged column list
-
-This table lists every column in the wide master artifact.
-
-```{r}
-#| label: complete-column-list
 
 tibble(column = output_columns) |>
   knitr::kable()

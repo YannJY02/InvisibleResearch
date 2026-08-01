@@ -49,7 +49,7 @@ def test_acquisition_and_promotion_contracts_are_explicit():
     assert "download.file(pkp_url" in enrichment
     assert "fetch_openalex_sources <-" not in enrichment
     assert "retryable_response <-" in enrichment
-    assert '"retryable_response",' in enrichment
+    assert "req_retry(" in enrichment
     assert "if (is.null(checkpoint$contract_version))" not in enrichment
     assert '"api_error"' not in enrichment
     assert "#| label: pre-promotion-validation" in enrichment

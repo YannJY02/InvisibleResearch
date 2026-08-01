@@ -31,6 +31,7 @@ wanted <- c(
   "dataframe_value",
   "expand_candidate_fields",
   "normalize_issn",
+  "normalize_issn_set",
   "promote_artifact_pair",
   "read_rds_or_null",
   "source_issns"

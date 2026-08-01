@@ -185,6 +185,11 @@ normalize_issn <- function(value) {
   paste0(substr(compact, 1, 4), "-", substr(compact, 5, 8))
 }
 
+normalize_issn_set <- function(values) {
+  normalized <- vapply(values, normalize_issn, character(1))
+  unique(normalized[!is.na(normalized)])
+}
+
 is_missing_value <- function(value) {
   is.na(value) |
     !nzchar(trimws(value)) |
@@ -195,14 +200,11 @@ parse_issns <- function(value) {
   if (is_missing_value(value)) return(character())
 
   tokens <- unlist(strsplit(value, "[[:space:],;|]+"))
-  normalized <- vapply(tokens[nzchar(tokens)], normalize_issn, character(1))
-  unique(normalized[!is.na(normalized)])
+  normalize_issn_set(tokens[nzchar(tokens)])
 }
 
 source_issns <- function(source) {
-  values <- unlist(source$issn, use.names = FALSE)
-  normalized <- vapply(values, normalize_issn, character(1))
-  unique(normalized[!is.na(normalized)])
+  normalize_issn_set(unlist(source$issn, use.names = FALSE))
 }
 ```
 
@@ -614,9 +616,12 @@ classify_status <- function(input_issns, candidate_ids) {
   )
 }
 
+crossref_issns <- function(journal) {
+  normalize_issn_set(journal$ISSN)
+}
+
 crossref_key <- function(journal) {
-  issns <- vapply(journal$ISSN, normalize_issn, character(1))
-  paste(sort(unique(issns[!is.na(issns)])), collapse = "|")
+  paste(sort(crossref_issns(journal)), collapse = "|")
 }
 
 crossref_candidates_from_pages <- function(page_files) {
@@ -966,10 +971,6 @@ if (run_mode == "sample") {
   )
 }
 
-crossref_issns <- function(journal) {
-  issns <- vapply(journal$ISSN, normalize_issn, character(1))
-  unique(issns[!is.na(issns)])
-}
 crossref_index <- index_candidates_by_issn(
   crossref_candidates,
   crossref_issns

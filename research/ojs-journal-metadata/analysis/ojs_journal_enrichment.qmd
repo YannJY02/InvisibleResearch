@@ -648,11 +648,7 @@ index_candidates_by_issn <- function(candidates, candidate_issns) {
   index <- new.env(hash = TRUE, parent = emptyenv())
   for (candidate_position in seq_along(candidates)) {
     for (issn in candidate_issns(candidates[[candidate_position]])) {
-      positions <- if (exists(issn, index, inherits = FALSE)) {
-        get(issn, index, inherits = FALSE)
-      } else {
-        integer()
-      }
+      positions <- get0(issn, index, inherits = FALSE, ifnotfound = integer())
       assign(issn, c(positions, candidate_position), index)
     }
   }
@@ -661,11 +657,7 @@ index_candidates_by_issn <- function(candidates, candidate_issns) {
 
 candidates_for_issns <- function(candidates, index, issns) {
   positions <- unique(unlist(map(issns, \(issn) {
-    if (exists(issn, index, inherits = FALSE)) {
-      get(issn, index, inherits = FALSE)
-    } else {
-      integer()
-    }
+    get0(issn, index, inherits = FALSE, ifnotfound = integer())
   })))
   candidates[positions]
 }

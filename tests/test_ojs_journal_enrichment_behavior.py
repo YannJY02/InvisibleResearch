@@ -31,6 +31,7 @@ wanted <- c(
   "dataframe_value",
   "expand_candidate_fields",
   "normalize_issn",
+  "promote_artifact_pair",
   "source_issns"
 )
 for (expression in parse(file = purl_path)) {
@@ -116,12 +117,42 @@ def test_validation_precedes_formal_artifact_promotion():
     qmd = QMD_PATH.read_text()
 
     validation = qmd.index("#| label: pre-promotion-validation")
-    master_promotion = qmd.index(
-        "file.rename(temporary_output_path, output_path)"
-    )
-    metadata_promotion = qmd.index(
-        "file.rename(metadata_temporary_path, metadata_path)"
+    promotion = qmd.index(
+        "promote_artifact_pair(\n"
+        "  c(temporary_output_path, metadata_temporary_path)"
     )
 
-    assert validation < master_promotion
-    assert validation < metadata_promotion
+    assert validation < promotion
+
+
+def test_artifact_pair_promotion_rolls_back_on_partial_failure():
+    run_r_contract(
+        r'''
+directory <- tempfile()
+dir.create(directory)
+on.exit(unlink(directory, recursive = TRUE), add = TRUE)
+
+temporary_master <- file.path(directory, "master.tmp")
+missing_metadata <- file.path(directory, "missing-metadata.tmp")
+master <- file.path(directory, "master.csv")
+metadata <- file.path(directory, "metadata.json")
+writeLines("new master", temporary_master)
+writeLines("old master", master)
+writeLines("old metadata", metadata)
+
+result <- try(
+  promote_artifact_pair(
+    c(temporary_master, missing_metadata),
+    c(master, metadata)
+  ),
+  silent = TRUE
+)
+stopifnot(
+  inherits(result, "try-error"),
+  readLines(master) == "old master",
+  readLines(metadata) == "old metadata",
+  !file.exists(paste0(master, ".previous")),
+  !file.exists(paste0(metadata, ".previous"))
+)
+'''
+    )

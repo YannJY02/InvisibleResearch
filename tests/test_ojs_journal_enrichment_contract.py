@@ -42,6 +42,21 @@ def test_enrichment_produces_one_wide_master():
         assert filename not in render
 
 
+def test_acquisition_and_promotion_contracts_are_explicit():
+    enrichment = QMD_PATH.read_text()
+    disagreement = DISAGREEMENT_QMD_PATH.read_text()
+
+    assert "download.file(pkp_url" in enrichment
+    assert "fetch_openalex_sources <-" not in enrichment
+    assert "retryable_response <-" in enrichment
+    assert '"retryable_response",' in enrichment
+    assert "if (is.null(checkpoint$contract_version))" not in enrichment
+    assert '"api_error"' not in enrichment
+    assert "#| label: pre-promotion-validation" in enrichment
+    assert 'identical(metadata$run_mode, "full")' in disagreement
+    assert "tools::md5sum(master_path)" in disagreement
+
+
 def test_disagreement_analysis_is_separate_and_offline():
     assert not (
         PROJECT_ROOT / "research" / "ojs-journal-disagreement-analysis"

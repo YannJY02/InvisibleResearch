@@ -54,6 +54,11 @@ master_path <- file.path(
   "full-v7",
   "pkp-ojs-multisource-enriched.csv.gz"
 )
+metadata_path <- file.path(
+  enrichment_artifact_dir,
+  "full-v7",
+  "run-metadata.json"
+)
 analysis_dir <- file.path(
   "..",
   "artifacts",
@@ -69,9 +74,17 @@ audit_summary_path <- file.path(
 )
 dir.create(analysis_dir, recursive = TRUE, showWarnings = FALSE)
 
-if (!file.exists(master_path)) {
+if (!file.exists(master_path) || !file.exists(metadata_path)) {
   stop("Run render_full.sh before this analysis.", call. = FALSE)
 }
+metadata <- jsonlite::read_json(metadata_path, simplifyVector = TRUE)
+stopifnot(
+  identical(metadata$run_mode, "full"),
+  identical(
+    unname(tools::md5sum(master_path)),
+    metadata$output$md5
+  )
+)
 master <- read_csv(
   master_path,
   col_types = cols(.default = col_character()),
@@ -214,7 +227,6 @@ openalex_source_issn_sets <- map2_chr(
 
 identity_outcome <- case_when(
   master$identifier_status != "valid" ~ "no_valid_issn",
-  master$openalex_match_status == "api_error" ~ "api_error",
   candidate_count == 0L ~ "valid_issn_unmatched",
   candidate_count > 1L ~ "conflicting_source_ids",
   is_missing_value(master$openalex_type) |
@@ -337,16 +349,14 @@ identity_categories <- c(
   "conflicting_source_ids",
   "non_journal_source",
   "valid_issn_unmatched",
-  "no_valid_issn",
-  "api_error"
+  "no_valid_issn"
 )
 comparison_categories <- c("same", "different", "not_observed")
 status_categories <- c(
-  "consistent",
-  "inconsistent",
+  "unique",
+  "ambiguous",
   "unmatched",
-  "not_attempted",
-  "api_error"
+  "not_attempted"
 )
 matched_denominator <- sum(identity_matched)
 

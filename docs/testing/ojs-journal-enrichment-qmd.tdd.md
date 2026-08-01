@@ -359,3 +359,37 @@ most time was spent serializing nested source fields. That is the accepted cost
 of the requested lossless wide master, not a reason to restore Parquet,
 pointer catalogs, a Python conversion layer, or analysis logic in the
 enrichment QMD.
+
+## 2026-08-01 exact-ISSN wide-master simplification
+
+### User journey
+
+As a researcher, I can directly download and checksum the pinned PKP/OJS file,
+join every PKP row to OpenAlex and Crossref by normalized exact ISSN, and obtain
+one validated wide table whose mechanical match states do not imply semantic
+agreement.
+
+### Task report
+
+| Stage | Commit or command | Evidence |
+|---|---|---|
+| RED | `7ea1170`; targeted pytest | Two expected failures captured the old `consistent` label and promotion before final validation. |
+| GREEN | `1f6d963`; targeted pytest | PASS: mechanical states are `not_attempted`, `unmatched`, `unique`, and `ambiguous`; ambiguous ordinary fields remain empty while complete candidates stay in JSON; validation precedes promotion. |
+| Refactor | Final task commit | Replaced custom download and retry state machines with base R `download.file()` plus MD5 and installed `httr2::req_retry()`; removed obsolete failure bookkeeping and stale downstream categories. |
+| Clean PKP acquisition | Base R download to a temporary file | PASS: 29,789,596 bytes and MD5 `3a4ad8ae1ebfcc2b991aaf55b2d82c92`; the temporary file was removed after verification. |
+| Sample render | `./render_sample.sh` | PASS from compatible caches: 10 rows, 81 columns, matching output/metadata MD5, OpenAlex counts 7/1/1/1 and Crossref counts 8/1/1/0 for unique/unmatched/not-attempted/ambiguous. |
+| Static checks | Targeted pytest; both QMD programs extracted and parsed; `sh -n`; `git diff --check` | PASS: 7 targeted tests and all syntax/whitespace checks, including promotion rollback. |
+| Repository regression | `uv run --with pytest --with pandas --with pyarrow pytest -q` | 33 passed; one unrelated publication-compendium allowlist failure remains outside this owner. |
+
+### Evidence boundary
+
+The purposive ten-row sample exercises the matching branches but is not a
+coverage estimate. No full-v7 cache existed on the qualification machine and no
+Crossref contact was configured, so this change did not retrieve or qualify a
+new 98,273-row master. The previous full-run counts must not be presented as
+results of this code version.
+
+An HTTP error or transport failure is retried up to four times. A malformed
+HTTP 200 response stops the run and is retried only by the next invocation;
+this keeps response-contract handling simple without allowing an invalid
+response to reach the formal master.

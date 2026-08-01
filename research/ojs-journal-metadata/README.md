@@ -17,10 +17,10 @@ or PKP identities?
 
 ## Run
 
-The current explanatory notebook pins PKP V7 Dataverse file `14084919` at MD5
-`3a4ad8ae1ebfcc2b991aaf55b2d82c92`. It downloads the file when absent, checks
-the 98,273-row release contract, and selects ten fixed source rows without a
-private `DATA_ROOT`.
+The current explanatory notebook directly downloads PKP V7 Dataverse file
+`14084919` when absent and verifies its published MD5
+`3a4ad8ae1ebfcc2b991aaf55b2d82c92`. It then checks the 98,273-row release
+contract and selects ten fixed source rows without a private `DATA_ROOT`.
 
 The qualified environment is R 4.5.2, Quarto 1.6.32, and the package versions
 recorded in `analysis/renv.lock`. The render fails clearly when that environment
@@ -65,14 +65,17 @@ page and `total-results` reconcile. `OPENALEX_API_KEY` and `CROSSREF_MAILTO`
 are required only when the corresponding cache/checkpoint is missing; they are
 never stored in generated artifacts.
 
-The qualified full run retrieves the complete Crossref directory in 169 pages
-and writes one wide row for each PKP V7 row to
+The 2026-07-30 qualified source snapshot used 169 Crossref pages. A current full
+run writes one wide row for each PKP V7 row to
 `pkp-ojs-multisource-enriched.csv.gz`. Every observed top-level OpenAlex and
-Crossref field becomes a column. Nested values and multiple candidate records
-remain losslessly encoded as JSON cells. The QMD writes the CSV to a temporary
-file, reads it back to verify rows, columns, and PKP identities, and only then
-promotes it. RDS source caches and checkpoints are internal resumability
-artifacts, not additional data deliverables.
+Crossref field becomes a column. Nested values are JSON-encoded; ambiguous
+candidate records remain complete in their candidate JSON columns, while their
+ordinary source-field columns stay empty rather than selecting an arbitrary
+candidate. The QMD checks retrieval and matching, writes the CSV to a temporary
+file, compares every cell after reading it back, and only then promotes the
+master and metadata.
+RDS source caches and checkpoints are internal resumability artifacts, not
+additional data deliverables.
 
 The enrichment QMD stops after producing and checking that wide master. Run the
 complete exploratory difference analysis separately:
@@ -88,14 +91,20 @@ requests. It writes the row-level disagreement audit and category summary under
 OJS, DOAJ, country, identity, and OpenAlex-by-Crossref comparisons with their
 eligible denominators and three descriptive charts.
 
-Delete generated reports, CSVs, or checkpoints when local storage is no longer
-needed; rerunning the same command recreates outputs and reuses only compatible
-versioned caches/checkpoints. Title, ISSN, OJS, DOAJ, and country differences
-are source-specific metadata evidence, not proof that either source is wrong.
-PKP country is inferred, absent DOAJ evidence is not a negative assertion, and
-all results remain **Exploratory Analysis**.
+Deleting caches and checkpoints causes a later run to retrieve refreshed
+OpenAlex or Crossref data; that is not an exact reproduction of the earlier
+source snapshot. Title, ISSN, OJS, DOAJ, and country differences are
+source-specific metadata evidence, not proof that either source is wrong. PKP
+country is inferred, absent DOAJ evidence is not a negative assertion, and all
+results remain **Exploratory Analysis**.
 
-## PKP input decision
+## Legacy V6/Python research notes
+
+Everything below this heading documents the superseded V6/Python exploration.
+It is retained as research history and is not the current V7 wide-master run
+book. Use the commands above for the current pipeline.
+
+### Legacy PKP input decision
 
 Use the original CSV behind `beacon.tab` in version 6.0 of [Details of
 publications using software by the Public Knowledge
@@ -343,7 +352,7 @@ coverage separately from provisional title coverage; OpenAlex field null rates;
 It must also list every ambiguous and unmatched row for review. No title-only
 candidate may be folded into strict ISSN coverage.
 
-## Run the exploratory pipeline
+## Run the legacy exploratory pipeline
 
 Keep the pinned input under the external data root, then run the exact-ISSN
 pipeline and its single output check:

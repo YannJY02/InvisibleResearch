@@ -208,7 +208,7 @@ parse_issns <- function(value) {
 }
 
 source_issns <- function(source) {
-  values <- c(unlist(source$issn, use.names = FALSE), source$issn_l)
+  values <- unlist(source$issn, use.names = FALSE)
   normalized <- vapply(values, normalize_issn, character(1))
   unique(normalized[!is.na(normalized)])
 }
@@ -702,8 +702,8 @@ classify_status <- function(input_issns, candidate_ids) {
   case_when(
     length(input_issns) == 0L ~ "not_attempted",
     length(candidate_ids) == 0L ~ "unmatched",
-    length(candidate_ids) == 1L ~ "consistent",
-    TRUE ~ "inconsistent"
+    length(candidate_ids) == 1L ~ "unique",
+    TRUE ~ "ambiguous"
   )
 }
 
@@ -808,21 +808,30 @@ serialize_json <- function(value) {
   ))
 }
 
+deduplicate_identical_candidates <- function(candidates) {
+  fingerprints <- map_chr(candidates, serialize_json)
+  candidates[!duplicated(fingerprints)]
+}
+
 dataframe_value <- function(value) {
-  if (is.null(value) || !length(value)) return(NA)
-  if (is.atomic(value) && length(value) == 1L) return(value)
+  if (is.null(value)) return(NA_character_)
+  if (is.atomic(value) && length(value) == 1L) {
+    return(as.character(value))
+  }
   serialize_json(value)
 }
 
 expand_candidate_fields <- function(matches, prefix, fields) {
   candidates <- map(
     matches,
-    \(match) if (length(match$candidates)) match$candidates[[1]] else list()
+    \(match) {
+      if (length(match$candidates) == 1L) match$candidates[[1]] else list()
+    }
   )
   cells <- set_names(
     map(fields, \(field) {
       map_chr(candidates, \(candidate) {
-        as.character(dataframe_value(candidate[[field]]))
+        dataframe_value(candidate[[field]])
       })
     }),
     paste(prefix, fields, sep = "_")
@@ -1009,7 +1018,8 @@ base_result <- ojs_rows |>
 
 Crossref is matched by the same normalized exact ISSNs. Both modes write every
 returned top-level OpenAlex and Crossref field to the same one-row-per-PKP
-master. Nested and repeated values remain lossless JSON cells.
+master. Nested and repeated values are JSON-encoded; all ambiguous candidate
+records remain in the candidate JSON column.
 
 ```{r}
 #| label: crossref-enrichment
@@ -1049,7 +1059,9 @@ if (run_mode == "sample") {
     )
     journals
   }
-  crossref_candidates <- unname(compact(crossref_journals))
+  crossref_candidates <- deduplicate_identical_candidates(
+    unname(compact(crossref_journals))
+  )
 } else {
   crossref_directory <- fetch_crossref_directory()
   crossref_candidates <- crossref_candidates_from_pages(
@@ -1124,13 +1136,112 @@ review_result <- if (run_mode == "full") {
 }
 ```
 
-### Validated master and provenance
+### Validate and promote
 
-The wide master is written to a temporary file, read back, and promoted only
-after its schema, row count, and PKP identities pass.
+The formal master and metadata are promoted only after retrieval, matching,
+privacy, and full-cell round-trip checks pass. A failed run leaves the previous
+formal artifact untouched.
 
 ```{r}
-#| label: validated-master
+#| label: pre-promotion-validation
+
+has_source_field <- function(prefix, field) {
+  any(startsWith(output_columns, paste0(prefix, "_")) &
+    endsWith(output_columns, paste0("_", field)))
+}
+artifact_root <- normalizePath(artifact_dir)
+
+stopifnot(
+  identical(pkp_version, 7L),
+  is.na(normalize_issn(NULL)),
+  identical(unname(tools::md5sum(input_path)), pkp_md5),
+  nrow(raw_input) == 98273L,
+  identical(names(raw_input), expected_schema),
+  !anyDuplicated(raw_row_identity),
+  sum(missing_identifier) == 26189L,
+  sum(lengths(all_input_issns) > 0L) == 72084L,
+  length(unique(unlist(all_input_issns))) == 103017L,
+  startsWith(normalizePath(input_path), artifact_root),
+  startsWith(normalizePath(output_path, mustWork = FALSE), artifact_root),
+  startsWith(normalizePath(metadata_path, mustWork = FALSE), artifact_root),
+  !"admin_email" %in% output_columns,
+  output_rows == nrow(ojs_rows),
+  all(c(
+    "openalex_match_status",
+    "openalex_candidate_count",
+    "openalex_candidate_ids",
+    "openalex_candidates__json",
+    "crossref_match_status",
+    "crossref_candidate_count",
+    "crossref_candidate_issn_sets",
+    "crossref_candidates__json"
+  ) %in% output_columns),
+  all(map_lgl(openalex_fields, \(field) {
+    has_source_field("openalex", field)
+  })),
+  all(map_lgl(crossref_fields, \(field) {
+    has_source_field("crossref", field)
+  })),
+  sum(openalex_status_counts) == output_rows,
+  sum(crossref_status_counts) == output_rows
+)
+
+if (run_mode == "sample") {
+  expected_openalex_status <- c(
+    "unique",
+    "unique",
+    "unmatched",
+    "unique",
+    "unique",
+    "unique",
+    "unique",
+    "unique",
+    "not_attempted",
+    "ambiguous"
+  )
+  stopifnot(
+    identical(row_identity(ojs_rows), sample_identity),
+    sum(result$identifier_status == "missing") == 1L,
+    nrow(result) == 10L,
+    identical(result$openalex_match_status, expected_openalex_status),
+    !anyDuplicated(map_chr(crossref_candidates, serialize_json)),
+    "not_attempted" %in% result$crossref_match_status
+  )
+} else {
+  stopifnot(
+    identical(row_identity(ojs_rows), raw_row_identity),
+    output_rows == 98273L,
+    sum(base_result$identifier_status == "missing") == 26189L,
+    length(tokens) == 103017L,
+    length(token_batches) == 1031L,
+    max(lengths(token_batches)) <= 100L,
+    all(map_lgl(batch_results, \(batch) {
+      identical(batch$pkp_version, 7L) &&
+        identical(batch$input_md5, pkp_md5) &&
+        identical(batch$status, "complete") &&
+        isTRUE(batch$pagination_complete) &&
+        length(batch$pages) >= 1L
+    })),
+    !any(result$openalex_match_status == "api_error"),
+    identical(crossref_directory$status, "complete"),
+    identical(crossref_directory$rows_per_page, 1000L),
+    crossref_directory$directory_rows ==
+      sum(map_int(crossref_directory$pages, "item_count")),
+    all(map_int(
+      crossref_directory$pages[-length(crossref_directory$pages)],
+      "item_count"
+    ) == 1000L),
+    last(crossref_directory$pages)$item_count < 1000L,
+    all(map_chr(crossref_directory$pages, "status") == "complete"),
+    all(result$crossref_match_status %in% c(
+      "unique",
+      "ambiguous",
+      "unmatched",
+      "not_attempted"
+    )),
+    endsWith(output_path, ".csv.gz")
+  )
+}
 
 temporary_output_path <- paste0(
   output_path,
@@ -1146,19 +1257,16 @@ observed_output <- read_csv(
   na = character(),
   show_col_types = FALSE
 )
+expected_output <- as_tibble(map(output_data, \(column) {
+  values <- as.character(column)
+  values[is.na(values)] <- ""
+  values
+}))
 observed_identity <- row_identity(observed_output)
 stopifnot(
-  nrow(observed_output) == nrow(output_data),
-  identical(names(observed_output), names(output_data)),
+  identical(as.data.frame(observed_output), as.data.frame(expected_output)),
   identical(observed_identity, row_identity(ojs_rows)),
   !anyDuplicated(observed_identity)
-)
-if (!file.rename(temporary_output_path, output_path)) {
-  stop("Could not promote the validated wide master.", call. = FALSE)
-}
-artifact_validation <- list(
-  rows = nrow(observed_output),
-  columns = ncol(observed_output)
 )
 
 openalex_retrieval_times <- if (run_mode == "full") {
@@ -1187,7 +1295,7 @@ run_metadata <- list(
   ),
   output = list(
     file = basename(output_path),
-    md5 = unname(tools::md5sum(output_path)),
+    md5 = unname(tools::md5sum(temporary_output_path)),
     format = if (run_mode == "full") "csv.gz" else "csv",
     rows = output_rows,
     columns = length(output_columns),
@@ -1226,10 +1334,7 @@ run_metadata <- list(
       failed_batches = sum(map_chr(batch_results, "status") != "complete")
     )
   } else {
-    list(
-      cache_file = basename(openalex_cache_path),
-      reused = openalex_cache_hit
-    )
+    list(cache_file = basename(openalex_cache_path), reused = openalex_cache_hit)
   },
   crossref = if (run_mode == "full") {
     list(
@@ -1247,10 +1352,7 @@ run_metadata <- list(
       )
     )
   } else {
-    list(
-      cache_file = basename(crossref_cache_path),
-      reused = crossref_cache_hit
-    )
+    list(cache_file = basename(crossref_cache_path), reused = crossref_cache_hit)
   },
   runtime = list(
     r = R.version.string,
@@ -1260,159 +1362,44 @@ run_metadata <- list(
     packages = as.list(installed_package_versions)
   )
 )
+
 metadata_temporary_path <- paste0(metadata_path, ".tmp")
+unlink(metadata_temporary_path)
 jsonlite::write_json(
   run_metadata,
   metadata_temporary_path,
   auto_unbox = TRUE,
   pretty = TRUE
 )
+metadata_text <- paste(
+  readLines(metadata_temporary_path, warn = FALSE),
+  collapse = "\n"
+)
+private_values <- c(Sys.getenv("OPENALEX_API_KEY"), crossref_mailto)
+private_values <- private_values[nzchar(private_values)]
+stopifnot(
+  !grepl("OPENALEX_API_KEY|CROSSREF_MAILTO", metadata_text),
+  !any(vapply(
+    private_values,
+    \(value) grepl(value, metadata_text, fixed = TRUE),
+    logical(1)
+  ))
+)
+
+if (!file.rename(temporary_output_path, output_path)) {
+  stop("Could not promote the validated wide master.", call. = FALSE)
+}
 if (!file.rename(metadata_temporary_path, metadata_path)) {
   stop("Could not promote validated run metadata.", call. = FALSE)
 }
 ```
 
-
-## Checks
-
-These checks confirm that the wide master preserves every input identity, every
-returned top-level source field, explicit match states, and no private values.
-
-```{r}
-#| label: contract-check
-
-metadata_text <- paste(readLines(metadata_path, warn = FALSE), collapse = "\n")
-artifact_root <- normalizePath(artifact_dir)
-private_values <- c(Sys.getenv("OPENALEX_API_KEY"), crossref_mailto)
-private_values <- private_values[nzchar(private_values)]
-metadata_contains_private_value <- any(vapply(
-  private_values,
-  \(value) grepl(value, metadata_text, fixed = TRUE),
-  logical(1)
-))
-has_source_field <- function(prefix, field) {
-  any(
-    startsWith(output_columns, paste0(prefix, "_")) &
-      endsWith(output_columns, paste0("_", field))
-  )
-}
-
-stopifnot(
-  identical(pkp_version, 7L),
-  is.na(normalize_issn(NULL)),
-  identical(unname(tools::md5sum(input_path)), pkp_md5),
-  nrow(raw_input) == 98273L,
-  identical(names(raw_input), expected_schema),
-  !anyDuplicated(raw_row_identity),
-  sum(missing_identifier) == 26189L,
-  sum(lengths(all_input_issns) > 0L) == 72084L,
-  length(unique(unlist(all_input_issns))) == 103017L,
-  startsWith(normalizePath(input_path), artifact_root),
-  startsWith(normalizePath(output_path), artifact_root),
-  startsWith(normalizePath(metadata_path), artifact_root),
-  file.exists(output_path),
-  file.exists(metadata_path),
-  !grepl("OPENALEX_API_KEY|CROSSREF_MAILTO", metadata_text),
-  !metadata_contains_private_value,
-  !"admin_email" %in% output_columns,
-  all(nzchar(unlist(run_metadata$runtime))),
-  output_rows == nrow(ojs_rows),
-  identical(output_columns, names(observed_output)),
-  all(c(
-    "openalex_match_status",
-    "openalex_candidate_count",
-    "openalex_candidate_ids",
-    "openalex_candidates__json",
-    "crossref_match_status",
-    "crossref_candidate_count",
-    "crossref_candidate_issn_sets",
-    "crossref_candidates__json"
-  ) %in% output_columns),
-  all(map_lgl(openalex_fields, \(field) {
-    has_source_field("openalex", field)
-  })),
-  all(map_lgl(crossref_fields, \(field) {
-    has_source_field("crossref", field)
-  })),
-  sum(unlist(run_metadata$output$status_counts$openalex)) == output_rows,
-  sum(unlist(run_metadata$output$status_counts$crossref)) == output_rows,
-  artifact_validation$rows == output_rows,
-  artifact_validation$columns == length(output_columns)
-)
-
-if (run_mode == "sample") {
-  expected_openalex_status <- c(
-    "consistent",
-    "consistent",
-    "unmatched",
-    "consistent",
-    "consistent",
-    "consistent",
-    "consistent",
-    "consistent",
-    "not_attempted",
-    "inconsistent"
-  )
-  stopifnot(
-    identical(row_identity(ojs_rows), sample_identity),
-    sum(result$identifier_status == "missing") == 1L,
-    nrow(result) == 10L,
-    identical(result$openalex_match_status, expected_openalex_status),
-    result$openalex_matched_issns[
-      result$context_name == "Jami Scientific Research Quarterly Journal"
-    ] == "2710-4990",
-    "not_attempted" %in% result$crossref_match_status
-  )
-} else {
-  stopifnot(
-    identical(row_identity(ojs_rows), raw_row_identity),
-    output_rows == 98273L,
-    sum(base_result$identifier_status == "missing") == 26189L,
-    length(tokens) == 103017L,
-    length(token_batches) == 1031L,
-    max(lengths(token_batches)) <= 100L,
-    all(map_lgl(batch_results, \(batch) {
-      identical(batch$pkp_version, 7L) &&
-        identical(batch$input_md5, pkp_md5) &&
-        identical(batch$status, "complete") &&
-        isTRUE(batch$pagination_complete) &&
-        length(batch$pages) >= 1L
-    })),
-    run_metadata$openalex$completed_batches == length(token_batches),
-    run_metadata$openalex$failed_batches == 0L,
-    !any(result$openalex_match_status == "api_error"),
-    all(nzchar(unlist(run_metadata$retrieval))),
-    identical(crossref_directory$status, "complete"),
-    identical(crossref_directory$rows_per_page, 1000L),
-    crossref_directory$directory_rows ==
-      sum(map_int(crossref_directory$pages, "item_count")),
-    all(map_int(
-      crossref_directory$pages[-length(crossref_directory$pages)],
-      "item_count"
-    ) == 1000L),
-    last(crossref_directory$pages)$item_count < 1000L,
-    all(map_chr(crossref_directory$pages, "status") == "complete"),
-    run_metadata$crossref$completed_pages ==
-      length(crossref_directory$pages),
-    run_metadata$crossref$failed_pages == 0L,
-    all(result$crossref_match_status %in% c(
-      "consistent",
-      "inconsistent",
-      "unmatched",
-      "not_attempted"
-    )),
-    endsWith(output_path, ".csv.gz"),
-    identical(run_metadata$output$format, "csv.gz")
-  )
-}
-```
-
-
 ## Purposive ten-row review
 
-This searchable, filterable table uses the fixed V7 sample in its deliberate
-display order. It includes every master field and omits only columns whose
-values are long JSON; those values remain complete in the wide master.
+This searchable, filterable table uses ten rows chosen to exercise known code
+paths. It is not representative and cannot estimate coverage or source
+differences. The table omits long JSON columns; those values remain in the
+wide master.
 
 ```{r}
 #| label: interactive-sample-dataframe

@@ -6,8 +6,7 @@ work here remains **Exploratory Analysis**.
 ## Question
 
 How can exact ISSNs connect pinned PKP OJS records to OpenAlex Sources and
-Crossref journals in one reusable wide master without dropping source fields
-or PKP identities?
+Crossref journals without dropping PKP identities?
 
 ## Referenced inputs
 
@@ -51,22 +50,21 @@ most 100 and retrieves the Crossref journal directory in 1,000-record cursor
 pages. Completed OpenAlex groups and the completed Crossref directory are cached
 under the ignored owner artifact directory so they can be reused.
 
-Both modes normalize checksum-valid ISSNs, match only by exact ISSN, retain all
-PKP rows, and expose every observed top-level OpenAlex and Crossref field.
-Nested values are JSON-encoded. Ambiguous candidate records remain complete in
-candidate JSON columns; ordinary source-field columns stay empty rather than
-selecting an arbitrary candidate.
+Both modes normalize checksum-valid ISSNs, match only by exact ISSN, and retain
+all PKP rows. The sample expands complete candidates for DT review. The full
+master keeps candidate identities and match states compact; complete OpenAlex
+and Crossref records remain in the ignored source caches.
 
 The full deliverable is:
 
 `artifacts/ojs_journal_enrichment/full-v7/pkp-ojs-multisource-enriched.csv.gz`
 
 Before promotion, the QMD reads the temporary CSV back and compares every cell,
-row identity, source field, match state, and candidate set. The adjacent minimal
+row identity, match state, and candidate set. The adjacent minimal
 `run-metadata.json` records the input version/checksum and output checksum so a
-downstream analysis can reject a mismatched master; it also records the R,
-Quarto, curl, and analysis-package versions. API credentials and `admin_email`
-are not written to either artifact.
+downstream analysis can reject a mismatched master or OpenAlex checkpoint set;
+it also records the R, Quarto, curl, and analysis-package versions. API
+credentials and `admin_email` are not written to either artifact.
 
 ## Difference analysis
 

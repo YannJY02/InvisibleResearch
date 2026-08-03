@@ -7,12 +7,12 @@ execute:
   message: false
 ---
 
-This exploratory analysis reads the validated PKP V7 wide master produced by
-`ojs_journal_enrichment.qmd`. It compares source-specific evidence without
-treating either source as authoritative and without interpreting source absence
-as a causal measure of journal invisibility.
+This exploratory analysis reads the validated compact PKP V7 master and its
+OpenAlex checkpoints. It compares source-specific evidence without treating
+either source as authoritative and without interpreting source absence as a
+causal measure of journal invisibility.
 
-## Load the wide master
+## Load the compact master
 
 ```{r}
 #| label: load-master
@@ -59,6 +59,11 @@ metadata_path <- file.path(
   "full-v7",
   "run-metadata.json"
 )
+openalex_batch_dir <- file.path(
+  enrichment_artifact_dir,
+  "full-v7",
+  "openalex-batches"
+)
 analysis_dir <- file.path(
   "..",
   "artifacts",
@@ -74,15 +79,33 @@ audit_summary_path <- file.path(
 )
 dir.create(analysis_dir, recursive = TRUE, showWarnings = FALSE)
 
-if (!file.exists(master_path) || !file.exists(metadata_path)) {
+if (
+  !file.exists(master_path) ||
+    !file.exists(metadata_path) ||
+    !dir.exists(openalex_batch_dir)
+) {
   stop("Run render_full.sh before this analysis.", call. = FALSE)
 }
 metadata <- jsonlite::read_json(metadata_path, simplifyVector = TRUE)
+file_set_md5 <- function(paths) {
+  manifest <- tempfile()
+  on.exit(unlink(manifest), add = TRUE)
+  paths <- sort(paths)
+  writeLines(paste(basename(paths), unname(tools::md5sum(paths))), manifest)
+  unname(tools::md5sum(manifest))
+}
+openalex_batch_files <- list.files(
+  openalex_batch_dir,
+  pattern = "^batch-[0-9]{4}\\.rds$",
+  full.names = TRUE
+)
 stopifnot(
   identical(metadata$run_mode, "full"),
+  identical(unname(tools::md5sum(master_path)), metadata$output$md5),
+  length(openalex_batch_files) == metadata$openalex_checkpoints$count,
   identical(
-    unname(tools::md5sum(master_path)),
-    metadata$output$md5
+    file_set_md5(openalex_batch_files),
+    metadata$openalex_checkpoints$md5
   )
 )
 master <- read_csv(
@@ -106,14 +129,6 @@ required_columns <- c(
   "openalex_match_status",
   "openalex_candidate_count",
   "openalex_candidate_ids",
-  "openalex_type",
-  "openalex_display_name",
-  "openalex_alternate_titles",
-  "openalex_issn",
-  "openalex_issn_l",
-  "openalex_is_ojs",
-  "openalex_is_in_doaj",
-  "openalex_country_code",
   "crossref_match_status",
   "crossref_candidate_count",
   "crossref_candidate_issn_sets"
@@ -127,6 +142,36 @@ stopifnot(
   !anyDuplicated(row_identity(master)),
   !"admin_email" %in% names(master)
 )
+
+source_value <- function(value) {
+  if (is.null(value)) return(NA_character_)
+  if (is.atomic(value) && length(value) == 1L) return(as.character(value))
+  as.character(jsonlite::toJSON(value, auto_unbox = TRUE, null = "null"))
+}
+openalex_sources <- openalex_batch_files |>
+  sort() |>
+  map(\(path) readRDS(path)$sources) |>
+  unlist(recursive = FALSE)
+openalex_fields <- c(
+  "type", "display_name", "alternate_titles", "issn", "issn_l", "is_ojs",
+  "is_in_doaj", "country_code"
+)
+openalex_rows <- tibble(
+  openalex_candidate_ids = map_chr(openalex_sources, "id")
+) |>
+  bind_cols(as_tibble(set_names(
+    map(openalex_fields, \(field) {
+      map_chr(openalex_sources, \(source) source_value(source[[field]]))
+    }),
+    paste("openalex", openalex_fields, sep = "_")
+  ))) |>
+  distinct(openalex_candidate_ids, .keep_all = TRUE)
+unique_ids <- master$openalex_candidate_ids[
+  master$openalex_match_status == "unique"
+]
+stopifnot(all(unique_ids %in% openalex_rows$openalex_candidate_ids))
+master <- left_join(master, openalex_rows, by = "openalex_candidate_ids")
+rm(openalex_sources, openalex_rows)
 ```
 
 ## Classify identity and metadata differences

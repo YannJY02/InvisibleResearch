@@ -10,7 +10,8 @@ execute:
 This notebook joins the pinned PKP OJS V7 release to retrieved OpenAlex Source
 and Crossref journal snapshots by exact ISSN. Sample mode is the default. Full
 mode must be started with `render_full.sh`; it preserves all 98,273 PKP rows and
-every returned top-level source field in one wide compressed CSV.
+keeps source candidate IDs in one compact compressed CSV. Complete source
+objects remain in the OpenAlex checkpoints and Crossref cache.
 
 Set `OPENALEX_API_KEY` before retrieving uncached OpenAlex data. Full mode also
 requires `CROSSREF_MAILTO` when a Crossref page is missing. A cache-only rerun
@@ -244,6 +245,14 @@ save_rds_atomic <- function(value, path) {
 read_rds_or_null <- function(path) {
   if (!file.exists(path)) return(NULL)
   tryCatch(readRDS(path), error = \(error) NULL)
+}
+
+file_set_md5 <- function(paths) {
+  manifest <- tempfile()
+  on.exit(unlink(manifest), add = TRUE)
+  paths <- sort(paths)
+  writeLines(paste(basename(paths), unname(tools::md5sum(paths))), manifest)
+  unname(tools::md5sum(manifest))
 }
 
 fetch_crossref_journal <- function(issn) {
@@ -481,7 +490,10 @@ ojs_rows <- if (run_mode == "full") {
 
 ## Multi-source enrichment
 
-For each PKP row, the notebook looks for OpenAlex and Crossref records with the same checksum-valid normalized ISSN. If the same source identity appears more than once, it is counted once. Both modes expand every returned top-level field into the one-row-per-PKP master and preserve nested values and complete candidate records as JSON cells.
+For each PKP row, the notebook looks for OpenAlex and Crossref records with the
+same checksum-valid normalized ISSN. Sample mode expands complete candidates
+for review. Full mode keeps only candidate identities in the compact master;
+complete records remain in the source caches.
 
 ### Matching helpers
 
@@ -534,6 +546,16 @@ candidates_for_issns <- function(candidates, index, issns) {
   candidates[positions]
 }
 
+match_indexed_ids <- function(input_issns, candidate_ids, index, issns_by_id) {
+  matched_ids <- candidates_for_issns(candidate_ids, index, input_issns)
+  candidate_issns <- unique(unlist(issns_by_id[matched_ids]))
+  list(
+    status = classify_status(input_issns, matched_ids),
+    matched_issns = base::intersect(input_issns, candidate_issns),
+    candidate_ids = matched_ids
+  )
+}
+
 match_exact_issns <- function(
   input_issns,
   candidates,
@@ -552,7 +574,7 @@ match_exact_issns <- function(
       candidate_ids = map_chr(matched, candidate_identity)
     )
   }
-  matched_issns <- intersect(
+  matched_issns <- base::intersect(
     input_issns,
     unique(unlist(map(resolved$candidates, candidate_issns)))
   )
@@ -679,19 +701,37 @@ openalex_sources <- deduplicate_candidates(
   openalex_sources,
   \(source) source$id
 )$candidates
-openalex_index <- index_candidates_by_issn(
-  openalex_sources,
-  source_issns
-)
-
-openalex_matches <- map(input_issns, \(issns) {
-  match_exact_issns(
-    issns,
-    candidates_for_issns(openalex_sources, openalex_index, issns),
-    source_issns,
-    \(source) source$id
+if (run_mode == "full") {
+  openalex_candidate_ids <- map_chr(openalex_sources, "id")
+  openalex_issns_by_id <- set_names(
+    map(openalex_sources, source_issns),
+    openalex_candidate_ids
   )
-})
+  openalex_index <- index_candidates_by_issn(
+    openalex_candidate_ids,
+    \(candidate_id) openalex_issns_by_id[[candidate_id]]
+  )
+  openalex_matches <- map(
+    input_issns,
+    match_indexed_ids,
+    candidate_ids = openalex_candidate_ids,
+    index = openalex_index,
+    issns_by_id = openalex_issns_by_id
+  )
+} else {
+  openalex_index <- index_candidates_by_issn(
+    openalex_sources,
+    source_issns
+  )
+  openalex_matches <- map(input_issns, \(issns) {
+    match_exact_issns(
+      issns,
+      candidates_for_issns(openalex_sources, openalex_index, issns),
+      source_issns,
+      \(source) source$id
+    )
+  })
+}
 openalex_status_counts <- table(map_chr(openalex_matches, "status"))
 
 base_result <- ojs_rows |>
@@ -718,12 +758,11 @@ base_result <- ojs_rows |>
   )
 ```
 
-### Crossref enrichment and wide master
+### Crossref enrichment and compact master
 
-Crossref is matched by the same normalized exact ISSNs. Both modes write every
-returned top-level OpenAlex and Crossref field to the same one-row-per-PKP
-master. Nested and repeated values are JSON-encoded; all ambiguous candidate
-records remain in the candidate JSON column.
+Crossref is matched by the same normalized exact ISSNs. Sample mode expands
+complete fields for the ten-row review. Full mode keeps one row per PKP record
+with candidate IDs that resolve to complete objects in the source caches.
 
 ```{r}
 #| label: crossref-enrichment
@@ -740,6 +779,7 @@ crossref_cache_is_valid <- is.list(crossref_cache) &&
 
 if (crossref_cache_is_valid) {
   crossref_result <- crossref_cache
+  rm(crossref_cache)
 } else {
   crossref_result <- if (run_mode == "sample") {
     list(
@@ -761,48 +801,59 @@ if (crossref_cache_is_valid) {
   if (run_mode == "full") unlink(crossref_page_dir, recursive = TRUE)
 }
 
-crossref_candidates <- if (run_mode == "sample") {
-  deduplicate_candidates(
+if (run_mode == "sample") {
+  crossref_candidates <- deduplicate_candidates(
     unname(compact(crossref_result$journals)),
     serialize_json
   )$candidates
 } else {
-  crossref_result$journals
+  candidate_issns <- map(crossref_result$journals, crossref_issns)
+  candidate_ids <- map_chr(
+    candidate_issns,
+    \(issns) paste(sort(issns), collapse = "|")
+  )
+  keep_candidate <- nzchar(candidate_ids) & !duplicated(candidate_ids)
+  crossref_candidate_ids <- candidate_ids[keep_candidate]
+  crossref_issns_by_id <- set_names(
+    candidate_issns[keep_candidate],
+    crossref_candidate_ids
+  )
+  rm(crossref_result, candidate_issns, candidate_ids, keep_candidate)
+  gc()
 }
 
-crossref_index <- index_candidates_by_issn(
-  crossref_candidates,
-  crossref_issns
-)
-crossref_matches <- map(input_issns, \(issns) {
-  match_exact_issns(
-    issns,
-    candidates_for_issns(
-      crossref_candidates,
-      crossref_index,
-      issns
-    ),
-    crossref_issns,
-    crossref_key,
-    deduplicate = FALSE
+if (run_mode == "sample") {
+  crossref_index <- index_candidates_by_issn(
+    crossref_candidates,
+    crossref_issns
   )
-})
+  crossref_matches <- map(input_issns, \(issns) {
+    match_exact_issns(
+      issns,
+      candidates_for_issns(
+        crossref_candidates,
+        crossref_index,
+        issns
+      ),
+      crossref_issns,
+      crossref_key
+    )
+  })
+} else {
+  crossref_index <- index_candidates_by_issn(
+    crossref_candidate_ids,
+    \(candidate_id) crossref_issns_by_id[[candidate_id]]
+  )
+  crossref_matches <- map(
+    input_issns,
+    match_indexed_ids,
+    candidate_ids = crossref_candidate_ids,
+    index = crossref_index,
+    issns_by_id = crossref_issns_by_id
+  )
+}
 crossref_status_counts <- table(map_chr(crossref_matches, "status"))
 
-# ponytail: in-memory wide assembly fits V7; stream chunks if cohort growth
-# makes memory material.
-openalex_fields <- sort(unique(unlist(map(openalex_sources, names))))
-crossref_fields <- sort(unique(unlist(map(crossref_candidates, names))))
-openalex_data <- expand_candidate_fields(
-  openalex_matches,
-  prefix = "openalex",
-  fields = openalex_fields
-)
-crossref_data <- expand_candidate_fields(
-  crossref_matches,
-  prefix = "crossref",
-  fields = crossref_fields
-)
 result <- base_result |>
   mutate(
     crossref_input_issns = map_chr(input_issns, paste, collapse = "|"),
@@ -819,8 +870,26 @@ result <- base_result |>
       crossref_matches,
       \(match) paste(match$candidate_ids, collapse = ";")
     )
-  ) |>
-  bind_cols(openalex_data, crossref_data)
+  )
+
+if (run_mode == "sample") {
+  openalex_fields <- sort(unique(unlist(map(openalex_sources, names))))
+  crossref_fields <- sort(unique(unlist(map(
+    crossref_candidates,
+    names
+  ))))
+  openalex_data <- expand_candidate_fields(
+    openalex_matches,
+    prefix = "openalex",
+    fields = openalex_fields
+  )
+  crossref_data <- expand_candidate_fields(
+    crossref_matches,
+    prefix = "crossref",
+    fields = crossref_fields
+  )
+  result <- bind_cols(result, openalex_data, crossref_data)
+}
 
 output_data <- result
 output_rows <- nrow(result)
@@ -830,7 +899,7 @@ output_columns <- names(result)
 ### Validate and promote
 
 The master is written to a temporary file, read back, and promoted only after
-its rows, fields, match states, candidate JSON, and every serialized cell pass.
+its rows, match states, and every serialized cell pass.
 
 ```{r}
 #| label: pre-promotion-validation
@@ -854,14 +923,10 @@ stopifnot(
     "openalex_match_status",
     "openalex_candidate_count",
     "openalex_candidate_ids",
-    "openalex_candidates__json",
     "crossref_match_status",
     "crossref_candidate_count",
-    "crossref_candidate_issn_sets",
-    "crossref_candidates__json"
+    "crossref_candidate_issn_sets"
   ) %in% output_columns),
-  all(paste("openalex", openalex_fields, sep = "_") %in% output_columns),
-  all(paste("crossref", crossref_fields, sep = "_") %in% output_columns),
   sum(openalex_status_counts) == output_rows,
   sum(crossref_status_counts) == output_rows,
   identical(
@@ -875,15 +940,7 @@ stopifnot(
     map2_chr(input_issns, crossref_matches, \(issns, match) {
       classify_status(issns, match$candidate_ids)
     })
-  ),
-  all(candidate_json_is_valid(
-    openalex_matches,
-    output_data$openalex_candidates__json
-  )),
-  all(candidate_json_is_valid(
-    crossref_matches,
-    output_data$crossref_candidates__json
-  ))
+  )
 )
 
 if (run_mode == "sample") {
@@ -891,7 +948,17 @@ if (run_mode == "sample") {
     identical(row_identity(ojs_rows), sample_identity),
     sum(result$identifier_status == "missing") == 1L,
     nrow(result) == 10L,
-    !anyDuplicated(map_chr(crossref_candidates, serialize_json))
+    !anyDuplicated(map_chr(crossref_candidates, serialize_json)),
+    all(paste("openalex", openalex_fields, sep = "_") %in% output_columns),
+    all(paste("crossref", crossref_fields, sep = "_") %in% output_columns),
+    all(candidate_json_is_valid(
+      openalex_matches,
+      output_data$openalex_candidates__json
+    )),
+    all(candidate_json_is_valid(
+      crossref_matches,
+      output_data$crossref_candidates__json
+    ))
   )
 } else {
   stopifnot(
@@ -907,6 +974,7 @@ if (run_mode == "sample") {
       "unmatched",
       "not_attempted"
     )),
+    !any(endsWith(output_columns, "candidates__json")),
     endsWith(output_path, ".csv.gz")
   )
 }
@@ -937,6 +1005,15 @@ stopifnot(
   !anyDuplicated(observed_identity)
 )
 
+openalex_batch_files <- if (run_mode == "full") {
+  list.files(
+    openalex_batch_dir,
+    pattern = "^batch-[0-9]{4}\\.rds$",
+    full.names = TRUE
+  )
+} else {
+  character()
+}
 run_metadata <- list(
   run_mode = run_mode,
   input = list(
@@ -949,6 +1026,14 @@ run_metadata <- list(
     rows = output_rows,
     columns = length(output_columns)
   ),
+  openalex_checkpoints = if (run_mode == "full") {
+    list(
+      count = length(openalex_batch_files),
+      md5 = file_set_md5(openalex_batch_files)
+    )
+  } else {
+    NULL
+  },
   runtime = list(
     r = R.version.string,
     quarto = system2("quarto", "--version", stdout = TRUE)[1],

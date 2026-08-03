@@ -21,7 +21,7 @@ def test_full_pipeline_has_no_cross_language_conversion_layer():
         assert fragment not in qmd
 
 
-def test_enrichment_produces_one_wide_master():
+def test_enrichment_produces_sample_review_and_compact_full_master():
     qmd = QMD_PATH.read_text()
     render = FULL_RENDER_PATH.read_text()
 
@@ -29,7 +29,9 @@ def test_enrichment_produces_one_wide_master():
     assert "expand_candidate_fields" in qmd
     assert "_candidates__json" in qmd
     assert "length(match$candidates) > 1L" in qmd
-    assert "deduplicate = FALSE" in qmd
+    assert 'if (run_mode == "sample") {' in qmd
+    assert '!any(endsWith(output_columns, "candidates__json"))' in qmd
+    assert "match_indexed_ids" in qmd
     assert "seen_keys" not in qmd
     assert 'prefix, "_candidate_"' not in qmd
     for filename in (

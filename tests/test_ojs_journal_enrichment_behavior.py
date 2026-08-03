@@ -26,12 +26,17 @@ library(tibble)
 
 wanted <- c(
   "classify_status",
+  "crossref_issns",
+  "crossref_key",
   "deduplicate_candidates",
   "serialize_json",
   "dataframe_value",
   "expand_candidate_fields",
   "fetch_crossref_directory",
   "fetch_openalex_batch",
+  "candidates_for_issns",
+  "index_candidates_by_issn",
+  "match_indexed_ids",
   "normalize_issn",
   "normalize_issn_set",
   "promote_artifact_pair",
@@ -90,10 +95,40 @@ deduplicated <- deduplicate_candidates(
 )$candidates
 stopifnot(
   length(deduplicated) == 2L,
-  identical(dataframe_value(list()), "[]")
+  identical(dataframe_value(list()), "[]"),
+  crossref_key(list(ISSN = c("2307-4116", "2307-4108"))) ==
+    "2307-4108|2307-4116"
+)
+
+candidate_ids <- c("candidate-1", "candidate-2")
+issns_by_id <- list(
+  "candidate-1" = c("2307-4108", "2307-4116"),
+  "candidate-2" = "2049-3630"
+)
+candidate_index <- index_candidates_by_issn(
+  candidate_ids,
+  \(candidate_id) issns_by_id[[candidate_id]]
+)
+indexed_match <- match_indexed_ids(
+  "2307-4116",
+  candidate_ids,
+  candidate_index,
+  issns_by_id
+)
+stopifnot(
+  indexed_match$status == "unique",
+  identical(indexed_match$matched_issns, "2307-4116"),
+  identical(indexed_match$candidate_ids, "candidate-1"),
+  match_indexed_ids(
+    "0000-0000",
+    candidate_ids,
+    candidate_index,
+    issns_by_id
+  )$status == "unmatched"
 )
 
 matches <- list(list(
+  candidate_ids = c("candidate-1", "candidate-2"),
   candidates = list(
     list(id = "candidate-1"),
     list(id = "candidate-2")

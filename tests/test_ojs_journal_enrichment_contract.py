@@ -42,6 +42,15 @@ def test_enrichment_produces_one_wide_master():
         assert filename not in render
 
 
+def test_enrichment_review_uses_filterable_dt_table():
+    qmd = QMD_PATH.read_text()
+
+    assert '"DT"' in qmd
+    assert "DT::datatable(" in qmd
+    assert 'filter = "top"' in qmd
+    assert "unlink(crossref_page_dir, recursive = TRUE)" in qmd
+
+
 def test_acquisition_and_promotion_contracts_are_explicit():
     enrichment = QMD_PATH.read_text()
     disagreement = DISAGREEMENT_QMD_PATH.read_text()

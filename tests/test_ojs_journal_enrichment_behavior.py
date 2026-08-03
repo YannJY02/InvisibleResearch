@@ -36,6 +36,7 @@ wanted <- c(
   "normalize_issn_set",
   "promote_artifact_pair",
   "read_rds_or_null",
+  "save_rds_atomic",
   "source_issns"
 )
 for (expression in parse(file = purl_path)) {
@@ -153,6 +154,9 @@ stopifnot(
 )
 
 crossref_mailto <- "researcher@example.org"
+crossref_page_dir <- tempfile()
+dir.create(crossref_page_dir)
+on.exit(unlink(crossref_page_dir, recursive = TRUE), add = TRUE)
 crossref_calls <- 0L
 fetch_crossref_page <- function(cursor, mailto) {
   crossref_calls <<- crossref_calls + 1L
@@ -160,22 +164,34 @@ fetch_crossref_page <- function(cursor, mailto) {
     return(list(
       items = replicate(1000L, list(ISSN = list("2307-4108")), simplify = FALSE),
       `total-results` = 1001L,
-      `next-cursor` = "*"
+      `next-cursor` = "next"
     ))
   }
+  stop("throttled")
+}
+stopifnot(
+  inherits(try(fetch_crossref_directory(), silent = TRUE), "try-error"),
+  crossref_calls == 2L
+)
+
+crossref_calls <- 0L
+fetch_crossref_page <- function(cursor, mailto) {
+  crossref_calls <<- crossref_calls + 1L
   list(
     items = list(list(ISSN = list("2307-4116"))),
     `total-results` = 1001L,
-    `next-cursor` = "*"
+    `next-cursor` = NULL
   )
 }
 directory <- fetch_crossref_directory()
 stopifnot(
   length(directory$journals) == 1001L,
   directory$total_results == 1001L,
-  crossref_calls == 2L
+  crossref_calls == 1L
 )
 
+unlink(crossref_page_dir, recursive = TRUE)
+dir.create(crossref_page_dir)
 crossref_calls <- 0L
 repeated_page <- replicate(
   1000L,

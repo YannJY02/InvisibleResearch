@@ -31,7 +31,8 @@ library(readr)
 library(tibble)
 
 analysis_packages <- c(
-  "curl", "dplyr", "httr2", "jsonlite", "knitr", "purrr", "readr", "tibble"
+  "curl", "dplyr", "DT", "httr2", "jsonlite", "knitr", "purrr", "readr",
+  "tibble"
 )
 run_mode <- Sys.getenv("OJS_ENRICHMENT_MODE", unset = "sample")
 stopifnot(run_mode %in% c("sample", "full"))
@@ -64,11 +65,13 @@ metadata_path <- file.path(run_dir, "run-metadata.json")
 openalex_cache_path <- file.path(run_dir, "openalex-sources.rds")
 crossref_cache_path <- file.path(run_dir, "crossref-journals.rds")
 openalex_batch_dir <- file.path(run_dir, "openalex-batches")
+crossref_page_dir <- file.path(run_dir, "crossref-pages")
 
 dir.create(input_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 if (run_mode == "full") {
   dir.create(openalex_batch_dir, recursive = TRUE, showWarnings = FALSE)
+  dir.create(crossref_page_dir, recursive = TRUE, showWarnings = FALSE)
 }
 
 download_pkp_input <- function(path) {
@@ -289,36 +292,60 @@ fetch_crossref_page <- function(cursor, mailto) {
 }
 
 fetch_crossref_directory <- function() {
-  if (!grepl("^[^@[:space:]]+@[^@[:space:]]+$", crossref_mailto)) {
-    stop("Set CROSSREF_MAILTO before retrieving Crossref data.", call. = FALSE)
-  }
-
   cursor <- "*"
   journals <- list()
   previous_items <- NULL
   total_results <- NULL
+  page_index <- 1L
 
   repeat {
-    page <- fetch_crossref_page(cursor, crossref_mailto)
-    if (!is.null(previous_items) && identical(page$items, previous_items)) {
+    checkpoint_path <- file.path(
+      crossref_page_dir,
+      sprintf("page-%04d.rds", page_index)
+    )
+    checkpoint <- read_rds_or_null(checkpoint_path)
+    reusable <- is.list(checkpoint) &&
+      identical(checkpoint$cursor, cursor) &&
+      length(checkpoint$total_results) == 1L &&
+      is.list(checkpoint$items)
+
+    if (!reusable) {
+      if (!grepl("^[^@[:space:]]+@[^@[:space:]]+$", crossref_mailto)) {
+        stop("Set CROSSREF_MAILTO before retrieving Crossref data.", call. = FALSE)
+      }
+      page <- fetch_crossref_page(cursor, crossref_mailto)
+      checkpoint <- list(
+        cursor = cursor,
+        total_results = as.integer(page[["total-results"]]),
+        next_cursor = page[["next-cursor"]],
+        items = page$items,
+        retrieved_at = format(Sys.time(), tz = "UTC", usetz = TRUE)
+      )
+      save_rds_atomic(checkpoint, checkpoint_path)
+    }
+
+    if (!is.null(previous_items) && identical(checkpoint$items, previous_items)) {
       stop("Crossref repeated a page.", call. = FALSE)
     }
     if (is.null(total_results)) {
-      total_results <- as.integer(page[["total-results"]])
+      total_results <- checkpoint$total_results
+    } else if (!identical(total_results, checkpoint$total_results)) {
+      stop("Crossref total-results changed during pagination.", call. = FALSE)
     }
-    journals <- c(journals, page$items)
-    previous_items <- page$items
+    journals <- c(journals, checkpoint$items)
+    previous_items <- checkpoint$items
     if (length(journals) > total_results) {
       stop("Crossref pagination exceeded total-results.", call. = FALSE)
     }
 
-    if (length(page$items) < 1000L) break
+    if (length(checkpoint$items) < 1000L) break
 
-    cursor <- page[["next-cursor"]]
+    cursor <- checkpoint$next_cursor
     if (is.null(cursor) || !nzchar(cursor)) {
       stop("Crossref returned a full page without a next cursor.", call. = FALSE)
     }
-    Sys.sleep(0.2)
+    page_index <- page_index + 1L
+    if (!reusable) Sys.sleep(0.2)
   }
 
   if (length(journals) != total_results) {
@@ -731,6 +758,7 @@ if (crossref_cache_is_valid) {
     )
   }
   save_rds_atomic(crossref_result, crossref_cache_path)
+  if (run_mode == "full") unlink(crossref_page_dir, recursive = TRUE)
 }
 
 crossref_candidates <- if (run_mode == "sample") {
@@ -998,7 +1026,11 @@ review_result |>
     crossref_match_status,
     crossref_candidate_count
   ) |>
-  knitr::kable()
+  DT::datatable(
+    filter = "top",
+    rownames = FALSE,
+    options = list(pageLength = 10)
+  )
 
 tibble(column = output_columns) |>
   knitr::kable()

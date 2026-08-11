@@ -1,0 +1,919 @@
+---
+title: "PKP/OJS multi-source journal enrichment — simple version"
+format:
+  html:
+    toc: true
+execute:
+  echo: true
+  warning: true
+  message: false
+---
+
+This one-off notebook independently rebuilds the complete PKP/OJS enrichment.
+It keeps the original exact-ISSN rule, retrieves OpenAlex and Crossref data when
+the reusable caches are missing, expands every observed top-level source field,
+and writes the 98,273-row result plus a fixed ten-row review sample as Parquet.
+Nested values are retained as JSON strings. Rows with multiple candidates keep
+all complete candidate objects in a JSON column instead of selecting one.
+
+The original enrichment caches are optional read-only fallbacks. Any downloaded
+input or newly retrieved source data are written under this notebook's own
+artifact directory. To retrieve a fresh snapshot, set `reuse_shared_cache` to
+`FALSE` and delete this notebook's `source-cache`. Missing OpenAlex batches
+require `OPENALEX_API_KEY`; missing Crossref pages require `CROSSREF_MAILTO`.
+
+## Packages and paths
+
+```{r}
+#| label: packages-and-paths
+
+library(dplyr)
+library(httr2)
+library(purrr)
+library(readr)
+library(tibble)
+
+stopifnot(requireNamespace("jsonlite", quietly = TRUE))
+stopifnot(requireNamespace("knitr", quietly = TRUE))
+stopifnot(requireNamespace("nanoparquet", quietly = TRUE))
+
+document_path <- knitr::current_input(dir = TRUE)
+document_dir <- if (nzchar(document_path)) {
+  dirname(normalizePath(document_path))
+} else {
+  normalizePath(getwd())
+}
+domain_dir <- normalizePath(file.path(document_dir, "..", ".."))
+project_env_path <- file.path(domain_dir, "..", "..", ".env")
+if (file.exists(project_env_path)) readRenviron(project_env_path)
+
+artifact_dir <- file.path(
+  domain_dir,
+  "artifacts",
+  "ojs_journal_enrichment_simple_ver"
+)
+shared_artifact_dir <- file.path(
+  domain_dir,
+  "artifacts",
+  "ojs_journal_enrichment"
+)
+reuse_shared_cache <- TRUE
+cache_dir <- file.path(artifact_dir, "source-cache")
+shared_cache_dir <- file.path(shared_artifact_dir, "full-v7")
+input_dir <- file.path(artifact_dir, "input")
+input_path <- file.path(input_dir, "beacon.csv")
+shared_input_path <- file.path(shared_artifact_dir, "pkp-v7", "beacon.csv")
+openalex_batch_dir <- file.path(cache_dir, "openalex-batches")
+shared_openalex_batch_dir <- file.path(shared_cache_dir, "openalex-batches")
+crossref_cache_path <- file.path(cache_dir, "crossref-journals.rds")
+shared_crossref_cache_path <- file.path(
+  shared_cache_dir,
+  "crossref-journals.rds"
+)
+crossref_page_dir <- file.path(cache_dir, "crossref-pages")
+shared_crossref_page_dir <- file.path(shared_cache_dir, "crossref-pages")
+output_path <- file.path(
+  artifact_dir,
+  "pkp-ojs-multisource-enriched-simple_ver.parquet"
+)
+sample_output_path <- file.path(
+  artifact_dir,
+  "pkp-ojs-multisource-enriched-simple_ver-sample.parquet"
+)
+openalex_expanded_path <- file.path(artifact_dir, "openalex-expanded.rds")
+crossref_expanded_path <- file.path(artifact_dir, "crossref-expanded.rds")
+
+dir.create(input_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(artifact_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(openalex_batch_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(crossref_page_dir, recursive = TRUE, showWarnings = FALSE)
+
+pkp_url <- paste0(
+  "https://dataverse.harvard.edu/api/access/datafile/",
+  "14084919?format=original"
+)
+pkp_md5 <- "3a4ad8ae1ebfcc2b991aaf55b2d82c92"
+
+if (!file.exists(input_path)) {
+  if (
+    file.exists(shared_input_path) &&
+      unname(tools::md5sum(shared_input_path)) == pkp_md5
+  ) {
+    stopifnot(file.copy(shared_input_path, input_path))
+  } else {
+    temporary_input <- paste0(input_path, ".download")
+    download.file(pkp_url, temporary_input, mode = "wb")
+    stopifnot(unname(tools::md5sum(temporary_input)) == pkp_md5)
+    stopifnot(file.rename(temporary_input, input_path))
+  }
+}
+stopifnot(unname(tools::md5sum(input_path)) == pkp_md5)
+```
+
+## ISSN preparation
+
+```{r}
+#| label: issn-preparation
+
+normalize_issn <- function(value) {
+  if (length(value) != 1L || is.na(value)) return(NA_character_)
+  compact <- gsub("[^0-9X]", "", toupper(trimws(as.character(value))))
+  if (!grepl("^[0-9]{7}[0-9X]$", compact)) return(NA_character_)
+
+  digits <- as.integer(strsplit(substr(compact, 1, 7), "")[[1]])
+  check_value <- (11 - sum(digits * 8:2) %% 11) %% 11
+  expected <- if (check_value == 10) "X" else as.character(check_value)
+  if (substr(compact, 8, 8) != expected) return(NA_character_)
+
+  paste0(substr(compact, 1, 4), "-", substr(compact, 5, 8))
+}
+
+normalize_issn_set <- function(values) {
+  normalized <- vapply(values, normalize_issn, character(1))
+  unique(normalized[!is.na(normalized)])
+}
+
+is_missing_value <- function(value) {
+  is.na(value) |
+    !nzchar(trimws(value)) |
+    toupper(trimws(value)) == "NA"
+}
+
+parse_issns <- function(value) {
+  if (is_missing_value(value)) return(character())
+  tokens <- unlist(strsplit(value, "[[:space:],;|]+"))
+  normalize_issn_set(tokens[nzchar(tokens)])
+}
+
+openalex_issns <- function(source) {
+  normalize_issn_set(unlist(source$issn, use.names = FALSE))
+}
+
+crossref_issns <- function(journal) {
+  normalize_issn_set(journal$ISSN)
+}
+```
+
+## Source retrieval and caching
+
+The cache code is intentionally small: completed OpenAlex batches and Crossref
+pages are reused; missing data are fetched with bounded retries and timeouts.
+
+```{r}
+#| label: retrieval-helpers
+
+retryable_response <- function(response) {
+  resp_status(response) %in% c(403L, 408L, 429L, 500L, 502L, 503L, 504L)
+}
+
+save_cache <- function(value, path) {
+  temporary <- paste0(path, ".tmp")
+  saveRDS(value, temporary)
+  stopifnot(file.rename(temporary, path))
+}
+
+read_cache <- function(path) {
+  if (!file.exists(path)) return(NULL)
+  tryCatch(readRDS(path), error = \(error) NULL)
+}
+
+fetch_openalex_page <- function(issns, cursor) {
+  api_key <- Sys.getenv("OPENALEX_API_KEY")
+  if (!nzchar(api_key)) {
+    stop("Set OPENALEX_API_KEY to retrieve missing OpenAlex batches.")
+  }
+
+  body <- request("https://api.openalex.org/sources") |>
+    req_url_query(
+      filter = paste0("issn:", paste(issns, collapse = "|")),
+      per_page = 200,
+      cursor = cursor,
+      api_key = api_key
+    ) |>
+    req_timeout(seconds = 30) |>
+    req_retry(
+      max_tries = 4L,
+      retry_on_failure = TRUE,
+      is_transient = retryable_response
+    ) |>
+    req_perform() |>
+    resp_body_json(simplifyVector = FALSE)
+
+  stopifnot(
+    is.list(body$results),
+    is.list(body$meta),
+    length(body$meta$count) == 1L,
+    is.null(body$meta$next_cursor) ||
+      length(body$meta$next_cursor) == 1L
+  )
+  body
+}
+
+fetch_openalex_batch <- function(issns) {
+  stopifnot(length(issns) <= 100L)
+  cursor <- "*"
+  seen_cursors <- character()
+  sources <- list()
+  expected_count <- NULL
+
+  repeat {
+    if (cursor %in% seen_cursors) stop("OpenAlex repeated a cursor.")
+    seen_cursors <- c(seen_cursors, cursor)
+    page <- fetch_openalex_page(issns, cursor)
+    if (is.null(expected_count)) expected_count <- as.integer(page$meta$count)
+    sources <- c(sources, page$results)
+    cursor <- page$meta$next_cursor
+    if (is.null(cursor) || !nzchar(cursor)) break
+  }
+
+  stopifnot(length(sources) == expected_count)
+  sources
+}
+
+fetch_crossref_page <- function(cursor) {
+  mailto <- Sys.getenv("CROSSREF_MAILTO")
+  if (!grepl("^[^@[:space:]]+@[^@[:space:]]+$", mailto)) {
+    stop("Set CROSSREF_MAILTO to retrieve missing Crossref pages.")
+  }
+
+  body <- request("https://api.crossref.org/journals") |>
+    req_url_query(rows = 1000, cursor = cursor, mailto = mailto) |>
+    req_user_agent(
+      paste(
+        "InvisibleResearch journal enrichment;",
+        "https://github.com/YannJY02/InvisibleResearch"
+      )
+    ) |>
+    req_timeout(seconds = 60) |>
+    req_retry(
+      max_tries = 4L,
+      retry_on_failure = TRUE,
+      is_transient = retryable_response
+    ) |>
+    req_perform() |>
+    resp_body_json(simplifyVector = FALSE) |>
+    pluck("message")
+
+  stopifnot(
+    is.list(body$items),
+    length(body[["total-results"]]) == 1L
+  )
+  body
+}
+
+fetch_crossref_directory <- function() {
+  cursor <- "*"
+  journals <- list()
+  expected_count <- NULL
+  previous_items <- NULL
+  page_number <- 1L
+
+  repeat {
+    page_path <- file.path(
+      crossref_page_dir,
+      sprintf("page-%04d.rds", page_number)
+    )
+    page <- read_cache(page_path)
+    reusable <- is.list(page) &&
+      identical(page$cursor, cursor) &&
+      is.list(page$items) &&
+      length(page$total_results) == 1L
+
+    if (!reusable) {
+      shared_page <- if (reuse_shared_cache) {
+        read_cache(file.path(shared_crossref_page_dir, basename(page_path)))
+      } else {
+        NULL
+      }
+      reusable <- is.list(shared_page) &&
+        identical(shared_page$cursor, cursor) &&
+        is.list(shared_page$items) &&
+        length(shared_page$total_results) == 1L
+      if (reusable) {
+        page <- shared_page
+      } else {
+        response <- fetch_crossref_page(cursor)
+        page <- list(
+          cursor = cursor,
+          total_results = as.integer(response[["total-results"]]),
+          next_cursor = response[["next-cursor"]],
+          items = response$items
+        )
+        save_cache(page, page_path)
+        Sys.sleep(0.2)
+      }
+    }
+
+    if (!is.null(previous_items) && identical(page$items, previous_items)) {
+      stop("Crossref repeated a page.")
+    }
+    if (is.null(expected_count)) {
+      expected_count <- page$total_results
+    } else {
+      stopifnot(identical(expected_count, page$total_results))
+    }
+
+    journals <- c(journals, page$items)
+    stopifnot(length(journals) <= expected_count)
+    if (length(page$items) < 1000L) break
+
+    cursor <- page$next_cursor
+    if (is.null(cursor) || !nzchar(cursor)) {
+      stop("Crossref returned a full page without a next cursor.")
+    }
+    previous_items <- page$items
+    page_number <- page_number + 1L
+  }
+
+  stopifnot(length(journals) == expected_count)
+  list(journals = journals, total_results = expected_count)
+}
+```
+
+## Load the complete PKP V7 cohort
+
+```{r}
+#| label: load-pkp
+
+pkp_rows <- read_csv(
+  input_path,
+  col_types = cols(.default = col_character()),
+  na = character(),
+  show_col_types = FALSE
+)
+
+expected_schema <- c(
+  "context_name", "issn", "oai_url", "application", "country", "region",
+  "total_record_count", "record_count_2025", "earliest_datestamp",
+  "repository_name", "set_spec", "stats_id", "best_doaj_url",
+  "last_completed_update", "first_beacon", "last_beacon",
+  "last_oai_response", "unresponsive_endpoint", "unresponsive_context"
+)
+row_identity <- function(data) {
+  paste(data$oai_url, data$repository_name, data$set_spec, sep = "\r")
+}
+
+stopifnot(
+  nrow(pkp_rows) == 98273L,
+  identical(names(pkp_rows), expected_schema),
+  all(tolower(pkp_rows$application) == "ojs"),
+  !anyDuplicated(row_identity(pkp_rows))
+)
+
+input_issns <- map(pkp_rows$issn, parse_issns)
+tokens <- sort(unique(unlist(input_issns)))
+stopifnot(
+  sum(is_missing_value(pkp_rows$issn)) == 26189L,
+  length(tokens) == 103017L
+)
+```
+
+## Matching and field expansion helpers
+
+```{r}
+#| label: matching-helpers
+
+deduplicate_candidates <- function(candidates, identity) {
+  ids <- vapply(candidates, identity, character(1))
+  keep <- !duplicated(ids)
+  list(candidates = candidates[keep], ids = ids[keep])
+}
+
+index_candidates <- function(candidate_issns) {
+  index <- new.env(hash = TRUE, parent = emptyenv())
+  for (position in seq_along(candidate_issns)) {
+    for (issn in candidate_issns[[position]]) {
+      existing <- get0(
+        issn,
+        index,
+        inherits = FALSE,
+        ifnotfound = integer()
+      )
+      assign(issn, c(existing, position), index)
+    }
+  }
+  index
+}
+
+match_candidates <- function(issns, index, candidate_issns) {
+  positions <- unique(unlist(map(issns, \(issn) {
+    get0(issn, index, inherits = FALSE, ifnotfound = integer())
+  })))
+  matched_issns <- base::intersect(
+    issns,
+    unique(unlist(candidate_issns[positions]))
+  )
+  status <- case_when(
+    length(issns) == 0L ~ "not_attempted",
+    length(positions) == 0L ~ "unmatched",
+    length(positions) == 1L ~ "unique",
+    TRUE ~ "ambiguous"
+  )
+  list(
+    status = status,
+    matched_issns = matched_issns,
+    positions = positions
+  )
+}
+
+serialize_json <- function(value) {
+  as.character(jsonlite::toJSON(
+    value,
+    auto_unbox = TRUE,
+    null = "null",
+    na = "null",
+    digits = NA
+  ))
+}
+
+dataframe_value <- function(value) {
+  if (is.null(value)) return(NA_character_)
+  if (is.atomic(value) && length(value) == 1L) {
+    return(as.character(value))
+  }
+  serialize_json(value)
+}
+
+scalar_column <- function(values) {
+  present <- keep(values, \(value) !is.null(value) && length(value) == 1L)
+  types <- unique(map_chr(present, typeof))
+  missing <- \(value) is.null(value) || length(value) == 0L
+
+  if (length(types) > 0L && all(types == "logical")) {
+    return(map_lgl(values, \(value) if (missing(value)) NA else value))
+  }
+  if (length(types) > 0L && all(types == "integer")) {
+    return(map_int(values, \(value) if (missing(value)) NA_integer_ else value))
+  }
+  if (length(types) > 0L && all(types %in% c("integer", "double"))) {
+    return(map_dbl(values, \(value) if (missing(value)) NA_real_ else value))
+  }
+  map_chr(values, \(value) {
+    if (missing(value)) NA_character_ else as.character(value)
+  })
+}
+
+expand_source_fields <- function(matches, candidates, prefix) {
+  fields <- sort(unique(unlist(map(candidates, names))))
+  single_positions <- map_int(matches, \(match) {
+    if (length(match$positions) == 1L) match$positions else NA_integer_
+  })
+
+  # ponytail: JSON conversion is single-process for this one-off; use Arrow
+  # nested columns only if repeated full rebuilds make serialization a problem.
+  columns <- set_names(
+    map(fields, \(field) {
+      values <- map(candidates, \(candidate) candidate[[field]])
+      scalar_field <- all(map_lgl(values, \(value) {
+        is.null(value) || (is.atomic(value) && length(value) <= 1L)
+      }))
+      candidate_values <- if (scalar_field) {
+        scalar_column(values)
+      } else {
+        map_chr(values, dataframe_value)
+      }
+      candidate_values[single_positions]
+    }),
+    paste(prefix, fields, sep = "_")
+  )
+  columns[[paste0(prefix, "_candidates__json")]] <- map_chr(
+    matches,
+    \(match) {
+      if (length(match$positions) > 1L) {
+        serialize_json(candidates[match$positions])
+      } else {
+        NA_character_
+      }
+    }
+  )
+  as_tibble(columns, .name_repair = "check_unique")
+}
+```
+
+## OpenAlex enrichment
+
+```{r}
+#| label: openalex-enrichment
+
+token_batches <- split(tokens, ceiling(seq_along(tokens) / 100L))
+openalex_batch_results <- imap(token_batches, \(batch, batch_number) {
+  checkpoint_path <- file.path(
+    openalex_batch_dir,
+    sprintf("batch-%04d.rds", as.integer(batch_number))
+  )
+  checkpoint <- read_cache(checkpoint_path)
+  reusable <- is.list(checkpoint) &&
+    identical(checkpoint$issns, batch) &&
+    is.list(checkpoint$sources)
+
+  if (!reusable && reuse_shared_cache) {
+    shared_checkpoint_path <- file.path(
+      shared_openalex_batch_dir,
+      basename(checkpoint_path)
+    )
+    checkpoint <- read_cache(shared_checkpoint_path)
+    reusable <- is.list(checkpoint) &&
+      identical(checkpoint$issns, batch) &&
+      is.list(checkpoint$sources)
+    if (reusable) checkpoint_path <- shared_checkpoint_path
+  }
+
+  if (!reusable) {
+    checkpoint <- list(
+      issns = batch,
+      sources = fetch_openalex_batch(batch)
+    )
+    save_cache(checkpoint, checkpoint_path)
+  }
+  list(sources = checkpoint$sources, path = checkpoint_path)
+})
+
+openalex_batches <- map(openalex_batch_results, "sources")
+openalex_source_key <- paste(
+  unname(tools::md5sum(map_chr(openalex_batch_results, "path"))),
+  collapse = ""
+)
+openalex_sources <- unlist(openalex_batches, recursive = FALSE)
+openalex_resolved <- deduplicate_candidates(
+  openalex_sources,
+  \(source) source$id
+)
+openalex_sources <- openalex_resolved$candidates
+openalex_ids <- openalex_resolved$ids
+openalex_issns_by_candidate <- map(openalex_sources, openalex_issns)
+relevant <- map_lgl(
+  openalex_issns_by_candidate,
+  \(issns) any(issns %in% tokens)
+)
+openalex_sources <- openalex_sources[relevant]
+openalex_ids <- openalex_ids[relevant]
+openalex_issns_by_candidate <- openalex_issns_by_candidate[relevant]
+openalex_index <- index_candidates(openalex_issns_by_candidate)
+openalex_matches <- map(
+  input_issns,
+  match_candidates,
+  index = openalex_index,
+  candidate_issns = openalex_issns_by_candidate
+)
+
+base_result <- pkp_rows |>
+  mutate(
+    identifier_status = case_when(
+      is_missing_value(issn) ~ "missing",
+      lengths(input_issns) == 0L ~ "invalid",
+      TRUE ~ "valid"
+    ),
+    openalex_input_issns = map_chr(input_issns, paste, collapse = "|"),
+    openalex_matched_issns = map_chr(
+      openalex_matches,
+      \(match) paste(match$matched_issns, collapse = "|")
+    ),
+    openalex_match_status = map_chr(openalex_matches, "status"),
+    openalex_candidate_count = map_int(
+      openalex_matches,
+      \(match) length(match$positions)
+    ),
+    openalex_candidate_ids = map_chr(
+      openalex_matches,
+      \(match) paste(openalex_ids[match$positions], collapse = "|")
+    )
+  )
+
+openalex_expected_columns <- c(
+  paste("openalex", sort(unique(unlist(map(openalex_sources, names)))), sep = "_"),
+  "openalex_candidates__json"
+)
+openalex_expanded <- read_cache(openalex_expanded_path)
+if (
+  !is.list(openalex_expanded) ||
+    !identical(openalex_expanded$source_key, openalex_source_key) ||
+    !is.data.frame(openalex_expanded$data) ||
+    nrow(openalex_expanded$data) != nrow(pkp_rows) ||
+    !identical(names(openalex_expanded$data), openalex_expected_columns)
+) {
+  openalex_expanded <- list(
+    source_key = openalex_source_key,
+    data = expand_source_fields(openalex_matches, openalex_sources, "openalex")
+  )
+  save_cache(openalex_expanded, openalex_expanded_path)
+}
+openalex_data <- openalex_expanded$data
+rm(openalex_batches, openalex_batch_results, openalex_resolved, openalex_index)
+gc()
+```
+
+## Crossref enrichment
+
+```{r}
+#| label: crossref-enrichment
+
+crossref_cache <- read_cache(crossref_cache_path)
+cache_is_complete <- is.list(crossref_cache) &&
+  is.list(crossref_cache$journals) &&
+  identical(
+    as.integer(crossref_cache$total_results),
+    length(crossref_cache$journals)
+  )
+
+crossref_cache_source_path <- crossref_cache_path
+if (!cache_is_complete && reuse_shared_cache) {
+  crossref_cache <- read_cache(shared_crossref_cache_path)
+  cache_is_complete <- is.list(crossref_cache) &&
+    is.list(crossref_cache$journals) &&
+    identical(
+      as.integer(crossref_cache$total_results),
+      length(crossref_cache$journals)
+    )
+  if (cache_is_complete) {
+    crossref_cache_source_path <- shared_crossref_cache_path
+  }
+}
+if (!cache_is_complete) {
+  crossref_cache <- fetch_crossref_directory()
+  save_cache(crossref_cache, crossref_cache_path)
+  crossref_cache_source_path <- crossref_cache_path
+}
+crossref_source_key <- unname(tools::md5sum(crossref_cache_source_path))
+crossref_journals <- crossref_cache$journals
+crossref_issns_by_candidate <- map(crossref_journals, crossref_issns)
+relevant <- map_lgl(
+  crossref_issns_by_candidate,
+  \(issns) any(issns %in% tokens)
+)
+crossref_journals <- crossref_journals[relevant]
+crossref_ids <- map_chr(
+  crossref_journals,
+  \(journal) paste(sort(crossref_issns(journal)), collapse = "|")
+)
+keep <- nzchar(crossref_ids)
+crossref_journals <- crossref_journals[keep]
+crossref_ids <- crossref_ids[keep]
+crossref_issns_by_candidate <- map(crossref_journals, crossref_issns)
+crossref_index <- index_candidates(crossref_issns_by_candidate)
+crossref_matches <- map(
+  input_issns,
+  match_candidates,
+  index = crossref_index,
+  candidate_issns = crossref_issns_by_candidate
+)
+
+crossref_expected_columns <- c(
+  paste("crossref", sort(unique(unlist(map(crossref_journals, names)))), sep = "_"),
+  "crossref_candidates__json"
+)
+crossref_expanded <- read_cache(crossref_expanded_path)
+if (
+  !is.list(crossref_expanded) ||
+    !identical(crossref_expanded$source_key, crossref_source_key) ||
+    !is.data.frame(crossref_expanded$data) ||
+    nrow(crossref_expanded$data) != nrow(pkp_rows) ||
+    !identical(names(crossref_expanded$data), crossref_expected_columns)
+) {
+  crossref_expanded <- list(
+    source_key = crossref_source_key,
+    data = expand_source_fields(crossref_matches, crossref_journals, "crossref")
+  )
+  save_cache(crossref_expanded, crossref_expanded_path)
+}
+crossref_data <- crossref_expanded$data
+
+result <- base_result |>
+  mutate(
+    crossref_input_issns = map_chr(input_issns, paste, collapse = "|"),
+    crossref_matched_issns = map_chr(
+      crossref_matches,
+      \(match) paste(match$matched_issns, collapse = "|")
+    ),
+    crossref_match_status = map_chr(crossref_matches, "status"),
+    crossref_candidate_count = map_int(
+      crossref_matches,
+      \(match) length(match$positions)
+    ),
+    crossref_candidate_issn_sets = map_chr(
+      crossref_matches,
+      \(match) paste(crossref_ids[match$positions], collapse = ";")
+    )
+  ) |>
+  bind_cols(openalex_data, crossref_data)
+```
+
+## Parquet outputs and lightweight validation
+
+```{r}
+#| label: parquet-output
+
+sample_spec <- tribble(
+  ~context_name, ~oai_url, ~repository_name, ~set_spec,
+  "Kuwait Journal of Science",
+  "https://journalskuwait.org/kjs/index.php/index/oai",
+  "Kuwait Journal of Science", "KJS",
+  "Cakrawala",
+  "https://cakrawalajournal.org/index.php/index/oai",
+  "CAKRAWALA", "cakrawala",
+  "Sintesa: Jurnal Ilmu Pendidikan",
+  "https://sintesa.stkip-arrahmaniyah.ac.id/index.php/index/oai",
+  "Sintesa: Jurnal Ilmu Pendidikan STKIP Arrahmaniyah Depok", "sintesa",
+  "CARAKA: Jurnal Teologi Biblika dan Praktika",
+  "https://ojs.sttibc.ac.id/index.php/index/oai",
+  "CARAKA:Jurnal Teologi", "ibc",
+  "Jurnal Tata Kelola dan Akuntabilitas Keuangan Negara",
+  "https://jurnal.bpk.go.id/index.php/index/oai",
+  "Open Journal Systems", "TAKEN",
+  "JOEEL (Journal of English Education and Literature)",
+  "https://journal.stkippamanetalino.ac.id/index.php/index/oai",
+  "Rumah Jurnal STKIP Pamane Talino Ngabang", "bahasa-inggris",
+  "Malaysian Journal of Paediatrics and Child Health",
+  "https://mpaeds.my/journals/index.php/index/oai",
+  "NA", "MJPCH",
+  "Jami Scientific Research Quarterly Journal",
+  "https://journals.jami.edu.af/index.php/index/oai",
+  "Jami University Press", "jsrqj",
+  "Journal of Polymer & Composites",
+  "https://engineeringjournals.stmjournals.in/index.php/index/oai",
+  "Engineering Journals", "JoPC",
+  "JURNAL TEKNIK PERTAMBANGAN",
+  "https://e-journal.upr.ac.id/index.php/index/oai",
+  "Journal Online Universitas Palangka Raya", "JTP"
+)
+sample_positions <- match(row_identity(sample_spec), row_identity(result))
+stopifnot(!anyNA(sample_positions))
+sample_result <- result[sample_positions, ]
+
+candidate_json_is_complete <- function(matches, values) {
+  map2_lgl(matches, values, \(match, value) {
+    candidate_count <- length(match$positions)
+    if (candidate_count <= 1L) return(is.na(value))
+    parsed <- tryCatch(
+      jsonlite::fromJSON(value, simplifyVector = FALSE),
+      error = \(error) NULL
+    )
+    is.list(parsed) && length(parsed) == candidate_count
+  })
+}
+
+stopifnot(
+  nrow(result) == 98273L,
+  !"admin_email" %in% names(result),
+  identical(row_identity(result), row_identity(pkp_rows)),
+  !anyDuplicated(row_identity(result)),
+  nrow(sample_result) == 10L,
+  all(c(
+    "openalex_candidates__json",
+    "crossref_candidates__json"
+  ) %in% names(result)),
+  all(candidate_json_is_complete(
+    openalex_matches,
+    result$openalex_candidates__json
+  )),
+  all(candidate_json_is_complete(
+    crossref_matches,
+    result$crossref_candidates__json
+  ))
+)
+
+python_candidates <- unname(Sys.which(c("python", "python3")))
+python_candidates <- python_candidates[nzchar(python_candidates)]
+has_pyarrow <- map_lgl(python_candidates, \(candidate) {
+  suppressWarnings(system2(
+    candidate,
+    c("-c", shQuote("import pyarrow")),
+    stdout = FALSE,
+    stderr = FALSE
+  )) == 0L
+})
+python <- python_candidates[has_pyarrow][1]
+if (is.na(python)) stop("Python with PyArrow is required to write Parquet.")
+converter_path <- file.path(artifact_dir, "csv_to_parquet.py")
+writeLines(c(
+  "import csv",
+  "import json",
+  "import sys",
+  "from pathlib import Path",
+  "import pyarrow as pa",
+  "import pyarrow.csv as pacsv",
+  "import pyarrow.parquet as pq",
+  "input_path, schema_path, output_path = map(Path, sys.argv[1:4])",
+  "temporary_path = output_path.with_suffix(output_path.suffix + '.tmp')",
+  "with open(input_path, newline='', encoding='utf-8') as handle:",
+  "    columns = next(csv.reader(handle))",
+  "r_types = json.loads(schema_path.read_text(encoding='utf-8'))",
+  paste0(
+    "arrow_types = {'character': pa.string(), 'logical': pa.bool_(), ",
+    "'integer': pa.int32(), 'double': pa.float64()}"
+  ),
+  "types = {column: arrow_types[r_types[column]] for column in columns}",
+  "reader = pacsv.open_csv(",
+  "    input_path,",
+  "    read_options=pacsv.ReadOptions(block_size=64 * 1024 * 1024),",
+  "    convert_options=pacsv.ConvertOptions(",
+  paste0(
+    "        column_types=types, strings_can_be_null=True, ",
+    "null_values=['__OJS_SIMPLE_NULL__']"
+  ),
+  "    ),",
+  ")",
+  "temporary_path.unlink(missing_ok=True)",
+  "writer = pq.ParquetWriter(temporary_path, reader.schema, compression='zstd')",
+  "try:",
+  "    for batch in reader:",
+  "        writer.write_batch(batch)",
+  "finally:",
+  "    writer.close()",
+  "temporary_path.replace(output_path)"
+), converter_path)
+
+write_parquet <- function(data, path) {
+  staging_path <- paste0(path, ".csv")
+  schema_path <- paste0(path, ".schema.json")
+  on.exit(unlink(c(staging_path, schema_path)), add = TRUE)
+  write_csv(data, staging_path, na = "__OJS_SIMPLE_NULL__")
+  column_types <- map_chr(data, typeof)
+  stopifnot(all(column_types %in% c(
+    "character", "logical", "integer", "double"
+  )))
+  jsonlite::write_json(as.list(column_types), schema_path, auto_unbox = TRUE)
+  output <- system2(
+    python,
+    c(converter_path, staging_path, schema_path, path),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  if (!is.null(attr(output, "status")) && attr(output, "status") != 0L) {
+    stop(paste(output, collapse = "\n"))
+  }
+}
+
+pending_output_path <- paste0(output_path, ".pending")
+pending_sample_output_path <- paste0(sample_output_path, ".pending")
+write_parquet(result, pending_output_path)
+write_parquet(sample_result, pending_sample_output_path)
+unlink(converter_path)
+
+parquet_info <- nanoparquet::read_parquet_info(pending_output_path)
+parquet_schema <- nanoparquet::read_parquet_schema(pending_output_path)
+observed <- nanoparquet::read_parquet(pending_output_path)
+observed_sample <- nanoparquet::read_parquet(pending_sample_output_path)
+
+stopifnot(
+  parquet_info$num_rows == nrow(result),
+  parquet_info$num_cols == ncol(result),
+  identical(
+    parquet_schema$name[!is.na(parquet_schema$r_col)],
+    names(result)
+  ),
+  isTRUE(all.equal(
+    as.data.frame(observed),
+    as.data.frame(result),
+    check.attributes = FALSE
+  )),
+  isTRUE(all.equal(
+    as.data.frame(observed_sample),
+    as.data.frame(sample_result),
+    check.attributes = FALSE
+  ))
+)
+
+stopifnot(
+  file.rename(pending_output_path, output_path),
+  file.rename(pending_sample_output_path, sample_output_path)
+)
+```
+
+## Ten-row visual review
+
+```{r}
+#| label: visual-review
+
+sample_result |>
+  mutate(issn = gsub("[\\r\\n]+", " / ", issn, perl = TRUE)) |>
+  select(
+    context_name,
+    issn,
+    identifier_status,
+    openalex_match_status,
+    openalex_candidate_count,
+    crossref_match_status,
+    crossref_candidate_count,
+    any_of(c(
+      "openalex_display_name",
+      "openalex_works_count",
+      "crossref_title",
+      "crossref_publisher"
+    ))
+  ) |>
+  knitr::kable()
+
+bind_rows(
+  count(result, openalex_match_status, name = "rows") |>
+    rename(status = openalex_match_status) |>
+    mutate(source = "OpenAlex"),
+  count(result, crossref_match_status, name = "rows") |>
+    rename(status = crossref_match_status) |>
+    mutate(source = "Crossref")
+) |>
+  select(source, status, rows) |>
+  knitr::kable()
+
+tibble(column = names(result)) |>
+  knitr::kable()
+```

@@ -98,8 +98,8 @@ if (!valid_pkp_file(input_path)) {
   } else {
     download.file(pkp_url, input_path, mode = "wb")
   }
+  stopifnot(valid_pkp_file(input_path))
 }
-stopifnot(valid_pkp_file(input_path))
 ```
 
 ## ISSN preparation

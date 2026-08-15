@@ -10,7 +10,9 @@ execute:
 This exploratory analysis reads the validated compact PKP V7 master and its
 OpenAlex checkpoints. It compares source-specific evidence without treating
 either source as authoritative and without interpreting source absence as a
-causal measure of journal invisibility.
+causal measure of journal invisibility. It also separates valid-ISSN rows that
+were unmatched from rows that could not be attempted because PKP supplied no
+usable ISSN.
 
 ## Load the compact master
 
@@ -122,6 +124,7 @@ required_columns <- c(
   "context_name",
   "issn",
   "country",
+  "total_record_count",
   "best_doaj_url",
   "identifier_status",
   "openalex_input_issns",
@@ -690,6 +693,244 @@ htmltools::div(
     resizable = TRUE,
     compact = TRUE,
     fullWidth = FALSE
+  )
+)
+```
+
+## Why rows were not attempted
+
+`not_attempted` is not an API failure. It means the PKP row had no
+checksum-valid ISSN, so the pipeline had no identifier to compare with either
+source. The diagnostics below distinguish the raw ISSN state, show the size and
+site concentration of affected OJS sets, and identify limited clues for later
+manual recovery. Title and `set_spec` similarities are only text-level review
+signals; they are not used to assign an ISSN.
+
+```{r}
+#| label: not-attempted-profile
+
+master_hosts <- if_else(
+  is_missing_value(master$oai_url),
+  "Missing URL",
+  sub("/.*$", "", sub("^https?://", "", tolower(master$oai_url)))
+)
+valid_title_rows <- master$identifier_status == "valid" &
+  !is.na(pkp_normalized_titles)
+valid_title_keys <- unique(pkp_normalized_titles[valid_title_rows])
+valid_title_set_text <- paste(
+  pkp_normalized_titles[valid_title_rows],
+  tolower(trimws(master$set_spec[valid_title_rows])),
+  sep = "\r"
+)
+valid_title_set_text_keys <- unique(valid_title_set_text)
+valid_host_title_set_keys <- unique(paste(
+  master_hosts[valid_title_rows],
+  valid_title_set_text,
+  sep = "\r"
+))
+
+not_attempted <- master |>
+  mutate(
+    title_key = pkp_normalized_titles,
+    title_set_text_key = paste(
+      title_key,
+      tolower(trimws(set_spec)),
+      sep = "\r"
+    ),
+    host_title_set_key = paste(master_hosts, title_set_text_key, sep = "\r"),
+    raw_issn_state = case_when(
+      is.na(issn) ~ "R missing value",
+      !nzchar(trimws(issn)) ~ "Blank string",
+      toupper(trimws(issn)) == "NA" ~ "Literal NA in PKP",
+      TRUE ~ "Present but invalid ISSN"
+    ),
+    record_count = suppressWarnings(as.numeric(total_record_count)),
+    record_band = factor(
+      case_when(
+        is.na(record_count) ~ "Missing",
+        record_count < 10 ~ "Under 10",
+        record_count < 25 ~ "10–24",
+        record_count < 50 ~ "25–49",
+        record_count < 100 ~ "50–99",
+        record_count < 1000 ~ "100–999",
+        TRUE ~ "1,000+"
+      ),
+      levels = c(
+        "Under 10", "10–24", "25–49", "50–99",
+        "100–999", "1,000+", "Missing"
+      )
+    ),
+    host = master_hosts,
+    same_title_as_valid = !is.na(title_key) & title_key %in% valid_title_keys,
+    same_title_set_text_as_valid = !is.na(title_key) &
+      title_set_text_key %in% valid_title_set_text_keys,
+    same_host_title_set_as_valid = !is.na(title_key) &
+      host_title_set_key %in% valid_host_title_set_keys
+  ) |>
+  filter(openalex_match_status == "not_attempted")
+
+stopifnot(
+  all(not_attempted$identifier_status != "valid"),
+  all(not_attempted$crossref_match_status == "not_attempted"),
+  all(master$openalex_match_status[master$identifier_status != "valid"] ==
+    "not_attempted")
+)
+
+not_attempted_summary <- tibble(
+  measure = c(
+    "All PKP rows not attempted",
+    "Raw ISSN is literal NA",
+    "Raw ISSN is an R missing value",
+    "Raw ISSN is blank",
+    "Raw ISSN is present but invalid",
+    "Same normalized title has a valid-ISSN row",
+    "Same normalized title and set_spec text occurs on a valid-ISSN row",
+    "Same host, normalized title, and set_spec has a valid-ISSN row",
+    "PKP DOAJ URL is present",
+    "At least 100 OAI records"
+  ),
+  denominator = c(
+    nrow(master),
+    rep(nrow(not_attempted), 9)
+  ),
+  rows = c(
+    nrow(not_attempted),
+    sum(not_attempted$raw_issn_state == "Literal NA in PKP"),
+    sum(not_attempted$raw_issn_state == "R missing value"),
+    sum(not_attempted$raw_issn_state == "Blank string"),
+    sum(not_attempted$raw_issn_state == "Present but invalid ISSN"),
+    sum(not_attempted$same_title_as_valid),
+    sum(not_attempted$same_title_set_text_as_valid),
+    sum(not_attempted$same_host_title_set_as_valid),
+    sum(!is_missing_value(not_attempted$best_doaj_url)),
+    sum(not_attempted$record_count >= 100, na.rm = TRUE)
+  )
+) |>
+  mutate(percent = round(100 * rows / denominator, 2))
+
+knitr::kable(not_attempted_summary)
+```
+
+In this snapshot, `r format(nrow(not_attempted), big.mark = ",")` rows
+(`r sprintf("%.2f%%", 100 * nrow(not_attempted) / nrow(master))` of PKP rows)
+were not attempted. All of their raw ISSN cells are the literal PKP value
+`NA`, rather than malformed identifiers rejected by the checksum rule.
+
+### Size of affected OJS sets
+
+```{r}
+#| label: not-attempted-record-distribution
+#| fig-width: 9
+#| fig-height: 5
+
+not_attempted_record_distribution <- not_attempted |>
+  count(record_band, .drop = FALSE, name = "rows") |>
+  mutate(percent = 100 * rows / sum(rows))
+
+not_attempted_record_distribution |>
+  ggplot(aes(x = record_band, y = rows)) +
+  geom_col(fill = "#3B6E8F", color = "#24485F", linewidth = 0.2) +
+  geom_text(
+    aes(label = sprintf("%s\n%.1f%%", format(rows, big.mark = ","), percent)),
+    vjust = -0.15,
+    size = 3
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
+  labs(
+    title = "OAI record counts for rows without a usable ISSN",
+    subtitle = "PKP V7 rows with match status not_attempted",
+    x = "Records reported for the OJS set",
+    y = "PKP rows"
+  ) +
+  theme_minimal()
+```
+
+`r sprintf("%.1f%%", 100 * mean(not_attempted$record_count < 25, na.rm = TRUE))`
+of the affected OJS sets contain fewer than 25 records, so much of the missing
+ISSN volume comes from small collections. However,
+`r format(sum(not_attempted$record_count >= 100, na.rm = TRUE), big.mark = ",")`
+rows contain at least 100 records and should not be dismissed as empty or test
+sets.
+
+### Concentration by OJS host
+
+```{r}
+#| label: not-attempted-host-concentration
+#| fig-width: 9
+#| fig-height: 5.5
+
+not_attempted_hosts <- not_attempted |>
+  count(host, sort = TRUE, name = "rows") |>
+  mutate(percent = 100 * rows / nrow(not_attempted)) |>
+  slice_head(n = 10)
+
+not_attempted_hosts |>
+  ggplot(aes(x = reorder(host, rows), y = rows)) +
+  geom_col(fill = "#3B6E8F", color = "#24485F", linewidth = 0.2) +
+  geom_text(
+    aes(label = sprintf("%s (%.1f%%)", format(rows, big.mark = ","), percent)),
+    hjust = -0.05,
+    size = 3
+  ) +
+  coord_flip(clip = "off") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(
+    title = "OJS hosts with the most rows lacking a usable ISSN",
+    subtitle = "Top ten hosts; percentages use all not-attempted rows",
+    x = NULL,
+    y = "PKP rows"
+  ) +
+  theme_minimal()
+```
+
+The two largest hosts account for
+`r sprintf("%.1f%%", 100 * sum(head(not_attempted_hosts$rows, 2)) / nrow(not_attempted))`
+of all not-attempted rows. Concentration explains part of the total, but most
+missing identifiers remain distributed across the long tail of OJS hosts.
+
+### Fixed random review sample
+
+The sample is reproducible rather than manually selected. It helps distinguish
+journal-like titles from books, proceedings, test installations, and other OJS
+sets, but those interpretations remain manual judgments.
+
+```{r}
+#| label: not-attempted-random-review
+
+set.seed(20260815)
+not_attempted_sample <- not_attempted |>
+  slice_sample(n = min(12L, nrow(not_attempted))) |>
+  transmute(
+    title = context_name,
+    host,
+    records = record_count,
+    review_signal = case_when(
+      same_host_title_set_as_valid ~ "Same host, title, and set_spec",
+      same_title_set_text_as_valid ~ "Same title/set text elsewhere",
+      same_title_as_valid ~ "Same title elsewhere",
+      TRUE ~ "None"
+    )
+  )
+
+htmltools::div(
+  style = "overflow-x: auto;",
+  htmltools::div(
+    style = "min-width: 850px;",
+    reactable::reactable(
+      not_attempted_sample,
+      searchable = TRUE,
+      filterable = TRUE,
+      pagination = FALSE,
+      resizable = TRUE,
+      compact = TRUE,
+      fullWidth = TRUE,
+      columns = list(
+        title = reactable::colDef(minWidth = 350),
+        host = reactable::colDef(minWidth = 250),
+        records = reactable::colDef(width = 80),
+        review_signal = reactable::colDef(width = 170)
+      )
+    )
   )
 )
 ```

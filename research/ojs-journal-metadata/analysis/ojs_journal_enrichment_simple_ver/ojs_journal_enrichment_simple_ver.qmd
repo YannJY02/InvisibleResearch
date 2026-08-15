@@ -3,29 +3,58 @@ title: "PKP/OJS multi-source journal enrichment — simple version"
 format:
   html:
     toc: true
+    embed-resources: true
 execute:
   echo: true
   warning: true
   message: false
 ---
 
-This one-off notebook independently rebuilds the complete PKP/OJS enrichment.
-It keeps the original exact-ISSN rule, retrieves OpenAlex and Crossref data when
-the reusable caches are missing, expands every observed top-level source field,
-and writes the 98,273-row result plus a fixed ten-row review sample as Parquet.
-Nested values are retained as JSON strings. Rows with multiple candidates keep
-all complete candidate objects in a JSON column instead of selecting one.
+This document performs **Full-Cohort Journal Enrichment**. It starts with every
+row in the PKP/OJS list. It looks for OpenAlex and Crossref records that share
+an exact, valid ISSN with each row. It does not use a title or publisher name to
+make a match.
 
-The original enrichment caches are optional read-only fallbacks. Any downloaded
-input or newly retrieved source data are written under this notebook's own
-artifact directory. To retrieve a fresh snapshot, set `reuse_shared_cache` to
-`FALSE` and delete this notebook's `source-cache`; the expanded-data caches are
-then bypassed automatically. Missing OpenAlex batches require
-`OPENALEX_API_KEY`; a missing Crossref snapshot requires
-`CROSSREF_MAILTO`. Delete `openalex-expanded.rds` and `crossref-expanded.rds`
-after changing the matching or field-expansion logic.
+This is **Exploratory Analysis**. It prepares evidence for review. It does not
+decide that two records describe the same journal when the evidence is
+uncertain.
+
+The final **Generated Artifact** is a Parquet table with all input rows and all
+available top-level OpenAlex and Crossref fields. A second Parquet file contains
+the fixed ten-row **Journal Enrichment Sample**. Complex source values stay in
+JSON text so that the analysis does not discard them.
+
+### How to read the match result
+
+An ISSN is the main journal identifier in this analysis. **Identifier
+Availability** tells us whether an input row has at least one valid ISSN.
+Each source can then give one of four match results:
+
+| Result | Plain-language meaning |
+|---|---|
+| `not_attempted` | The input row has no valid ISSN, so an exact-ISSN search is not possible. |
+| `unmatched` | The row has a valid ISSN, but the source has no record with that ISSN. |
+| `unique` | The source has one record with the ISSN. Its fields are expanded into columns. |
+| `ambiguous` | The source has more than one record with the ISSN. All candidates are kept; the code does not select a winner. |
+
+The code can reuse saved data to avoid expensive API requests. A cache is only
+a saved copy of an earlier download or calculation. The complete download code
+remains in this document. Set `reuse_shared_cache` to `FALSE` and delete this
+document's `source-cache` to request a fresh source snapshot. Missing OpenAlex
+batches require `OPENALEX_API_KEY`. A missing Crossref snapshot requires
+`CROSSREF_MAILTO`. Delete `openalex-expanded.rds` and
+`crossref-expanded.rds` after a change to the matching or field-expansion code.
 
 ## Packages and paths
+
+This block prepares the tools and file locations. All new files go to this
+analysis's own artifact directory. `reuse_shared_cache` permits read-only reuse
+of earlier source data. The code still writes new data only to this analysis's
+directory.
+
+`valid_pkp_file()` compares the input file with the expected content
+fingerprint. This check makes sure that the analysis uses the intended PKP V7
+release, not a different file with the same name.
 
 ```{r}
 #| label: packages-and-paths
@@ -104,6 +133,18 @@ if (!valid_pkp_file(input_path)) {
 
 ## ISSN preparation
 
+These functions prepare ISSNs before matching.
+
+- `normalize_issn()` removes spaces and punctuation. It also checks the ISSN
+  structure and check digit.
+- `parse_issns()` returns every valid ISSN in one input cell. It returns an
+  empty set when the cell is missing or contains no valid ISSN.
+- `openalex_issns()` and `crossref_issns()` apply the same rule to source
+  records.
+
+This common preparation is important. It makes both sources use the same exact
+identifier rule.
+
 ```{r}
 #| label: issn-preparation
 
@@ -148,9 +189,14 @@ crossref_issns <- function(journal) {
 
 ## Source retrieval and caching
 
-The cache code is intentionally small: completed OpenAlex batches and the full
-Crossref directory are reused; missing data are fetched with bounded retries
-and timeouts.
+This block defines how to obtain source data when a usable cache is not
+available. `read_cache()` returns a saved R object when it can read one.
+Otherwise, the relevant `fetch_*()` function calls the source API.
+
+OpenAlex accepts the input ISSNs in groups of 100. Crossref supplies its journal
+directory in pages of 1,000 records. A short timeout prevents a stalled request
+from waiting forever. Each request can make at most four attempts. The cursor
+checks stop the code if an API repeats the same page position.
 
 ```{r}
 #| label: retrieval-helpers
@@ -262,6 +308,16 @@ fetch_crossref_directory <- function() {
 
 ## Load the complete PKP V7 cohort
 
+This block reads the PKP V7 list. Each row is one OJS record. All 19 source
+fields are read as text so that R does not silently change an identifier, date,
+or special value.
+
+`row_identity()` uses the OAI address, repository name, and OAI set identifier
+together as a stable row identity. The two checks confirm that the fields
+needed for matching exist and that every input row is an OJS row. `input_issns`
+then stores the valid ISSNs for each row. `tokens` is the distinct ISSN list
+sent to the source APIs.
+
 ```{r}
 #| label: load-pkp
 
@@ -286,6 +342,20 @@ tokens <- sort(unique(unlist(input_issns)))
 ```
 
 ## Matching and field expansion helpers
+
+These functions turn exact ISSN evidence into result columns.
+
+- `index_candidates()` records which source objects contain each ISSN.
+- `match_candidates()` compares one PKP row with that index and assigns one of
+  the four match results defined above.
+- `expand_source_fields()` creates one result column for every top-level source
+  field. A simple source value keeps its number, true/false, or text type. A
+  nested value becomes JSON text.
+
+For a `unique` match, the source fields appear directly in the expanded
+columns. For an `ambiguous` match, the code leaves those single-record columns
+empty and stores every complete candidate in `*_candidates__json`. This keeps
+the evidence without making an unsupported choice.
 
 ```{r}
 #| label: matching-helpers
@@ -403,6 +473,15 @@ expand_source_fields <- function(matches, candidates, prefix) {
 
 ## OpenAlex enrichment
 
+This block processes OpenAlex in four steps. It reuses or retrieves each
+100-ISSN batch. It removes duplicate OpenAlex source IDs. It matches each PKP
+row by exact ISSN. It then expands all observed OpenAlex fields.
+
+`base_result` also adds `identifier_status`, the ISSNs used for the search, the
+ISSNs that matched, the match result, and the candidate count. The expanded-data
+cache avoids repeating the most expensive field conversion. Reuse it only when
+the source cache and the matching code have not changed.
+
 ```{r}
 #| label: openalex-enrichment
 
@@ -509,6 +588,14 @@ gc()
 
 ## Crossref enrichment
 
+This block applies the same exact-ISSN method to the Crossref journal directory.
+It first keeps only Crossref records that contain an ISSN used by the PKP list.
+It does not merge distinct Crossref objects merely because they have the same
+ISSN set. Therefore, a shared ISSN can correctly produce an `ambiguous` result.
+
+The final `result` joins the original PKP fields, the match evidence, and every
+expanded OpenAlex and Crossref field. The original row order stays unchanged.
+
 ```{r}
 #| label: crossref-enrichment
 
@@ -582,6 +669,20 @@ result <- base_result |>
 ```
 
 ## Parquet outputs and lightweight validation
+
+This block creates the two Generated Artifacts. `sample_spec` identifies ten
+specific rows by stable row identity. This Journal Enrichment Sample is not a
+random or representative sample. It is a visual review tool that shows several
+match situations and all expanded fields.
+
+Before writing files, the checks confirm three points: the sensitive
+`admin_email` field is absent; the input rows and their order are unchanged;
+and each ambiguous JSON value contains the reported number of candidates.
+
+Arrow writes each Parquet file to a `.pending` path with Zstandard compression.
+The code checks the full-table size and column names, and it reads the complete
+sample back. Only then does it give both files their final names. This short
+staging step protects an earlier valid result if writing stops partway through.
 
 ```{r}
 #| label: parquet-output
@@ -687,8 +788,19 @@ stopifnot(
 
 ## Ten-row visual review
 
+The complete Generated Artifact contains **`r format(nrow(result), big.mark = ",")` rows and `r ncol(result)` columns**. The Journal Enrichment Sample contains
+`r nrow(sample_result)` of those rows.
+
+### Journal Enrichment Sample
+
+The interactive DT table below shows all result columns. Use its search boxes
+and horizontal scroll to inspect which expanded fields are useful.
+
+This sample supports visual review. It does not represent the frequency of each
+match result in the complete table.
+
 ```{r}
-#| label: visual-review
+#| label: visual-review-sample
 
 sample_result |>
   mutate(issn = gsub("[\\r\\n]+", " / ", issn, perl = TRUE)) |>
@@ -701,6 +813,16 @@ sample_result |>
       lengthChange = FALSE
     )
   )
+```
+
+### Match-result counts
+
+This table shows how many input rows received each match result from each
+source. Use the four definitions at the start of this document to interpret the
+counts.
+
+```{r}
+#| label: visual-review-status
 
 bind_rows(
   count(result, openalex_match_status, name = "rows") |>
@@ -712,6 +834,16 @@ bind_rows(
 ) |>
   select(source, status, rows) |>
   knitr::kable()
+```
+
+### Complete field list
+
+This list shows every column in the Generated Artifact. It helps reviewers find
+the original PKP fields, the match evidence, and the expanded source fields.
+The display does not replace the complete Parquet file.
+
+```{r}
+#| label: visual-review-fields
 
 tibble(column = names(result)) |>
   knitr::kable()

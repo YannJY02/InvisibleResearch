@@ -118,3 +118,6 @@ papers/*/manuscript/*_files/
 
 # Regenerable meeting exports and local publishing state.
 meeting-reports/artifacts/
+
+# Read-only intake snapshots and pending Plane reconciliation records.
+docs/operations/artifacts/project-management/

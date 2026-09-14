@@ -16,8 +16,9 @@ The original file remains unchanged in the local-only Inbox.
 
 The export labels the meeting 14 September, but the closing discussion says
 “15th next Tuesday” and refers to an invitation for “next week” (33:08–34:23).
-The exact meeting and follow-up dates therefore remain unverified. This report
-uses the supplied date for filing rather than reconstructing an event date.
+The transcript alone cannot settle those dates. The follow-up schedule was
+subsequently confirmed by the user below; the original meeting date remains
+unverified. This report uses the supplied date for filing.
 
 ## Agreed immediate work
 
@@ -112,7 +113,31 @@ newly created tracker issues. Owners are inferred from the exchange.
 | Supervisor | Ask the administrators to resolve the researcher's query-execution access | After receiving diagnostic evidence | 26:46–27:39 |
 | Supervisor, with researcher | Clarify the three snapshot alternatives and record the selected dataset/table identifiers | January 2026 is provisional; before extraction | 19:24–19:47 |
 | Researcher and supervisor | Define and investigate Web of Science/Scopus coverage comparison | After the preceding work; tentative 10–20-day estimate | 31:02–32:01 |
-| Researcher and supervisor | Verify the next meeting date against the invitation | Transcript proposes the 15th, Tuesday, at 13:00 Amsterdam time; date remains unresolved | 33:08–34:23 |
+| Researcher and supervisor | Prepare for the next meeting | User subsequently confirmed September 15, 16:00–16:30 China time; see source clarification below | 33:08–34:23; user confirmation on September 14 |
+
+## Subsequent source clarification — 2026-09-14
+
+During project-management intake, the user explicitly confirmed the next meeting
+as **2026-09-15, 16:00–16:30 China time**. This supersedes the transcript's
+13:00 Amsterdam wording. An internal preparation checkpoint is 15:00 China
+time. Searches in the connected Gmail, Outlook and primary Google Calendar did
+not locate the invitation; the user's confirmation supplies the scheduling
+authority without establishing the original recording's meeting date.
+
+The [supervisor's September 5 comment on upstream issue #5, edited September 8](https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839)
+was also read directly. It specifies **all OpenAlex journals** as the next
+baseline, a metadata file on SURFdrive, journal-row ISSN checks against Web of
+Science and Scopus, then Boruta/SHAP predictor analysis. This resolves the
+transcript-only ambiguity about the comparison unit and broad baseline scope.
+The exact snapshot, journal filter, row key and matching contract still need
+implementation decisions. The existing PKP pipeline remains a historical
+foundation; its output is not the new OpenAlex-wide baseline.
+
+The [Plane management workflow](../docs/operations/project-management.md) now
+tracks these source-backed actions, their dependencies and current progress.
+The earlier sections preserve what the transcript itself supported; this
+supplement records the additional sources rather than attributing them to the
+recorded conversation.
 
 ## Governance
 

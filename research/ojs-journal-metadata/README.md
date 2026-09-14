@@ -21,12 +21,16 @@ requests a review of Crossref's additional fields and rows with Crossref
 information but none from OpenAlex, alongside resolution of BigQuery query
 access. It provisionally favours a January 2026 snapshot and places Web of
 Science/Scopus coverage comparison after that work. The report records the
-owners, dependencies, and unresolved date, access, snapshot, and comparison-unit
-questions; it does not establish that those follow-ups are complete.
+owners, dependencies, and access/snapshot questions; it does not establish that
+those follow-ups are complete. Its subsequent-source section records the user's
+confirmed September 15 meeting at 16:00–16:30 China time and the upstream issue's
+explicit journal-level baseline scope.
 
-The meeting's OpenAlex-baseline direction does not yet specify a replacement
-for the PKP/OJS cohort or denominator. The implemented workflow below retains
-its existing row-preservation and exact-ISSN contract.
+The [September 5 upstream direction](https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839)
+calls for a new all-OpenAlex-journals baseline. Its snapshot, journal filter and
+row contract are tracked separately in [Plane](../../docs/operations/project-management.md).
+The implemented PKP/OJS workflow below retains its existing row-preservation
+and exact-ISSN contract; its output does not complete the new baseline task.
 
 ## Environment
 

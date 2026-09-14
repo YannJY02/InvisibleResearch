@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "InvisibleResearch",
+    "id": "0624dddb-fd32-4c90-870b-921183e73676",
+    "identifier": "INVIS",
+    "workspace_id": "31459efd-0b9a-49db-9a8a-b51cb9a51e87",
+    "timezone": "Asia/Shanghai"
+  },
+  "authority": {
+    "tracker": "Plane",
+    "github_repository": "invisibleinfo/invisible-research",
+    "github_mode": "collect-only; no issue-set synchronization or writes",
+    "allowed_sources": [
+      "meeting action",
+      "repository issue or comment",
+      "explicit user request"
+    ],
+    "current_phase_start": "2026-09-05",
+    "current_phase_source": "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
+    "history_scope": "Selected July 16/28 to August 15 foundations, not the entire prior backlog"
+  },
+  "meeting": {
+    "date": "2026-09-15",
+    "date_source": "User confirmation in this task on 2026-09-14",
+    "start": "2026-09-15T16:00:00+08:00",
+    "end": "2026-09-15T16:30:00+08:00",
+    "timezone": "Asia/Shanghai",
+    "time_status": "Confirmed by user; supersedes transcript 13:00 Amsterdam. Email invitation was not located.",
+    "pre_meeting_checkpoint": "2026-09-15T15:00:00+08:00",
+    "checkpoint_basis": "Internal preparation checkpoint, one hour before confirmed meeting"
+  },
+  "pages": {
+    "overview": "42ce0ab8-4ab7-4b8f-a940-34122b3705ac",
+    "history": "88305295-6231-4357-9916-ea1c9a12c965"
+  },
+  "automation": {
+    "id": "invisibleresearch",
+    "kind": "heartbeat",
+    "frequency": "hourly",
+    "thread_id": "01a09fe9-8055-7143-ab7f-784410a5b9c1",
+    "created_status": "ACTIVE",
+    "notification_intent": "meaningful change, completion, failure or required user action only"
+  },
+  "states": {
+    "Backlog": "03368326-3b95-4def-964d-f21d7c2644f3",
+    "Todo": "c808444e-6ce0-4fdb-aadc-7a03c84b93a4",
+    "In Progress": "132f50a9-8b53-44f5-844d-dc66969c553f",
+    "In Review": "ba57a2bb-50ce-4d98-a3da-40b108d88667",
+    "Blocked": "b0735bf0-e65a-4078-866b-ff42d02f1371",
+    "Done": "94386673-5703-477c-ab55-33dfdec562f4",
+    "Cancelled": "62342d87-07da-41aa-a8ad-2fe6a5912b1b"
+  },
+  "tasks": [
+    {
+      "key": "user-2026-09-14-plane-management",
+      "plane_id": "adc498d6-fab4-45c2-a759-fd6108241762",
+      "identifier": "INVIS-1",
+      "source": "Explicit user request in this task on 2026-09-14",
+      "date_kind": "internal delivery target before confirmed meeting"
+    },
+    {
+      "key": "history-sample",
+      "plane_id": "fd36e750-e5c8-4f8e-8137-30b17c5d6293",
+      "identifier": "INVIS-2",
+      "sources": [
+        "https://github.com/invisibleinfo/invisible-research/issues/6#issuecomment-5001679414",
+        "https://github.com/invisibleinfo/invisible-research/issues/6#issuecomment-5010060289"
+      ],
+      "depends_on": [],
+      "planned_start": null,
+      "planned_target": null,
+      "date_kind": "Historical completion evidence is in Plane description; import timestamp is not original completion"
+    },
+    {
+      "key": "history-full-pkp",
+      "plane_id": "b13f196a-9bd3-4fda-8c0f-468278f27968",
+      "identifier": "INVIS-3",
+      "sources": [
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-07-28-ojs-enrichment-next-steps.md",
+        "https://github.com/YannJY02/InvisibleResearch/issues/98#issuecomment-5113777503"
+      ],
+      "depends_on": [],
+      "planned_start": null,
+      "planned_target": null,
+      "date_kind": "Historical completion evidence is in Plane description; import timestamp is not original completion"
+    },
+    {
+      "key": "history-literature",
+      "plane_id": "e2055cf6-a668-4a8f-b2e2-2a38fdcd793c",
+      "identifier": "INVIS-4",
+      "sources": [
+        "https://github.com/YannJY02/InvisibleResearch/issues/76#issuecomment-5041986142",
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/docs/issues/2026-07-20-counter-explanations-coverage-audit.md"
+      ],
+      "depends_on": [],
+      "planned_start": null,
+      "planned_target": null,
+      "date_kind": "Historical completion evidence is in Plane description; import timestamp is not original completion"
+    },
+    {
+      "key": "crossref-increment",
+      "plane_id": "edb5fec9-b6b3-46b8-89d9-bbe81e0db770",
+      "identifier": "INVIS-5",
+      "sources": [
+        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md"
+      ],
+      "depends_on": [],
+      "planned_start": "2026-09-14",
+      "planned_target": "2026-09-15",
+      "date_kind": "Provisional internal target; replan against actual dependency status"
+    },
+    {
+      "key": "bigquery-access",
+      "plane_id": "44bbc7dc-71f7-479d-9990-b81a892ae1d1",
+      "identifier": "INVIS-6",
+      "sources": [
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
+        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839"
+      ],
+      "depends_on": [],
+      "planned_start": "2026-09-14",
+      "planned_target": "2026-09-15",
+      "date_kind": "Internal dependency/status checkpoint, not a promise of external resolution"
+    },
+    {
+      "key": "openalex-snapshot",
+      "plane_id": "4ccf4a84-1900-4d9a-a15f-01d6effd8b0d",
+      "identifier": "INVIS-7",
+      "sources": [
+        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md"
+      ],
+      "depends_on": [],
+      "planned_start": "2026-09-15",
+      "planned_target": "2026-09-17",
+      "date_kind": "Provisional internal target; replan against actual dependency status"
+    },
+    {
+      "key": "openalex-export",
+      "plane_id": "e03c9a86-aab7-4ca1-a42c-8167cd5ef9cd",
+      "identifier": "INVIS-8",
+      "sources": [
+        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839"
+      ],
+      "depends_on": [
+        "bigquery-access",
+        "openalex-snapshot"
+      ],
+      "planned_start": "2026-09-17",
+      "planned_target": "2026-09-21",
+      "date_kind": "Provisional internal target; replan against actual dependency status"
+    },
+    {
+      "key": "commercial-coverage",
+      "plane_id": "7cede8dd-860e-445a-a899-0869ec2eaae8",
+      "identifier": "INVIS-9",
+      "sources": [
+        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md"
+      ],
+      "depends_on": [
+        "openalex-export"
+      ],
+      "planned_start": "2026-09-21",
+      "planned_target": "2026-10-01",
+      "date_kind": "Provisional internal target; replan against actual dependency status"
+    },
+    {
+      "key": "feature-model",
+      "plane_id": "1d703e72-95b0-4e98-abe6-d3ed1104f858",
+      "identifier": "INVIS-10",
+      "sources": [
+        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-07-28-ojs-enrichment-next-steps.md"
+      ],
+      "depends_on": [
+        "commercial-coverage"
+      ],
+      "planned_start": null,
+      "planned_target": null,
+      "date_kind": "Estimate after predecessor review"
+    },
+    {
+      "key": "seed-literature-overview",
+      "plane_id": "4e2f98cb-d6f6-4d23-9061-f0c7bd6adf38",
+      "identifier": "INVIS-11",
+      "sources": [
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-07-28-ojs-enrichment-next-steps.md"
+      ],
+      "depends_on": [],
+      "planned_start": "2026-09-15",
+      "planned_target": "2026-09-22",
+      "date_kind": "Internal dependency/status checkpoint, not a promise of external resolution"
+    }
+  ]
+}

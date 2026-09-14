@@ -4,7 +4,7 @@
 
 - Read supporting docs when relevant to the task:
   - Project vocabulary or architectural decisions: [domain guidance](docs/agents/domain.md).
-  - Issue work: [GitHub workflow](docs/agents/issue-tracker.md). External pull requests are not a triage request surface.
+  - Project and issue work: [Plane workflow](docs/agents/issue-tracker.md) and [project management](docs/operations/project-management.md). Read the linked Plane task and source updates before starting, sync meaningful progress and blockers as they occur, and record verified delivery after commit/push. This applies to future tasks in this workspace. The upstream GitHub issue collection is read-only; do not synchronize or modify it.
   - Triage: [canonical labels](docs/agents/triage-labels.md): `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
   - Creating, importing, or reorganizing documents: [document governance](docs/governance/document-governance.md). Choose the owner, role, and filename before writing; update the existing canonical document and links where appropriate.
   - Writing or revising formal prose: [writing requirements](docs/writing/requirements.md) and the target's requirements index. Apply applicable source-backed requirements without waiting for the user to repeat them.

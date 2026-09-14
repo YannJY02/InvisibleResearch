@@ -1,39 +1,65 @@
-# Issue tracker: GitHub
+# Issue tracker: Plane
 
-Issues and PRDs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
+Plane is the current task tracker for InvisibleResearch, following the user's
+2026-09-14 instruction. Use the [project workflow](../operations/project-management.md)
+and [source-to-task registry](../operations/project-management.json).
+This supersedes the former GitHub issue-management default for future work here.
 
-## Conventions
+## Start, progress, and delivery
 
-- **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
-- **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.
-- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
-- **Comment on an issue**: `gh issue comment <number> --body "..."`
-- **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
-- **Close**: `gh issue close <number> --comment "..."`
+- Read the current Plane record, dependencies, assignment, dates, and linked
+  evidence before work. Check incoming meeting and upstream issue changes.
+- Map new authorized work to an existing task first. Create a task only from a
+  real meeting action, repository issue/comment, or explicit user instruction;
+  retain the exact source and a stable deduplication key. Do not turn ideas,
+  missing evidence, or status observations into invented assignments.
+- Set In Progress when execution actually begins. Update the task at meaningful
+  findings, blockers, scope/date changes, and delivery, without waiting for the
+  end of the conversation. Each update states what changed, evidence, remaining
+  work, and the next checkpoint. Read back writes.
+- For repository changes, preserve unrelated work, verify, commit, and push.
+  Then record the commit and actual checks in Plane and use In Review for human
+  acceptance. Historical completed work may be backfilled as Done when the
+  original closure/acceptance and deliverable evidence support that exact scope.
+- Native Plane comments, descriptions, assignment, dates, and dependency links
+  are the current progress record. Local registry dates are initial planning
+  provenance, not an instruction to overwrite newer Plane edits.
 
-Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
+## GitHub is a collection source
 
-## Pull requests as a triage surface
+Monitor `invisibleinfo/invisible-research` issues, including closed issues,
+comments (including edits), assignments/unassignments, labels, milestones, and
+status changes. Use the explicit repository; the local Git remote is a different
+repository. The collector follows all pages and excludes pull requests.
 
-**PRs as a request surface: no.**
+Only collect and interpret source changes. Do not create an issue-set mirror,
+turn on a GitHub–Plane integration, or write comments, labels, state, assignment,
+or other changes to the upstream repository. A selected source action can
+support a Plane task, but its status is evaluated independently against delivery
+and acceptance evidence. Closed source issues do not complete all their checklist
+items in Plane. An assigned source issue is not authority to start every task
+inside it without checking scope and dependencies.
 
-GitHub shares one number space across issues and PRs, so a bare `#42` may be either — resolve with `gh pr view 42` and fall back to `gh issue view 42`.
+Read-only source commands include:
 
-## When a skill says "publish to the issue tracker"
+```sh
+gh issue view 5 --repo invisibleinfo/invisible-research --comments
+PYTHONPATH=src python3 -m invisible_research.project_intake collect
+```
 
-Create a GitHub issue.
+Existing local GitHub issues and merged PRs remain historical evidence. Do not
+mass-close, migrate, or mirror them. The user's commit/push agreement for this
+repository remains in force. Sending messages to collaborators, including
+Mattermost/email, still needs corresponding explicit authorization.
 
-## When a skill says "fetch the relevant ticket"
+## Triage and recurring checks
 
-Run `gh issue view <number> --comments`.
+The [triage vocabulary](triage-labels.md) remains useful for classifying intake;
+it does not authorize writing those labels upstream. Keep accepted task scope
+and actual assignees distinct from inferred speaker roles.
 
-## Wayfinding operations
-
-Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
-
-- **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.
-- **Child ticket**: an issue linked to the map as a GitHub sub-issue (`gh api` on the sub-issues endpoint). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.
-- **Blocking**: GitHub's native issue dependencies are the canonical representation. Add an edge with `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is the blocker's numeric database ID. Where dependencies aren't available, use a `Blocked by: #<n>` line at the top of the child body.
-- **Frontier query**: list the map's open children, then drop tickets with an open blocker or assignee; first in map order wins.
-- **Claim**: `gh issue edit <n> --add-assignee @me` — the session's first write.
-- **Resolve**: comment with the answer, close the ticket, then append a context pointer to the map's Decisions-so-far.
+During active work, publish meaningful progress immediately. During idle time,
+the configured hourly heartbeat checks source changes, Plane changes and
+schedule risks. This is polling, not a webhook or a guarantee while the host or
+credentials are unavailable. A failed collection/sync retains pending evidence;
+never claim a successful sync from a scheduler configuration alone.

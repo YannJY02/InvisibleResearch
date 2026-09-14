@@ -12,7 +12,7 @@ with its [research owner](../research/README.md) or
 | Project terms and scientific authority | [Glossary](../CONTEXT.md), [authority inventory](governance/artifact-authority-inventory.md), [data-to-claim graph](governance/data-to-claim-dependency-graph.md) |
 | Data schemas and commands | [PKP database](data/pkp-database-schema.md), [ArticleInfo](data/articleinfo-database.md), [command mapping](data/data-script-mapping.md) |
 | Environment and shared tools | [Security guide](operations/security-guide.md), [utility index](operations/utility-index.md) |
-| Issue work | [GitHub workflow](agents/issue-tracker.md), [triage labels](agents/triage-labels.md), [issue-linked notes](issues/) |
+| Project progress and issue work | [Plane workflow](agents/issue-tracker.md), [schedule and source monitoring](operations/project-management.md), [source-to-task registry](operations/project-management.json), [triage labels](agents/triage-labels.md) |
 | Design and previous verification | [Plans](plans/), [test evidence](testing/) |
 | This governance installation and relocation audit | [Verification record](testing/document-governance.md) |
 | Literature reading notes | [Evidence note specification](writing/literature-evidence-note-spec.md) |

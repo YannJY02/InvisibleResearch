@@ -121,6 +121,11 @@ documented in [`papers/invisible-communication-science/`](papers/invisible-commu
 Project-level supervisor and group-meeting updates are indexed in
 [`meeting-reports/`](meeting-reports/README.md).
 
+Current tasks, dependencies and progress are managed in **Plane / InvisibleResearch**.
+The [project workflow](docs/operations/project-management.md) and
+[source registry](docs/operations/project-management.json) apply to future work.
+The collaborator GitHub issues are collected read-only, without issue-set sync.
+
 **📋 For detailed data-script relationships**: See [`docs/data/data-script-mapping.md`](docs/data/data-script-mapping.md)
 
 ## 🔍 LLM Validation Suite

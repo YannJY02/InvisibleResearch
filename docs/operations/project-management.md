@@ -11,7 +11,8 @@ identifiers; it is mapping and planning provenance, not a competing status track
 - Plane project: **InvisibleResearch**, identifier **INVIS**, UUID
   `0624dddb-fd32-4c90-870b-921183e73676`; timezone **Asia/Shanghai**.
 - Sources: real [meeting actions](../../meeting-reports/README.md), selected
-  repository issues/comments, and explicit user instructions. Each Plane task
+  repository issues/comments, project-related Mattermost exchanges with the
+  supervisor, and explicit user instructions. Each Plane task
   links its source and acceptance criteria. New observations alone do not
   authorize invented tasks or automatic research execution.
 - Monitor [invisibleinfo/invisible-research issues](https://github.com/invisibleinfo/invisible-research/issues)
@@ -42,7 +43,7 @@ the whole earlier backlog:
 | Plane item | Historical scope and evidence |
 |---|---|
 | INVIS-2 | Ten-row enrichment sample; [July 18 result and checked source task](https://github.com/invisibleinfo/invisible-research/issues/6#issuecomment-5010060289). Fixed matching-case sample, not representative random sampling. |
-| INVIS-3 | Local PKP V7 full enrichment and interactive review; [July 29 delivery](https://github.com/YannJY02/InvisibleResearch/issues/98#issuecomment-5113777503), merged PR #103, later August improvements. This is not the new OpenAlex-wide extraction or confirmed collaborator delivery. |
+| INVIS-3 | Local PKP V7 full enrichment and interactive review; [July 29 delivery](https://github.com/YannJY02/InvisibleResearch/issues/98#issuecomment-5113777503), merged PR #103, later August improvements. August Mattermost delivery/feedback evidence is recorded below; this is not the new OpenAlex-wide extraction. |
 | INVIS-4 | Initial 18-note conceptual literature evidence set and counter-explanation audit; [July 22 accepted closure](https://github.com/YannJY02/InvisibleResearch/issues/76#issuecomment-5041986142). This is not a literature-review draft. |
 
 Historical completion dates belong in the evidence narrative. Plane's newly
@@ -51,6 +52,54 @@ The July script handoff/server run and supervisor seed-paper receipt have no
 completion evidence. Preserve those gaps in the history page; do not restart
 the old API run simply because the handoff is unconfirmed. Seed-based writing
 remains the parallel carryover task INVIS-11.
+
+## Mattermost source intake
+
+On 2026-09-14 the user added project-related Mattermost exchanges with the
+supervisor as a potential task source and background source. Record author,
+message date, permalink, action or decision, and evidence scope. Explicit project
+actions can support a task after deduplication; background, discussion, shared
+articles and status reports normally supplement an existing task. Do not turn
+social conversation, a suggestion, or an unsent composer draft into an assignment.
+
+Use available authorized read-only access or user-supplied excerpts/Appshots.
+State the actual coverage; the current collector does not poll Mattermost.
+Do not claim complete chat history or automatic Mattermost monitoring. Preserve
+message IDs for deduplication and attribute reported completion separately from
+supervisor feedback and independent artifact verification. Attachment presence
+is not knowledge of its contents. Store only project-safe paraphrases and source
+references; omit private unrelated conversation and token-bearing sharing links.
+This source authorization does not authorize sending messages.
+
+### Evidence supplied on September 14
+
+Source: user-provided Mattermost Appshot captured at 2026-09-14T15:06:39.083Z,
+including its visible accessibility text. Dates below follow that supplied UI;
+message timezone was not independently established. Permalinks were supplied in
+the Appshot, not independently fetched from the server in this intake.
+
+- **INVIS-3 — historical delivery:** [August 15 report message](https://mattermost.invisible.info/invisible-information-lab/pl/qb5de3uzi3fgbpfn9aqra9sb9r)
+  shows Jinyi shared an RPubs report and described a full PKP-data version.
+  The visible conversation includes a QMD attachment. [Saurabh's August 15 reply](https://mattermost.invisible.info/invisible-information-lab/pl/wmgw3hmfh3rk5rff5tjnqa1zee)
+  says only the QMD was visible in SURFdrive and asks whether parquet upload
+  finished. [Jinyi's August 16 message](https://mattermost.invisible.info/invisible-information-lab/pl/o7r8wjnc8pdnup7tgr6y3r149a)
+  reports successful re-upload. [Saurabh's August 27 feedback](https://mattermost.invisible.info/invisible-information-lab/pl/5ggjckon8p817egctrf6h9cnky)
+  describes the preceding work as useful and proposes discussing next steps.
+  This adds actual sharing, self-reported upload and supervisor feedback evidence
+  to the earlier local-only audit. It does not independently verify the remote
+  parquet contents, a collaborator-repository handoff or a server execution.
+  INVIS-3 remains historically Done in its accepted local-delivery scope;
+  INVIS-8's new OpenAlex-wide delivery remains separate.
+- **INVIS-5 — prior field explanation:** [Jinyi's September 8 message](https://mattermost.invisible.info/invisible-information-lab/pl/nawjj4usqby5zns9y6rakxba6w)
+  already explains Crossref's DOI registration counts/yearly breakdowns and
+  metadata provision/completeness indicators (abstracts, references, affiliations,
+  ORCID, funding, licences), relative to OpenAlex fields in the existing dataset.
+  This is a communicated finding to reuse, not a newly verified schema comparison.
+  [The later message](https://mattermost.invisible.info/invisible-information-lab/pl/r6tpz8eya38cjdwi5xjx1qr1ao)
+  contains two screenshot attachments; their contents have not been inspected.
+  INVIS-5 remains Todo for the remaining sourced counts/examples, denominator,
+  version evidence and field-specific missingness checks. Do not redo the sent
+  explanation as though no prior work existed, or mark the whole task complete.
 
 ## Meeting and initial schedule
 

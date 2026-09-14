@@ -14,7 +14,7 @@ the request changes that same subject.
 | Governance and agent instructions | `docs/governance/<short-topic>.md` or `docs/agents/<short-topic>.md` |
 | Setup and shared operations | `docs/operations/<short-topic>.md` |
 | Writing guidance | `docs/writing/<short-topic>.md` |
-| Issue-linked research or implementation notes | `docs/issues/YYYY-MM-DD-<short-topic>.md`; GitHub remains the task tracker |
+| Issue-linked research or implementation notes | `docs/issues/YYYY-MM-DD-<short-topic>.md`; Plane is the current task tracker |
 | Design plans | `docs/plans/YYYY-MM-DD-<short-topic>.md` |
 | Recorded verification | `docs/testing/<short-topic>.md`; state the observation date and scope |
 | Historical migration and retention records | `docs/history/<short-topic>.md` or `.json`; preserve recorded evidence |

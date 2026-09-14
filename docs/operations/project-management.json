@@ -14,11 +14,13 @@
     "allowed_sources": [
       "meeting action",
       "repository issue or comment",
+      "explicit project action in Mattermost supervisor exchange",
       "explicit user request"
     ],
     "current_phase_start": "2026-09-05",
     "current_phase_source": "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
-    "history_scope": "Selected July 16/28 to August 15 foundations, not the entire prior backlog"
+    "history_scope": "Selected July foundations and August delivery feedback, not the entire prior backlog",
+    "mattermost_mode": "Action or background source; bounded read-only intake from available access or user-provided evidence; no automatic polling configured"
   },
   "meeting": {
     "date": "2026-09-15",
@@ -78,7 +80,11 @@
       "identifier": "INVIS-3",
       "sources": [
         "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-07-28-ojs-enrichment-next-steps.md",
-        "https://github.com/YannJY02/InvisibleResearch/issues/98#issuecomment-5113777503"
+        "https://github.com/YannJY02/InvisibleResearch/issues/98#issuecomment-5113777503",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/qb5de3uzi3fgbpfn9aqra9sb9r",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/wmgw3hmfh3rk5rff5tjnqa1zee",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/o7r8wjnc8pdnup7tgr6y3r149a",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/5ggjckon8p817egctrf6h9cnky"
       ],
       "depends_on": [],
       "planned_start": null,
@@ -104,7 +110,9 @@
       "identifier": "INVIS-5",
       "sources": [
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
-        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/nawjj4usqby5zns9y6rakxba6w",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/r6tpz8eya38cjdwi5xjx1qr1ao"
       ],
       "depends_on": [],
       "planned_start": "2026-09-14",

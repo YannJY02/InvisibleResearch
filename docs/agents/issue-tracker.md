@@ -10,7 +10,8 @@ This supersedes the former GitHub issue-management default for future work here.
 - Read the current Plane record, dependencies, assignment, dates, and linked
   evidence before work. Check incoming meeting and upstream issue changes.
 - Map new authorized work to an existing task first. Create a task only from a
-  real meeting action, repository issue/comment, or explicit user instruction;
+  real meeting action, repository issue/comment, explicit project action in
+  Mattermost with the supervisor, or explicit user instruction;
   retain the exact source and a stable deduplication key. Do not turn ideas,
   missing evidence, or status observations into invented assignments.
 - Set In Progress when execution actually begins. Update the task at meaningful
@@ -24,6 +25,16 @@ This supersedes the former GitHub issue-management default for future work here.
 - Native Plane comments, descriptions, assignment, dates, and dependency links
   are the current progress record. Local registry dates are initial planning
   provenance, not an instruction to overwrite newer Plane edits.
+
+## Mattermost is an action and background source
+
+Use the [Mattermost intake rules](../operations/project-management.md#mattermost-source-intake)
+for supervisor exchanges. Attribute author/date/permalink and distinguish an
+explicit action from background, reported completion and acceptance. Reuse the
+existing task first. User-provided Appshots are bounded evidence; unread
+attachments and unsent drafts do not establish facts or assignments. The GitHub
+collector does not automatically poll Mattermost. Read-only collection does not
+authorize sending messages.
 
 ## GitHub is a collection source
 

@@ -1,0 +1,43 @@
+# Google MCP Toolbox v1.10.0 configuration for the current access diagnostic.
+# This allowlist is not a decision to use this snapshot for the final study.
+kind: source
+name: research-bigquery
+type: bigquery
+project: insyspo
+location: US
+readOnly: true
+writeMode: blocked
+allowedDatasets:
+  - insyspo.publicdb_openalex_2025_08_rm
+maximumBytesBilled: 104857600
+maxQueryResultRows: 100
+---
+kind: tool
+name: execute_sql
+type: bigquery-execute-sql
+source: research-bigquery
+description: Run SELECT queries or dry runs in the approved OpenAlex dataset. Dry-run first; each query is capped at 100 MiB billed and 100 result rows.
+---
+kind: tool
+name: get_dataset_info
+type: bigquery-get-dataset-info
+source: research-bigquery
+description: Read metadata for the approved OpenAlex dataset.
+---
+kind: tool
+name: get_table_info
+type: bigquery-get-table-info
+source: research-bigquery
+description: Read table metadata within the approved OpenAlex dataset.
+---
+kind: tool
+name: list_dataset_ids
+type: bigquery-list-dataset-ids
+source: research-bigquery
+description: Return the configured dataset allowlist, not a project-wide inventory.
+---
+kind: tool
+name: list_table_ids
+type: bigquery-list-table-ids
+source: research-bigquery
+description: List tables within the approved OpenAlex dataset.

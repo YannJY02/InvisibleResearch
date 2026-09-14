@@ -84,8 +84,8 @@ decision. No repair or alternate execution route has yet been verified.
 
 These routes use Google Cloud authentication and permissions independently of
 the plan-restricted built-in BigQuery connector reported by the user. This
-run exercised only `bq`; plugin and MCP compatibility below is documented,
-not an installed-runtime test.
+initial diagnostic exercised only `bq`; the later setup and MCP runtime
+validation are recorded in the final section below.
 
 | Official route | Relevance and requirements |
 |---|---|
@@ -110,3 +110,41 @@ For the current meeting preparation, continue with the already functioning
 CLI for schema inspection and permission diagnostics. A local Toolbox/plugin
 can provide a persistent AI interface later, but does not unblock SQL execution
 until the project permission is repaired.
+
+## Subsequent authorized MCP setup — September 14, 23:30
+
+After the user accepted the recommended setup, Google Toolbox v1.10.0 was
+installed from the official macOS arm64 binary and its SHA-256 was checked
+against the release. ADC authorization completed; a fresh Google userinfo
+response confirmed the researcher account. The project-scoped Codex server
+`bigquery_research` uses the committed
+[restricted configuration](../../config/bigquery-toolbox.yaml).
+See [operating instructions](../operations/bigquery-mcp.md) for paths and limits.
+
+The following checks were executed, with full responses retained locally in
+`artifacts/bigquery-access/mcp-tools.json` and `mcp-runtime.json`:
+
+| Runtime check | Observed result |
+|---|---|
+| `codex mcp get bigquery_research --json` | Parsed the enabled project-scoped server with the intended executable/configuration paths |
+| MCP stdio `initialize` and `tools/list` | Successful protocol handshake; exactly five configured tools, all with `readOnlyHint: true` |
+| MCP `get_table_info`, `table=sources` | Successfully returned the expected table ID and 21 schema fields |
+| MCP `get_table_info` with synthetic dataset `outside_access_scope` | Rejected because the dataset is outside the configured allowlist |
+| MCP `execute_sql`, `SELECT 1 AS access_test`, `dry_run=false` | Failed during the server's initial dry run: HTTP 403, missing `bigquery.jobs.create` on `insyspo` |
+| Existing conversation's server discovery | Reported unknown MCP server; configuration requires reload before this conversation exposes its tools |
+
+The cost cap, SELECT-only configuration and tool annotations were inspected;
+no successful query or write-rejection experiment establishes their full
+runtime behavior while query-job permission is missing. The successful
+metadata call and failed boundary test do establish functioning ADC, MCP
+transport, table-metadata access and the tested metadata allowlist check.
+
+Administrator request prepared for the existing supervisor workflow, **not sent**:
+
+> I retested BigQuery using Google's official CLI and MCP Toolbox. My account
+> can read the authors and sources metadata and preview one ID from each table
+> in insyspo.publicdb_openalex_2025_08_rm, but SELECT 1 fails with
+> bigquery.jobs.create denied on project insyspo. Could the administrator grant
+> yann.jyal@gmail.com BigQuery Job User (roles/bigquery.jobUser) on insyspo, or
+> confirm the approved project for running and billing these queries? I will
+> rerun a bounded read after the permission is updated.

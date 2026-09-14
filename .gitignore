@@ -121,3 +121,6 @@ meeting-reports/artifacts/
 
 # Read-only intake snapshots and pending Plane reconciliation records.
 docs/operations/artifacts/project-management/
+
+# Generated verification evidence, separated by check under artifacts/.
+docs/testing/artifacts/

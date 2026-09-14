@@ -15,6 +15,7 @@ with its [research owner](../research/README.md) or
 | Project progress and issue work | [Plane workflow](agents/issue-tracker.md), [schedule and source monitoring](operations/project-management.md), [source-to-task registry](operations/project-management.json), [triage labels](agents/triage-labels.md) |
 | Design and previous verification | [Plans](plans/), [test evidence](testing/) |
 | This governance installation and relocation audit | [Verification record](testing/document-governance.md) |
+| BigQuery access retest and official AI interfaces | [Access verification](testing/bigquery-access.md) |
 | Literature reading notes | [Evidence note specification](writing/literature-evidence-note-spec.md) |
 | Repository design and retention | [Organization research](governance/repository-structure-research.md), [unused code policy](governance/unused-code-policy.md) |
 | Historical migration and external archives | [Migration record](history/hybrid-workspace-migration.md), [archive index](history/archive-index.md), [Dimensions workflow snapshot](history/dimensions-workflow-notes.md) |

@@ -1,5 +1,9 @@
 # Hybrid Workspace Migration Record
 
+Status: historical migration record. Use the [data command mapping](../data/data-script-mapping.md)
+and each owner README for current commands. Checksum and archival statements
+below describe the original migration verification.
+
 The migration consolidated reusable behavior under `src/invisible_research/`.
 The temporary root `run_pipeline.sh` adapter and phase-numbered directories were
 verified during the migration window and then removed. Git history preserves

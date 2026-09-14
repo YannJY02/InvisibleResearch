@@ -41,6 +41,8 @@ Paper Analysis Candidate gate.
 
 - `analysis/`: unchanged Source Authority plus input verification orchestration.
 - `manuscript/`: active Etmaal presentation source and required theme assets.
+- `literature/`: source-linked Literature Evidence Notes, governed by the
+  [note specification](../../docs/writing/literature-evidence-note-spec.md).
 - `artifacts/`: ignored local presentation figures with recorded legacy hashes.
 - `environment/`: retained environment evidence and known gaps.
 - `governance/`: current candidate/designation boundary; no event is created here.

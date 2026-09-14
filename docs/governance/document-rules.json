@@ -1,0 +1,127 @@
+{
+  "document_extensions": [
+    ".md",
+    ".qmd",
+    ".rmd",
+    ".ipynb",
+    ".pdf",
+    ".docx",
+    ".html",
+    ".pptx",
+    ".tex",
+    ".typ",
+    ".json",
+    ".doc",
+    ".ppt",
+    ".odt",
+    ".odp",
+    ".xls",
+    ".xlsx",
+    ".ods"
+  ],
+  "path_rules": [
+    {
+      "pattern": "(?:README|AGENTS|CONTEXT)\\.md",
+      "description": "Repository entry points"
+    },
+    {
+      "pattern": "docs/README\\.md",
+      "description": "Documentation index"
+    },
+    {
+      "pattern": "docs/(?:agents|data|governance|operations|writing|history|testing)/[a-z0-9]+(?:-[a-z0-9]+)*\\.(?:md|json)",
+      "description": "Shared documentation by role"
+    },
+    {
+      "pattern": "docs/(?:issues|plans|adr)/20\\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\\d|3[01])-[a-z0-9]+(?:-[a-z0-9]+)*\\.md",
+      "description": "Dated issues, plans and decisions"
+    },
+    {
+      "pattern": "(?:research|papers|meeting-reports|inbox|data)/README\\.md",
+      "description": "Owner indexes"
+    },
+    {
+      "pattern": "meeting-reports/20\\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\\d|3[01])-[a-z0-9]+(?:-[a-z0-9]+)*\\.md",
+      "description": "Meeting summaries"
+    },
+    {
+      "pattern": "research/[a-z0-9]+(?:-[a-z0-9]+)*/(?:README|[a-z0-9]+(?:-[a-z0-9]+)*)\\.md",
+      "description": "Research owner notes"
+    },
+    {
+      "pattern": "research/[a-z0-9]+(?:-[a-z0-9]+)*/analysis/(?:[a-z0-9_-]+/)*[a-z0-9_-]+\\.(?:qmd|Rmd)",
+      "description": "Established research source names"
+    },
+    {
+      "pattern": "research/[a-z0-9]+(?:-[a-z0-9]+)*/notebooks/[a-zA-Z0-9_-]+\\.ipynb",
+      "description": "Existing notebook conventions"
+    },
+    {
+      "pattern": "papers/[a-z0-9]+(?:-[a-z0-9]+)*/(?:README\\.md|(?:analysis|environment|governance|requirements|artifacts)/README\\.md)",
+      "description": "Publication indexes"
+    },
+    {
+      "pattern": "papers/[a-z0-9]+(?:-[a-z0-9]+)*/literature/[a-z0-9]+(?:-[a-z0-9]+)*-\\d{4}-[a-z0-9]+(?:-[a-z0-9]+)*\\.md",
+      "description": "Literature source notes"
+    },
+    {
+      "pattern": "papers/[a-z0-9]+(?:-[a-z0-9]+)*/(?:governance|requirements)/[a-z0-9]+(?:-[a-z0-9]+)*\\.(?:md|json)",
+      "description": "Publication governance and requirement records"
+    },
+    {
+      "pattern": "papers/[a-z0-9]+(?:-[a-z0-9]+)*/requirements/sources/[^/]+",
+      "description": "Original requirement sources retain issuer filenames"
+    },
+    {
+      "pattern": "papers/[a-z0-9]+(?:-[a-z0-9]+)*/manuscript/(?:[a-z0-9]+(?:-[a-z0-9]+)*\\.md|[a-zA-Z0-9_-]+\\.(?:Rmd|qmd|typ|tex))",
+      "description": "Publication manuscript sources"
+    },
+    {
+      "pattern": "papers/[a-z0-9]+(?:-[a-z0-9]+)*/analysis/[a-zA-Z0-9_-]+\\.(?:Rmd|qmd|ipynb)",
+      "description": "Publication analysis sources"
+    },
+    {
+      "pattern": "src/invisible_research/(?:[a-z_]+/)*README\\.md",
+      "description": "Shared capability documentation"
+    },
+    {
+      "pattern": "data/(?:artifact-versions|component-manifests)/[a-z0-9]+(?:-[a-z0-9]+)*\\.json",
+      "description": "Existing content-identity records"
+    },
+    {
+      "pattern": "\\.github/(?:ISSUE_TEMPLATE/[a-z-]+|pull_request_template)\\.md",
+      "description": "GitHub templates"
+    }
+  ],
+  "required_files": [
+    "AGENTS.md",
+    "README.md",
+    "CONTEXT.md",
+    "docs/README.md",
+    "docs/governance/document-governance.md",
+    "docs/governance/document-rules.json",
+    "docs/agents/task-intake.md",
+    "docs/writing/requirements.md",
+    "src/invisible_research/document_governance.py",
+    ".githooks/pre-commit",
+    ".github/workflows/document-governance.yml"
+  ],
+  "link_exemptions": [],
+  "protected_files": [
+    {
+      "path": "papers/invisible-communication-science/analysis/analyze.Rmd",
+      "sha256": "42395d4f28ddaf3d1f062d74d215e68fc93b691d47f2e6632943f976c65797b5",
+      "reason": "Preserved source authority or immutable historical verification record; changes need an explicit evidence update."
+    },
+    {
+      "path": "docs/history/data-lifecycle-cutover.json",
+      "sha256": "d3e8246bc7f8c1f7e5ac561dc57bb77bacfe99eceff048f0732246402970bb0d",
+      "reason": "Preserved source authority or immutable historical verification record; changes need an explicit evidence update."
+    },
+    {
+      "path": "docs/history/writing-report-archive-manifest.json",
+      "sha256": "68d413ee2383a090f87eb75789e628ea145c84ecde296bcb41df5e5ac46fe144",
+      "reason": "Preserved source authority or immutable historical verification record; changes need an explicit evidence update."
+    }
+  ]
+}

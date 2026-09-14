@@ -14,7 +14,7 @@ sources or models are added.
 - [Khanna et al. (2022) Literature Evidence Note](../papers/invisible-communication-science/literature/khanna-2022-recalibrating-scholarly-publishing.md)
   records the study's framing, data, methods, findings, limitations, and
   literature-review leads. The reusable note format is documented in the
-  [Literature Evidence Note specification](../docs/literature-evidence-note-spec.md).
+  [Literature Evidence Note specification](../docs/writing/literature-evidence-note-spec.md).
 - [OJS Journal Metadata Enrichment](../research/ojs-journal-metadata/README.md)
   records the pinned PKP input, row identity, OpenAlex matching rules, retained
   fields, and reproduction command. The generated `coverage-report.json` and

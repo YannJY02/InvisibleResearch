@@ -226,14 +226,14 @@ def test_github_issues_are_the_only_current_tracker() -> None:
     tracker = (PROJECT_ROOT / "docs/agents/issue-tracker.md").read_text(
         encoding="utf-8"
     )
-    inventory = (PROJECT_ROOT / "docs/artifact-authority-inventory.md").read_text(
+    inventory = (PROJECT_ROOT / "docs/governance/artifact-authority-inventory.md").read_text(
         encoding="utf-8"
     )
 
     assert not (PROJECT_ROOT / "docs/PROJECT_ISSUES.md").exists()
     assert "Issues and PRDs for this repo live as GitHub issues" in tracker
     assert "docs/PROJECT_ISSUES.md" not in inventory
-    assert "GitHub Issues](agents/issue-tracker.md) is the current tracker authority" in inventory
+    assert "GitHub Issues](../agents/issue-tracker.md) is the current tracker authority" in inventory
 
 
 def test_unsupported_cursor_workflow_is_retired() -> None:
@@ -251,7 +251,7 @@ def test_unsupported_cursor_workflow_is_retired() -> None:
     assert not [path for path in retired_paths if (PROJECT_ROOT / path).exists()]
 
     root_readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
-    inventory = (PROJECT_ROOT / "docs/artifact-authority-inventory.md").read_text(
+    inventory = (PROJECT_ROOT / "docs/governance/artifact-authority-inventory.md").read_text(
         encoding="utf-8"
     )
     active_guidance = (

@@ -1,0 +1,23 @@
+name: Document governance
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  documents:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check document layout, links and protected evidence
+        run: PYTHONPATH=src python3 -m invisible_research.document_governance check
+      - name: Test governance checks with disposable repositories
+        run: python3 -m unittest discover -s tests -p test_document_governance.py

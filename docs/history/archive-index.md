@@ -16,7 +16,7 @@ Entries:
 ## Google Drive Writing Report legacy archive
 
 - Path: `GoogleDrive:InvisibleResearch/archive/writing-report-legacy/`
-- Source: selected unique inactive text sources from local-only `Writing Report/`, copied during ticket #54; exact source paths are in `docs/writing-report-archive-manifest.json`.
+- Source: selected unique inactive text sources from local-only `Writing Report/`, copied during ticket #54; exact source paths are in `docs/history/writing-report-archive-manifest.json`.
 - Purpose: preserve superseded analysis variants, execution history, presentation support, and inactive report source without importing the full private workspace into Git.
 - Last known good (env/tooling): mixed historical state; the R transcript identifies R 4.5.2 and partial package versions but no clean end-to-end run, while the Node report tooling has no retained verified run.
 - Dependencies: partial R/CRAN packages documented in the Publication Compendium environment note; inactive report sources reference the archived `package.json` but exclude `node_modules` and `package-lock.json`.
@@ -26,7 +26,7 @@ Entries:
 ## Google Drive Writing Report human-review archive
 
 - Path: `GoogleDrive:InvisibleResearch/archive/writing-report-human-review/`
-- Source: seven owner-approved administrative, private, or potentially copyrighted files listed in `docs/writing-report-human-review.md`.
+- Source: seven owner-approved administrative, private, or potentially copyrighted files listed in `docs/history/writing-report-human-review.md`.
 - Purpose: retain the reviewed private material without keeping a duplicate local workspace or importing its bytes into Git.
 - Last known good (env/tooling): content preservation only; no executable environment is claimed.
 - Dependencies: none for preservation.

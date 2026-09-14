@@ -32,7 +32,7 @@ cp .env.example .env
 # 3. The .env file is automatically ignored by git for security
 ```
 
-📋 **See [Security Guide](docs/SECURITY_GUIDE.md) for detailed configuration instructions and best practices.**
+📋 **See [Security Guide](docs/operations/security-guide.md) for detailed configuration instructions and best practices.**
 
 ### Run Shared Capabilities
 ```bash
@@ -74,7 +74,7 @@ python -m invisible_research.validation.start
 - **Schema**: 16 optimized columns with proper data types
 - **Integration**: Seamless compatibility with existing analysis pipeline
 
-**📋 See detailed specification**: [`docs/ARTICLEINFO_DATABASE.md`](docs/ARTICLEINFO_DATABASE.md)
+**📋 See detailed specification**: [`docs/data/articleinfo-database.md`](docs/data/articleinfo-database.md)
 
 ## 🔬 Methodology
 
@@ -121,7 +121,7 @@ documented in [`papers/invisible-communication-science/`](papers/invisible-commu
 Project-level supervisor and group-meeting updates are indexed in
 [`meeting-reports/`](meeting-reports/README.md).
 
-**📋 For detailed data-script relationships**: See [`docs/DATA_SCRIPT_MAPPING.md`](docs/DATA_SCRIPT_MAPPING.md)
+**📋 For detailed data-script relationships**: See [`docs/data/data-script-mapping.md`](docs/data/data-script-mapping.md)
 
 ## 🔍 LLM Validation Suite
 
@@ -157,10 +157,19 @@ guidance covers the [domain vocabulary](docs/agents/domain.md),
 [GitHub Issue tracker](docs/agents/issue-tracker.md), and
 [triage labels](docs/agents/triage-labels.md).
 
+Use the [documentation index](docs/README.md) to find the correct document
+owner and the [governance rules](docs/governance/document-governance.md) for
+placement, naming, writing requirements, and automatic checks. For a new clone,
+enable the versioned pre-commit hook after inspecting any existing hooks:
+
+```bash
+git config --local core.hooksPath .githooks
+```
+
 **📊 Data Documentation**:
-- **MySQL Database Schema**: Complete relational database structure - see [Database Documentation](docs/README.md).
-- **ArticleInfo Parquet Database**: High-performance analytical database - see [ArticleInfo Database Guide](docs/ARTICLEINFO_DATABASE.md).
-- **Data Processing Pipeline**: Complete script-data mapping - see [Data Script Mapping](docs/DATA_SCRIPT_MAPPING.md).
+- **MySQL Database Schema**: Complete relational database structure - see [Database Documentation](docs/data/pkp-database-schema.md).
+- **ArticleInfo Parquet Database**: High-performance analytical database - see [ArticleInfo Database Guide](docs/data/articleinfo-database.md).
+- **Data Processing Pipeline**: Complete script-data mapping - see [Data Script Mapping](docs/data/data-script-mapping.md).
 
 ## 📝 Citation
 
@@ -175,4 +184,4 @@ guidance covers the [domain vocabulary](docs/agents/domain.md),
 See `docs/` folder for detailed documentation.
 
 ### Unused Code Policy
-See the policy for handling unused but potentially reusable code: [docs/unused-code-policy.md](docs/unused-code-policy.md).
+See the policy for handling unused but potentially reusable code: [docs/governance/unused-code-policy.md](docs/governance/unused-code-policy.md).

@@ -1,5 +1,9 @@
 # Follow-on Journal Metadata Source Assessment
 
+Status: historical source assessment from 2026-07-16. Crossref integration has
+since been implemented; use the [owner README](README.md) for current scope and
+commands. The recommendations below retain their original assessment context.
+
 Assessed 2026-07-16 for the exploratory PKP journal metadata pipeline. This
 note decides which sources merit investigation after OpenAlex; it does not
 authorize or implement an integration.
@@ -110,7 +114,7 @@ future-use extracts. [Dimensions reasonable use][dimensions-use]
 The repository already contains a large Dimensions-derived artifact, but its
 origin, extraction query, version, and license remain unresolved. It is not
 evidence of current API entitlement or permission to enrich this new cohort.
-[Local authority inventory](../../docs/artifact-authority-inventory.md)
+[Local authority inventory](../../docs/governance/artifact-authority-inventory.md)
 
 **Gate.** No follow-on implementation for the current destination. Reopen the
 decision only for a named cross-domain analysis and a documented access/license

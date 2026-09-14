@@ -1,5 +1,10 @@
 # OJS journal enrichment QMD: TDD evidence
 
+Status: chronological verification evidence, including later dated runs below.
+Counts, commands, and contracts belong to the recorded run, not necessarily the
+current implementation. See the [owner README](../../research/ojs-journal-metadata/README.md)
+for current execution instructions.
+
 Date: 2026-07-17
 
 ## Contract

@@ -6,6 +6,9 @@
   - Project vocabulary or architectural decisions: [domain guidance](docs/agents/domain.md).
   - Issue work: [GitHub workflow](docs/agents/issue-tracker.md). External pull requests are not a triage request surface.
   - Triage: [canonical labels](docs/agents/triage-labels.md): `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
+  - Creating, importing, or reorganizing documents: [document governance](docs/governance/document-governance.md). Choose the owner, role, and filename before writing; update the existing canonical document and links where appropriate.
+  - Writing or revising formal prose: [writing requirements](docs/writing/requirements.md) and the target's requirements index. Apply applicable source-backed requirements without waiting for the user to repeat them.
+  - Material gaps in a prompt or conflicting requirements: [task intake and MATT routing](docs/agents/task-intake.md). Investigate facts, suggest a resolution, and clarify consequential decisions; proceed on routine choices.
 
 ## Academic analysis code
 
@@ -19,4 +22,5 @@ In `research/**`, `papers/**/analysis/**`, QMD/Rmd files, and notebooks:
 ## Completion
 
 - Complete the requested deliverable and verification appropriate to its risk. When execution or rendering is part of the task, inspect the result and fix in-scope failures before handing it back.
+- After document changes, run `PYTHONPATH=src python3 -m invisible_research.document_governance check` and fix in-scope placement, naming, or link failures. The pre-commit hook and CI check the committed document snapshot automatically.
 - Stage only the task's changes, commit, and push the current branch. Preserve unrelated existing changes. Report any blocker, including a failed commit or push.

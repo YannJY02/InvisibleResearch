@@ -3,6 +3,8 @@
 This section stores version-controlled reports prepared for recurring
 supervisor or research-group meetings. Name each report
 `YYYY-MM-DD-short-topic.md` and add it to the index below.
+Generated HTML, PDF, and slide exports belong in the ignored
+`artifacts/<report-stem>/` subdirectory. Keep the Markdown source in this index.
 
 ## Index
 

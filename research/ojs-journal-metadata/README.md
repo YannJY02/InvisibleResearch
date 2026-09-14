@@ -66,6 +66,26 @@ downstream analysis can reject a mismatched master or OpenAlex checkpoint set;
 it also records the R, Quarto, curl, and analysis-package versions. API
 credentials and `admin_email` are not written to either artifact.
 
+## Simple full-field Parquet version
+
+The separate source in `analysis/ojs_journal_enrichment_simple_ver/` expands
+the full source records into a Parquet master and a fixed ten-row sample.
+Use its render entry point so the HTML also lands in its own artifact directory:
+
+```bash
+./research/ojs-journal-metadata/analysis/render_simple.sh
+```
+
+It uses the packages and source/cache requirements documented in that QMD.
+The command executes the analysis and may retrieve missing source data; use it
+when the task authorizes the corresponding run. Existing source caches are
+reused as specified in the QMD. Its outputs and cache remain under
+`artifacts/ojs_journal_enrichment_simple_ver/`, with HTML in `rendered/`.
+A differing source-adjacent HTML export and its RPubs metadata were preserved
+under `artifacts/ojs_journal_enrichment_simple_ver/source-adjacent-2026-09-14/`.
+The prior `rendered/` report was retained unchanged; the reorganization did not
+republish either export.
+
 ## Difference analysis
 
 Run the separate offline comparison after a validated full master exists:

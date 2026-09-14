@@ -1,5 +1,9 @@
 # Current Data-to-Claim Dependency Graph
 
+Scope: the retained assessment of the researcher-supplied analysis and its
+recorded evidence. The documentation reorganization on 2026-09-14 did not rerun
+the analysis or turn the previously observed counts into current measurements.
+
 This trace resolves [Trace the current data-to-claim dependency graph](https://github.com/YannJY02/InvisibleResearch/issues/47). It documents the latest researcher-supplied analysis without rerunning or changing the research. The Publication Compendium migration changed locators, not evidence: the Source Authority hash is unchanged and the large CSV now has a four-field external Artifact Version record.
 
 ## Decision

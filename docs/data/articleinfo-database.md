@@ -1,5 +1,10 @@
 # ArticleInfo Parquet Database
 
+The sizes, throughput, and validation statements below are historical observations
+from the retained conversion documentation, not a new full-dataset check. Use
+the [owner instructions](../../research/article-metadata-conversion/README.md)
+for current commands; dataset locations resolve through external `DATA_ROOT`.
+
 A high-performance, compressed academic paper metadata database converted from CSV to Parquet format for optimized analysis and processing within the InvisibleResearch project.
 
 ---
@@ -282,9 +287,9 @@ final_result = pd.concat(results, ignore_index=True)
 ---
 
 **📋 See also**: 
-- [Main README](README.md) - Complete MySQL database schema
-- [Data Script Mapping](DATA_SCRIPT_MAPPING.md) - Complete processing pipeline
-- [GitHub Issue Tracker](agents/issue-tracker.md) - Current issue workflow and tracker authority
+- [PKP database schema](pkp-database-schema.md) - Retained MySQL database description
+- [Data Script Mapping](data-script-mapping.md) - Complete processing pipeline
+- [GitHub Issue Tracker](../agents/issue-tracker.md) - Current issue workflow and tracker authority
 
 **🔗 Quick Access**:
 - **File Location**: `data/processed/articleInfo.parquet`

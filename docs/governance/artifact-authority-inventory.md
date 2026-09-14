@@ -1,6 +1,10 @@
 # Current Artifact Role and Authority Inventory
 
-This inventory resolves [Classify current artifacts by scholarly role and authority](https://github.com/YannJY02/InvisibleResearch/issues/46). It classified the pre-migration tree and now records the equivalent roles after the Shared Workspace, research-owner, and Publication Compendium migrations. See [`hybrid-workspace-migration.md`](hybrid-workspace-migration.md) for current commands.
+Scope: the retained migration-era authority assessment, with document locators
+updated on 2026-09-14. Counts describe the original inventory, not the current
+file count. Moving documents does not revalidate datasets or designate analyses.
+
+This inventory resolves [Classify current artifacts by scholarly role and authority](https://github.com/YannJY02/InvisibleResearch/issues/46). It classified the pre-migration tree and records the equivalent roles after the Shared Workspace, research-owner, and Publication Compendium migrations. See the [data command mapping](../data/data-script-mapping.md) and owner READMEs for current commands; the [migration record](../history/hybrid-workspace-migration.md) preserves the earlier cutover evidence.
 
 ## Decision
 
@@ -23,12 +27,12 @@ At classification time, the repository tracked 97 files. The role assignments be
 | Paths | Primary role | Evidence and handling consequence |
 |---|---|---|
 | `src/invisible_research/acquisition/**`, `src/invisible_research/processing/**`, `src/invisible_research/validation/**`, `.env.example`, `data/README.md`, `data/raw/sample_records_language_title_abstract.csv`, `requirements.txt`, `tests/**` | Shared Workspace | Reusable configuration, sample input, acquisition/processing/validation code, and checks. Direct module commands resolve external artifacts through `DATA_ROOT`. |
-| `docs/ARTICLEINFO_DATABASE.md`, `docs/DATA_SCRIPT_MAPPING.md`, `docs/README.md`, `docs/TableRelation.png` | Shared Workspace | Describe shared data schemas and transformations rather than a single claim. |
+| `docs/data/articleinfo-database.md`, `docs/data/data-script-mapping.md`, `docs/data/pkp-database-schema.md`, `docs/data/table-relations.png` | Shared Workspace | Describe shared data schemas and transformations rather than a single claim. |
 | `research/**/README.md`, `research/**/analysis/**`, `research/**/notebooks/**` | Exploratory Analysis | Five named owners now contain the acquisition experiments, matching, variable construction, coverage, sampling, and validation work. Notebook code is retained in owner analysis commands and notebooks act as adapters. No owner has Paper Analysis authority. |
 | `papers/invisible-communication-science/**` | Publication Compendium containing Exploratory Analysis | Contains the unchanged Source Authority, active slide source and theme assets, external-input verification, environment gaps, ignored legacy figures, and a governance boundary. It contains no Candidate Version or Designation Event. |
 | `data/artifact-versions/**` | Shared Workspace | Four-field content-identity records reference large external inputs through portable `DATA_ROOT` locations; no large data bytes enter Git. |
 | Removed tracked executed notebooks, root outputs, phase-numbered scripts, root command wrapper, obsolete config, and backup code | Generated Artifact / superseded support material | These retired forms left the active tree during owner migration and final contraction. Git history retains their exact tracked content. New regenerable reports are written to ignored owner-local `artifacts/` directories. |
-| `.github/**`, `.gitignore`, `AGENTS.md`, `CITATION.cff`, `CONTEXT.md`, `README.md`, `research/README.md`, `docs/agents/**`, `docs/SECURITY_GUIDE.md`, `docs/academic-repository-structure-research.md`, `docs/issues/**`, `docs/unused-code-policy.md`, `utils.md`, `archive.md` | Administrative or support material | [GitHub Issues](agents/issue-tracker.md) is the current tracker authority. The listed paths support repository operation, governance, planning, citation, external-archive indexing, and developer documentation; they do not enter the data-to-claim chain. |
+| `.github/**`, `.gitignore`, `AGENTS.md`, `CITATION.cff`, `CONTEXT.md`, `README.md`, `research/README.md`, `docs/agents/**`, `docs/operations/security-guide.md`, `docs/governance/repository-structure-research.md`, `docs/issues/**`, `docs/governance/unused-code-policy.md`, `docs/operations/utility-index.md`, `docs/history/archive-index.md` | Administrative or support material | [GitHub Issues](../agents/issue-tracker.md) is the current tracker authority. The listed paths support repository operation, governance, planning, citation, external-archive indexing, and developer documentation; they do not enter the data-to-claim chain. |
 | None | Paper Analysis Candidate | No tracked analysis meets the reproducibility gate defined in `CONTEXT.md`. |
 | None | Paper Analysis | No tracked joint designation record exists. |
 
@@ -39,7 +43,7 @@ At classification time, the repository tracked 97 files. The role assignments be
 | `$DATA_ROOT/processed/dimensions_april2025_consolidated.csv` | External Google Drive data, registered | Shared Workspace input | 2,583,327,244 bytes, SHA-256 `9361454fd9e9c6479181dd60d98d44038aa4b346bb74654f7750345db6f27ab2`; upstream provenance remains unresolved. |
 | `$DATA_ROOT/derived/**` represented by `data/artifact-versions/**` | External Google Drive data, registered | Shared derived data or Generated Artifact | Direct hashes or tracked component manifests preserve content identity and upstream Artifact Version links. Registration grants no paper authority. |
 | `GoogleDrive:InvisibleResearch/archive/writing-report-legacy/` | External archive | Archive | Unique inactive text sources were copied and SHA-256 verified during the Publication Compendium migration. |
-| `GoogleDrive:InvisibleResearch/archive/writing-report-human-review/` | Private external archive | Administrative or support material | Seven owner-approved files were SHA-256 verified before the duplicate local workspace was removed; see `writing-report-human-review.md`. |
+| `GoogleDrive:InvisibleResearch/archive/writing-report-human-review/` | Private external archive | Administrative or support material | Seven owner-approved files were SHA-256 verified before the duplicate local workspace was removed; see the [archive decision](../history/writing-report-human-review.md). |
 | `papers/invisible-communication-science/artifacts/**` | Ignored local artifacts | Generated Artifact | Selected legacy figures support the compendium but remain non-authoritative unless Candidate Version governance records their hashes. |
 | `.env`, `.vscode/**` | Ignored local files | Administrative or support material | `.env` remains local and secret; editor settings are optional. |
 

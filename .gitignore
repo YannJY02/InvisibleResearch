@@ -115,3 +115,6 @@ papers/*/artifacts/*
 !papers/*/artifacts/README.md
 papers/*/manuscript/libs/
 papers/*/manuscript/*_files/
+
+# Regenerable meeting exports and local publishing state.
+meeting-reports/artifacts/

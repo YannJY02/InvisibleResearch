@@ -84,4 +84,4 @@ processed/dimension_data_for_analysis.parquet
 
 ## 📋 Detailed Script-Data Mapping
 
-For complete information about which scripts process which data files, see: [`../docs/DATA_SCRIPT_MAPPING.md`](../docs/DATA_SCRIPT_MAPPING.md)
+For complete information about which scripts process which data files, see: [`../docs/data/data-script-mapping.md`](../docs/data/data-script-mapping.md)

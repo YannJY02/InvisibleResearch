@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -48,7 +49,7 @@ def test_publication_compendium_preserves_source_authority_without_designation()
     assert not list((PAPER_ROOT / "governance").rglob("*.yaml"))
 
 
-def test_publication_compendium_contains_only_selected_active_sources() -> None:
+def test_publication_compendium_contains_selected_sources_and_literature_notes() -> None:
     expected = {
         "README.md",
         "analysis/analyze.Rmd",
@@ -78,7 +79,11 @@ def test_publication_compendium_contains_only_selected_active_sources() -> None:
             check=True,
         ).stdout.splitlines()
     }
-    assert actual == expected
+    # Literature Evidence Notes are now an established compendium role; they
+    # do not change the fixed analysis/manuscript source selection below.
+    literature = {path for path in actual if path.startswith("literature/")}
+    assert all(re.fullmatch(r"literature/[a-z0-9-]+-\d{4}-[a-z0-9-]+\.md", path) for path in literature)
+    assert actual - literature == expected
 
     tracked = subprocess.run(
         [
@@ -205,7 +210,7 @@ def test_intake_and_paper_artifacts_are_local_only() -> None:
 
 def test_external_archives_and_human_review_decision_are_separate() -> None:
     manifest = json.loads(
-        (PROJECT_ROOT / "docs/writing-report-archive-manifest.json").read_text(
+        (PROJECT_ROOT / "docs/history/writing-report-archive-manifest.json").read_text(
             encoding="utf-8"
         )
     )
@@ -217,9 +222,9 @@ def test_external_archives_and_human_review_decision_are_separate() -> None:
         )
         assert len(entry["sha256"]) == 64
 
-    archive_index = (PROJECT_ROOT / "archive.md").read_text(encoding="utf-8")
+    archive_index = (PROJECT_ROOT / "docs/history/archive-index.md").read_text(encoding="utf-8")
     assert "writing-report-legacy" in archive_index
-    assert "docs/writing-report-archive-manifest.json" in archive_index
+    assert "docs/history/writing-report-archive-manifest.json" in archive_index
     for field in (
         "Source",
         "Purpose",
@@ -230,7 +235,7 @@ def test_external_archives_and_human_review_decision_are_separate() -> None:
     ):
         assert field in archive_index
 
-    review = (PROJECT_ROOT / "docs/writing-report-human-review.md").read_text(
+    review = (PROJECT_ROOT / "docs/history/writing-report-human-review.md").read_text(
         encoding="utf-8"
     )
     assert "GoogleDrive:InvisibleResearch/archive/writing-report-human-review/" in review

@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+PYTHONPATH=src python3 -m invisible_research.document_governance check --staged
+if ! PYTHONPATH=src python3 -m invisible_research.document_governance check; then
+  printf '%s\n' 'Working-tree document warnings above include uncommitted files; repair in-scope findings before delivery.' >&2
+fi

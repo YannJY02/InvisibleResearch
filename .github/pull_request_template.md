@@ -1,33 +1,14 @@
-## 📝 Pull Request: [Title]
+## Change
 
-### 🔗 Related Issue
-Closes #[issue-number]
+<!-- State the problem and resulting behavior. Link a related issue if one exists. -->
 
-### 📋 Changes Summary
-- <!-- List of changes made -->
-- <!-- Files modified/added -->
-- <!-- Methodology updates -->
+## Validation
 
-### 🧪 Testing & Validation
-- [ ] Code tested with sample data
-- [ ] Results reproducible
-- [ ] Documentation updated
-- [ ] Academic standards verified
+<!-- Record checks actually run, results, and material coverage gaps.
+For document changes: placement, names, links, and applicable writing requirements.
+For analysis changes: affected methods, inputs, denominators, and output evidence.
+Omit checks that do not apply. A successful check is not scientific designation. -->
 
-### 📊 Academic Review Checklist
-- [ ] **Methodology Sound**: Approach follows academic standards
-- [ ] **Reproducible**: Code can be run by others
-- [ ] **Documented**: Clear comments and documentation
-- [ ] **Data Quality**: Input/output data validated
-- [ ] **Citation Ready**: Proper attribution and references
+## Review notes
 
-### 🎯 Impact Assessment
-**Research Impact**: <!-- How this affects ongoing research -->
-**Data Pipeline**: <!-- Changes to data processing -->
-**Documentation**: <!-- Updates to papers/reports needed -->
-
-### 📈 Key Findings (if applicable)
-<!-- Summarize main results or discoveries -->
-
-### 🔄 Review Notes
-<!-- Any specific areas where reviewer attention is needed -->
+<!-- Include only relevant unresolved decisions, compatibility effects, or risks. -->

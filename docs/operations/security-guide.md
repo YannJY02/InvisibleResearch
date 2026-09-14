@@ -32,7 +32,11 @@ OPENAI_MODEL=gpt-4o                        # 使用的模型
 BATCH_SIZE=20                              # 批处理大小
 ```
 
-### 步骤 3: 验证配置
+### 步骤 3: 运行已授权的作者处理
+
+下面的命令会调用 LLM 服务并生成处理结果，可能产生费用；它不是只读配置检查。
+仅在任务包含作者处理、数据范围和服务调用均已授权时执行。
+
 ```bash
 DATA_ROOT=/path/to/data PYTHONPATH=src python -m invisible_research.processing.author_names_llm
 ```

@@ -1,5 +1,9 @@
 # OJS Enrichment Simplification Design
 
+Status: historical design from 2026-07-30. Some output details changed during
+implementation. Use the [owner README](../../research/ojs-journal-metadata/README.md)
+for current commands and output contracts; this plan is not a fresh run record.
+
 ## Decision
 
 Separate reusable data production from exploratory disagreement analysis.

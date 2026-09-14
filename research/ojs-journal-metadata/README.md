@@ -32,6 +32,19 @@ row contract are tracked separately in [Plane](../../docs/operations/project-man
 The implemented PKP/OJS workflow below retains its existing row-preservation
 and exact-ISSN contract; its output does not complete the new baseline task.
 
+## Offline premeeting audit
+
+The [current premeeting report](../openalex-journal-baseline/premeeting-report.md)
+records the September 14 offline audit of the existing 98,273 × 81 full-field
+Parquet. Reproduce that audit without API calls from the repository root:
+
+```sh
+Rscript research/ojs-journal-metadata/analysis/premeeting_crossref_audit.R
+```
+
+Its outputs belong to `artifacts/premeeting-crossref-audit/`. This audits saved
+August 3 API caches; it does not construct the separate OpenAlex-wide baseline.
+
 ## Environment
 
 The analysis uses the package versions recorded in `analysis/renv.lock`. Restore

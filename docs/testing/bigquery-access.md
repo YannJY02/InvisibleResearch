@@ -4,6 +4,11 @@ Observed on **2026-09-14, 23:18–23:20 Asia/Shanghai** for **INVIS-6**.
 Owner: project operations. This is a dated verification record; current task
 status remains in [Plane](../operations/project-management.md).
 
+**Latest follow-up:** the 23:39–23:52 tests below confirmed dataset OWNER but
+continued SQL denial, and completed a full official `tabledata.list` read of
+the candidate sources table. See the final section and the
+[premeeting report](../../research/openalex-journal-baseline/premeeting-report.md).
+
 ## Result and scope
 
 Google's official CLI successfully read table metadata and one ID from each of
@@ -148,3 +153,54 @@ Administrator request prepared for the existing supervisor workflow, **not sent*
 > yann.jyal@gmail.com BigQuery Job User (roles/bigquery.jobUser) on insyspo, or
 > confirm the approved project for running and billing these queries? I will
 > rerun a bounded read after the permission is updated.
+
+## User dataset and complete alternate read — September 14, 23:39–23:52
+
+The user asked whether `userdb_yann_jyal` changes the permission result and
+authorized other means, including saved merged data, to continue the planned
+work. Fresh `bq show --dataset` succeeded and returned an explicit OWNER entry
+for the researcher account. The dataset is in `US`; its table listing succeeded
+with no tables returned. No write test was performed.
+
+The corrected constant-query test explicitly selected that default dataset:
+
+```sh
+/Users/yann.jy/.local/google-cloud-sdk/bin/bq \
+  --headless=true --project_id=insyspo \
+  --dataset_id=insyspo:userdb_yann_jyal --location=US --format=prettyjson \
+  query --use_legacy_sql=false --maximum_bytes_billed=1 \
+  'SELECT 1 AS access_test'
+```
+
+It failed with the same `bigquery.jobs.create` denial at
+`2026-09-14T15:39:08.798359Z`, exit 1. Dataset ownership does not grant the missing
+project job permission. Raw dataset metadata, table listing and command output
+are local under `artifacts/bigquery-access/`; `userdb-query.json` contains the
+correct test, while `userdb-query-cli-flag-error.json` preserves a preceding
+invalid-flag attempt that is not permission evidence.
+
+An authorized alternate route then succeeded: the official REST
+[`tabledata.list`](https://docs.cloud.google.com/bigquery/docs/reference/rest/v2/tabledata/list)
+method read all 260,789 records of
+`insyspo.publicdb_openalex_2025_08_rm.sources` in 27 pages, without a SQL job.
+The [reader](../../research/openalex-journal-baseline/analysis/read_bigquery_sources.py)
+decoded all 21 scalar fields and retained the 209,799 exact `type == journal`
+rows locally. Before/after schema, numRows, numBytes and lastModifiedTime were
+identical. Independent readback verified IDs, all 4,405,779 journal field values,
+page totals and both file hashes. This is complete-read evidence for this table,
+not transactional snapshot isolation or proof that every related table is readable.
+
+The valid manifest, raw JSONL, journal CSV and independent verification are in
+`research/openalex-journal-baseline/artifacts/bigquery-tabledata-2025-08/`.
+CSV merges null and original empty strings into empty cells; JSONL preserves
+their distinction. Completion requires a valid manifest and matching hashes,
+not just final filenames. No credentials were retained in artifacts.
+
+A fresh project inventory listed 16 visible datasets, with OpenAlex candidates
+March 2025 and August 2025. January 2026 and the third meeting candidate were not
+identified in that account/project scope. A
+[candidate input contract](../../research/openalex-journal-baseline/input-contract.md)
+records these limits and the inspected related-table schemas. The alternate read
+releases the core-table extraction's dependence on SQL access. It does not repair
+IAM, confirm the final scientific snapshot, complete related metadata or verify
+SURFdrive delivery.

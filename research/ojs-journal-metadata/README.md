@@ -14,6 +14,20 @@ Crossref journals without dropping PKP identities?
 - OpenAlex Sources
 - Crossref journals
 
+## Latest meeting follow-up
+
+The [meeting record labelled 2026-09-14](../../meeting-reports/2026-09-14-openalex-baseline-and-access.md)
+requests a review of Crossref's additional fields and rows with Crossref
+information but none from OpenAlex, alongside resolution of BigQuery query
+access. It provisionally favours a January 2026 snapshot and places Web of
+Science/Scopus coverage comparison after that work. The report records the
+owners, dependencies, and unresolved date, access, snapshot, and comparison-unit
+questions; it does not establish that those follow-ups are complete.
+
+The meeting's OpenAlex-baseline direction does not yet specify a replacement
+for the PKP/OJS cohort or denominator. The implemented workflow below retains
+its existing row-preservation and exact-ISSN contract.
+
 ## Environment
 
 The analysis uses the package versions recorded in `analysis/renv.lock`. Restore

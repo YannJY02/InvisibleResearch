@@ -2,10 +2,10 @@
 
 This repo uses a **single-context** domain documentation layout.
 
-## Before exploring, read these
+## Read when relevant
 
-- `CONTEXT.md` at the repo root.
-- `docs/adr/` for architectural decisions related to the area being changed.
+- Use root `CONTEXT.md` when interpreting or changing project concepts and terminology.
+- Consult relevant decisions in `docs/adr/` when changing architecture or checking a design constraint.
 
 If these files don't exist, proceed silently. Don't suggest creating them upfront. The `/domain-modeling` skill creates them lazily when terms or decisions actually get resolved.
 

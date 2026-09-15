@@ -1,6 +1,8 @@
 # 大数据文件
 *.parquet
 *.sql
+# Reproducible journal consolidation query (not a data dump).
+!research/openalex-journal-baseline/analysis/export_journal_table.sql
 *.gz
 data/processed/
 data/derived/

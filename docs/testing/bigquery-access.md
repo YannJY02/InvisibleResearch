@@ -1,10 +1,36 @@
 # BigQuery access verification
 
+## 当前连接：multiobs（2026-09-15 会后）
+
+用户已明确旧 insyspo 停用。持久 [Toolbox 配置](../../config/bigquery-toolbox.yaml)
+现在允许 `multiobs.publicdb_openalex_2026_01_rm` 和 `multiobs.userdb_saurabh_khanna`；
+执行项目为 `gen-lang-client-0676290976`，US。两套概念分别是“数据在哪里”与
+“查询作业在哪里执行”，无需把作业项目设成 multiobs 才能读取其公共表。
+
+CLI `toolbox invoke` 和真实 MCP stdio 都分别成功查询上述公共库/工作库；四个作业
+已读回 DONE，每个扫描 12,620,845 bytes。旧 insyspo 范围在该配置中已被拒绝。
+本轮没有改云端 IAM；本机 gcloud 默认项目本来就是 YannJY，无需再改。
+
+| 通路 | 公共库成功作业 | 工作库成功作业 |
+|---|---|---|
+| CLI invoke | `LmSk0jxaVQjbnjYi50pQJy6v5dj` | `dwAoJK1JlmRkgE9Yqn3bxawBEMf` |
+| MCP stdio | `ASFaP5yiBq7gNOLOc40iqiNN572` | `FBtISQjE2rEmGsulVXLjKEJ4R4H` |
+
+当前对话工具列表没有热加载 BigQuery 命名空间；这不影响已经验证可执行的 CLI 和
+MCP stdio。日常启动方式见[操作说明](../operations/bigquery-mcp.md)。完整本地证据：
+`artifacts/bigquery-current-connection/summary.json` 及同目录 job-readback.json。
+
+同时实际查看了用户的 Brave 页面，并从 BigQuery API 读回同一作业
+`job_sbBLOCwefAD87ma1eYc4trWpKPEE`：公共 authors 查询 DONE、10 行、执行项目 YannJY、US。
+没有重跑这个较大的 authors 查询。其日志位于期刊导出证据目录，见[简明报告](../../research/openalex-journal-baseline/journal-export.md)。
+
+## 历史访问诊断（以下均保留当时范围）
+
 Observed on **2026-09-14, 23:18–23:20 Asia/Shanghai** for **INVIS-6**.
 Owner: project operations. This is a dated verification record; current task
 status remains in [Plane](../operations/project-management.md).
 
-**Latest successful route (2026-09-15, 18:18–18:20 China time):** using
+**此前成功路线 (2026-09-15, 18:18–18:20 China time):** using
 `gen-lang-client-0676290976` (the YannJY project selected in the user's supplied
 browser view) as the job project, actual region-local queries on
 `multiobs.publicdb_openalex_2026_01_eu_rm`,
@@ -19,7 +45,7 @@ No default project, IAM or MCP allowlist was changed.
 **Earlier query test (2026-09-15, before meeting):** the
 [R/Quarto meeting report](../../research/ojs-journal-metadata/analysis/crossref-meeting-report.qmd)
 executed `SELECT 1 AS access_test` through `bq` from R; it still failed for
-missing `bigquery.jobs.create` in `insyspo`. This is the current supervisor
+missing `bigquery.jobs.create` in `insyspo`. This was the premeeting supervisor
 presentation. The September 14 23:39–23:52 tests below confirmed dataset OWNER
 and completed a full official `tabledata.list` read of the candidate sources
 table; see the final section and the
@@ -66,7 +92,7 @@ This retest does not verify January 2026 snapshots, all fields or tables,
 write access, a full extraction, or SURFdrive delivery. No IAM or service
 enablement changes, plugin installation, or collaborator message was performed.
 
-## Reproduce and release the blocker
+## Historical reproduction of the old-project blocker
 
 Use the existing official CLI with an explicit execution project:
 

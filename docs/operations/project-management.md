@@ -101,6 +101,33 @@ the Appshot, not independently fetched from the server in this intake.
   version evidence and field-specific missingness checks. Do not redo the sent
   explanation as though no prior work existed, or mark the whole task complete.
 
+## Current week: September 15–22, after the user's execution clarification
+
+The user explicitly retired the old `insyspo` source for this work and selected
+new `multiobs`, requested a persistent connection correction and a simple
+Markdown report, and authorized starting the combined journal CSV. The
+[current report](../../research/openalex-journal-baseline/journal-export.md)
+is the concise delivery and weekly-work entry point.
+
+- INVIS-6: persistent Toolbox scope now selects the two current multiobs datasets;
+  real CLI/MCP public and work queries pass. The user's Brave query was separately
+  read back from its existing BigQuery job.
+- INVIS-7: January 2026 US input and journal-row join rules are implemented;
+  remaining topics/empty-source limitations are documented, not a reason to
+  keep the obsolete project active. September 17 is the internal review point.
+- INVIS-8: the actual BigQuery merge, 32-column CSV, source/final-column missingness
+  and existing SURFdrive delivery are being executed; read the report and live
+  Plane record for verified completion. September 21 is the internal checkpoint.
+- INVIS-9: the supervisor investigates Scopus/WoS access in parallel; formal
+  ISSN labels require versioned references and the established current baseline.
+- INVIS-11: September 22 is the seed-receipt checkpoint for the existing parallel
+  literature task. Existing evidence notes do not prove the requested seed set
+  was received. Modelling follows usable coverage labels, with no invented date.
+
+The sections below retain the earlier comparison/intake and initial scheduling
+scope. They do not override the user's later active-database choice or current
+execution evidence. The next meeting's exact date still needs the invitation.
+
 ## September 15 dataset comparison and available SQL route
 
 The user's follow-up identified `multiobs` and supplied the supervisor's CLONE

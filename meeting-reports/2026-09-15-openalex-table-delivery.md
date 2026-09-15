@@ -126,3 +126,17 @@ and guides follow-up through the [Plane workflow](../docs/operations/project-man
 It creates no Candidate Version, Designation Event or Paper Analysis designation.
 Only the privacy-safe summary and source identity enter Git/Plane; the private
 transcript, personal discussion and sharing credentials remain local.
+
+
+## Further user clarification: active connection and execution
+
+Later on September 15, the user explicitly stated that the old `insyspo`
+database is retired and the new `multiobs` database is the correct active source.
+They requested persistent CLI/MCP scope correction, inspection of their successful
+Brave public-table query, a simple Markdown verification report with evidence,
+and progress on the coming week's tasks beginning with the merged journal CSV.
+This clarification settles the active-project choice for this execution; the
+subsequent [input contract](../research/openalex-journal-baseline/input-contract.md)
+uses January 2026 US. It does not establish unavailable topics data or commercial
+index access. Actual execution and delivery evidence belong to the
+[journal export report](../research/openalex-journal-baseline/journal-export.md).

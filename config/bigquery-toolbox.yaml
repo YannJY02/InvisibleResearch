@@ -1,43 +1,44 @@
-# Google MCP Toolbox v1.10.0 configuration for the current access diagnostic.
-# This allowlist is not a decision to use this snapshot for the final study.
+# Google MCP Toolbox v1.10.0: current OpenAlex source and supervisor work area.
+# Data lives in multiobs; query jobs run in the user's YannJY project.
 kind: source
 name: research-bigquery
 type: bigquery
-project: insyspo
+project: gen-lang-client-0676290976
 location: US
 readOnly: true
 writeMode: blocked
 allowedDatasets:
-  - insyspo.publicdb_openalex_2025_08_rm
-maximumBytesBilled: 104857600
+  - multiobs.publicdb_openalex_2026_01_rm
+  - multiobs.userdb_saurabh_khanna
+maximumBytesBilled: 536870912
 maxQueryResultRows: 100
 ---
 kind: tool
 name: execute_sql
 type: bigquery-execute-sql
 source: research-bigquery
-description: Run SELECT queries or dry runs in the approved OpenAlex dataset. Dry-run first; each query is capped at 100 MiB billed and 100 result rows.
+description: Read the current multiobs OpenAlex source and supervisor work dataset. Use fully qualified multiobs.dataset.table SQL names. Jobs run in gen-lang-client-0676290976, US. Dry-run first; each SELECT is capped at 512 MiB billed and 100 result rows. Use the export pipeline for full CSV delivery.
 ---
 kind: tool
 name: get_dataset_info
 type: bigquery-get-dataset-info
 source: research-bigquery
-description: Read metadata for the approved OpenAlex dataset.
+description: Read metadata for publicdb_openalex_2026_01_rm or userdb_saurabh_khanna in project multiobs. Supply project=multiobs and the unqualified dataset ID.
 ---
 kind: tool
 name: get_table_info
 type: bigquery-get-table-info
 source: research-bigquery
-description: Read table metadata within the approved OpenAlex dataset.
+description: Read table metadata in project multiobs, within publicdb_openalex_2026_01_rm or userdb_saurabh_khanna. Supply project=multiobs, dataset, and table.
 ---
 kind: tool
 name: list_dataset_ids
 type: bigquery-list-dataset-ids
 source: research-bigquery
-description: Return the configured dataset allowlist, not a project-wide inventory.
+description: Return the configured current multiobs dataset allowlist, not a live project-wide inventory.
 ---
 kind: tool
 name: list_table_ids
 type: bigquery-list-table-ids
 source: research-bigquery
-description: List tables within the approved OpenAlex dataset.
+description: List tables in project multiobs, within publicdb_openalex_2026_01_rm or userdb_saurabh_khanna. Supply project=multiobs and the unqualified dataset ID.

@@ -1,25 +1,39 @@
 # OpenAlex 全期刊基线输入约定
 
-记录日期：2026-09-14；候选定位更新：2026-09-15。所有者：`openalex-journal-baseline`。对应 INVIS-7。
-状态：**可复现的探索性候选约定，供人工审阅；最终快照尚未确认**。
-上游要求见[来源评论](https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839)
-和[会议记录](../../meeting-reports/2026-09-14-openalex-baseline-and-access.md)。
+记录日期：2026-09-14；当前输入更新：**2026-09-15**。所有者：`openalex-journal-baseline`。对应 INVIS-7。
+状态：用户已明确改用新 `multiobs`；本轮期刊合并采用 January 2026 US 公共库。
+这是探索性数据交付，不代表索引定义或后续模型设计已获接受。
 
-## September 15 更新：已定位 January 2026 并验证查询路线
+## 当前输入与合并约定
 
-[最新比较](dataset-comparison.md)已定位 `multiobs` 中的 January 2026 EU/US
-两库：各 76 表，表清单、schema、行数和逻辑大小一致。11 张 `sources*` 表与
-`publishers` 的完整行 SHA256 指纹也一致。导师 US 工作库已有 11 张相应克隆，
-当前内容已核验。`sources` 为 260,789 行，仍须按 journal 类型筛选。
+用户会后明确指出旧 `insyspo` 已停用，并要求沿用新 `multiobs`、合并期刊表导出 CSV。
+[会议记录](../../meeting-reports/2026-09-15-openalex-table-delivery.md)保留该澄清来源；
+[交付报告](journal-export.md)记录实际结果、文件和本周安排。
 
-执行项目采用用户页面所选的 `gen-lang-client-0676290976`，分别在 EU/US
-成功查询 `multiobs` 目标数据；直接在 `multiobs` 创建作业仍失败。已有查询
-路线不再依赖 `insyspo` 作业权限修复。建议后续沿用 US 工作库，最终快照接受、
-字段关联和空表处理仍待审阅；下方保留 September 14 候选的历史执行证据。
+| 项目 | 当前采用的规则 |
+|---|---|
+| 输入 | `multiobs.publicdb_openalex_2026_01_rm`，US；全部关联表来自同一数据集 |
+| 作业项目 | `gen-lang-client-0676290976`（YannJY），US |
+| 工作库 | `multiobs.userdb_saurabh_khanna` 的 11 张既有克隆已核验；本次直接查询公共源表，无需重复复制 |
+| 观察单位 | `sources.type = 'journal'`；一个非空唯一 Source ID 一行，209,799 行 |
+| 核心范围 | 保留 sources 全部 21 字段；不因缺 ISSN、OA 状态或低发文量删行 |
+| 一对多信息 | 10 张 sources 子表各按 source_id 聚合成 JSON 列，再 LEFT JOIN；保留全部记录及重复次数 |
+| 年份 | counts_by_year 保留所有已存年份，按年份排序；不在此次导出中选择窗口或计算跨年总量 |
+| 出版者 | 从 host_organization 的完整 OpenAlex P URL 提取数值 ID，与 publishers.id 精确关联；先核验 publishers.id 唯一；不按名称猜测 |
+| 空值 | CSV 用 `\N` 表示 SQL NULL，空字符串仍为空字符串；原值若与标记冲突则失败；JSON 内保留原 null |
+| 无子记录 | JSON `[]` 表示该来源没有匹配子行；另记录整张子表为空的情况，不能解释为现实中无关系 |
+| 核验 | 合并前后 ID 集合摘要及行数相同；各子表匹配行数、覆盖期刊数与 JSON 数量一致；逐列云端/本地缺失计数一致；重新解析 CSV；记录 SHA256 |
 
-January 2026 中 `sources_concepts` 等六张关联表为空，没有 `sources_topics`。
-不能把 August 的关联表行数与 January 混用，也不能从 topics 分类表存在推断
-期刊—主题映射已齐备。EU/US 内容一致不证明其本身没有缺失或时间混杂。
+[EU/US 比较](dataset-comparison.md)已核验两库各 76 张表的同名、同 schema、同行数和同大小；
+12 张相关表进一步通过全行内容指纹比较。其余 64 张未比较行内容。
+本轮检查各输入表的前后元数据稳定；数据集名不证明原始构建时间，也不构成跨作业原子快照。
+
+`sources_concepts` 等六张子表为空；没有 `sources_topics`。这两点在交付中显式保留，
+不混入旧 August 的关联行数，也不把 topics 分类表当作期刊—主题映射。
+`publisher_id` 在期刊中仅 1 行非空，因此不用它作为覆盖充分的连接键；已核验的
+host_organization P ID 有 63,030 行，63,016 行能精确匹配 publishers，14 行没有对应记录。
+四张非空子表的原始行数均为按完整记录去重后数量的两倍；本次导出保留重复，
+后续数值汇总必须明确去重规则，不能直接累加重复子行。详见交付报告的全文件核验。
 
 ## September 14 已落实的候选行定义
 
@@ -59,7 +73,7 @@ March/August 的字段结构一致，行数净差为 −23。这只说明计数�
 删除、合并、类型变更或字段修正，更不能认定较新月份的数据质量更高。
 August 是当前可见的较晚候选，**本次用它验证可行性，没有替导师锁定研究版本**。
 
-## 关联表范围与 JOIN 约束
+## September 14 关联表清单与 JOIN 约束（历史范围）
 
 已读取以下 12 张表的元数据；除 `sources` 外，未提取其全量行。
 完整 schema 与行数位于 `artifacts/schema-inventory/tables.json`。
@@ -87,12 +101,12 @@ source_id 形成单行列表或经说明的聚合字段后 LEFT JOIN。每次合
 是否补充 topics、语言、出版者关系及其他指标，取决于接受的快照和研究问题；本次
 21 列核心表**未完成“全部相关元数据”交付**。未确认的字段不应以同名猜测填补。
 
-## 索引与模型的待审阅决定
+## 索引与模型仍需明确的决定
 
-1. 确认研究快照。January 2026 的两个公共库和导师克隆现已定位并比较；仍需接受实际版本及确认构建时间含义，不能由月份标签推断每张表更新进度。
-2. 明确“全部元数据”的关联表范围和时间窗口，解释稀疏关系表与 publisher_id。
+1. 当前输入已按用户选择切至 January 2026 US。仍需解释构建时间含义及缺失的主题映射，不能由月份标签推断每张表更新进度。
+2. 此次合并范围及完整年份已固定如上。用于后续分析的年份窗口、主题补充及空表处理仍需随研究问题明确。
 3. 固定索引定义：Scopus 主表 `Journal`、是否纳入 Trade Journal、是否区分 active/inactive；WoS 是 SCIE、SSCI、AHCI、ESCI 哪些集合。
-4. 固定参照日期。当前 Scopus August 2026 和 OpenAlex August 2025 不同期；只能报告跨时点匹配，不能称同年覆盖率或新收录预测。
+4. 固定参照日期。已有 Scopus August 2026 参照与当前 January 2026 输入不同期；此前 August 2025 匹配是历史候选，不能直接作为本次收录标签。
 5. 商业索引未知、无有效 ISSN、歧义分别编码；建立可验证的正负例定义后才启动 BorutaSHAP。
 
-这些决定保留为待审阅项；当前可重现的是已读取候选及其精确匹配，不是最终研究设计。
+这些索引和模型决定仍待审阅；当前可复现的交付是上文固定输入的期刊合并表。

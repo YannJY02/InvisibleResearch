@@ -226,10 +226,14 @@ initial run, project creation reported HTTP 400 although the project existed
 on readback. Read the current remote objects before retrying any ambiguous
 write. Reconcile by ID and source key; never blindly create a duplicate.
 
-## Hourly source and schedule monitoring
+## Recurring source and schedule monitoring
 
-The thread heartbeat runs every hour while available. Active task progress is
-updated at the events above; hourly polling covers idle source/schedule changes.
+The saved thread heartbeat was read back on September 15 with a
+12-hour interval. This supersedes the initial hourly setup description; this
+reconciliation preserved the saved interval rather than changing it. Future
+runs use the current scheduler configuration, not an assumed hourly cadence.
+Active task progress is updated at the events above; scheduled polling covers
+idle source/schedule changes.
 It is not a webhook and cannot guarantee wall-clock freshness while the host,
 scheduler, network or credentials are unavailable. The heartbeat performs
 management and source intake, not unrequested data runs or new research writing.

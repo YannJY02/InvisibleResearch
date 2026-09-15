@@ -40,7 +40,9 @@
   "automation": {
     "id": "invisibleresearch",
     "kind": "heartbeat",
-    "frequency": "hourly",
+    "frequency": "every 12 hours",
+    "schedule_observed_at": "2026-09-15T14:09:25.252820+00:00",
+    "schedule_basis": "Current saved automation configuration; preserved during reconciliation, superseding initial hourly setup",
     "thread_id": "01a09fe9-8055-7143-ab7f-784410a5b9c1",
     "created_status": "ACTIVE",
     "notification_intent": "meaningful change, completion, failure or required user action only"

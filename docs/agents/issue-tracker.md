@@ -70,7 +70,7 @@ it does not authorize writing those labels upstream. Keep accepted task scope
 and actual assignees distinct from inferred speaker roles.
 
 During active work, publish meaningful progress immediately. During idle time,
-the configured hourly heartbeat checks source changes, Plane changes and
+the configured heartbeat checks source changes, Plane changes and
 schedule risks. This is polling, not a webhook or a guarantee while the host or
 credentials are unavailable. A failed collection/sync retains pending evidence;
 never claim a successful sync from a scheduler configuration alone.

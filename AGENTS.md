@@ -8,6 +8,7 @@
   - Triage: [canonical labels](docs/agents/triage-labels.md): `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
   - Creating, importing, or reorganizing documents: [document governance](docs/governance/document-governance.md). Choose the owner, role, and filename before writing; update the existing canonical document and links where appropriate.
   - Writing or revising formal prose: [writing requirements](docs/writing/requirements.md) and the target's requirements index. Apply applicable source-backed requirements without waiting for the user to repeat them.
+  - Creating, revising, or reissuing a research/meeting presentation report: read [research report requirements](docs/writing/research-report-requirements.md) before drafting, including scope, plain-language interpretation, executed analysis and field comparisons. Apply its delivery checklist every time, even when the latest prompt does not repeat these preferences.
   - Material gaps in a prompt or conflicting requirements: [task intake and MATT routing](docs/agents/task-intake.md). Investigate facts, suggest a resolution, and clarify consequential decisions; proceed on routine choices.
 
 ## Academic analysis code
@@ -22,5 +23,6 @@ In `research/**`, `papers/**/analysis/**`, QMD/Rmd files, and notebooks:
 ## Completion
 
 - Complete the requested deliverable and verification appropriate to its risk. When execution or rendering is part of the task, inspect the result and fix in-scope failures before handing it back.
+- For research reports, complete the [report delivery checklist](docs/writing/research-report-requirements.md#每次交付前的检查) before handoff; automated document checks do not replace content and rendered-output review.
 - After document changes, run `PYTHONPATH=src python3 -m invisible_research.document_governance check` and fix in-scope placement, naming, or link failures. The pre-commit hook and CI check the committed document snapshot automatically.
 - Stage only the task's changes, commit, and push the current branch. Preserve unrelated existing changes. Report any blocker, including a failed commit or push.

@@ -8,6 +8,7 @@ with its [research owner](../research/README.md) or
 |---|---|
 | Place, name, or check a document | [Document governance](governance/document-governance.md) |
 | Write or revise a report, manuscript, or presentation | [Writing requirements](writing/requirements.md) |
+| Prepare a research or supervisor-facing meeting report | [Research report requirements and delivery checklist](writing/research-report-requirements.md) |
 | Clarify a request that could produce the wrong result | [Task intake and MATT routing](agents/task-intake.md) |
 | Project terms and scientific authority | [Glossary](../CONTEXT.md), [authority inventory](governance/artifact-authority-inventory.md), [data-to-claim graph](governance/data-to-claim-dependency-graph.md) |
 | Data schemas and commands | [PKP database](data/pkp-database-schema.md), [ArticleInfo](data/articleinfo-database.md), [command mapping](data/data-script-mapping.md) |

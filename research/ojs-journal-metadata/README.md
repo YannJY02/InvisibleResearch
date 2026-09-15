@@ -34,10 +34,17 @@ and exact-ISSN contract; its output does not complete the new baseline task.
 
 ## September 15 meeting report
 
+Every creation, revision or re-rendering of a supervisor-facing report follows
+the user's [research report requirements](../../docs/writing/research-report-requirements.md),
+including the pre-delivery review. Use the agreed task, runnable code, results
+and plain-language interpretation as the structure for each analysis section.
+
 The [R/Quarto meeting report](analysis/crossref-meeting-report.qmd) follows four
 immediate tasks: Crossref fields, additional matched records, empty subject
-lists and a short BigQuery query test. It reads the existing merged Parquet and
-Crossref cache, calculates the results in R, and displays the executed code.
+lists and a short BigQuery query test. Its field comparison retrieves and caches
+Nature's complete Crossref journal and OpenAlex Source responses. Tasks 2 and 3
+read the existing merged Parquet and Crossref cache. Results are calculated in R,
+with the executed code available in the report.
 
 ```sh
 sh research/ojs-journal-metadata/analysis/render_meeting_report.sh
@@ -45,19 +52,24 @@ sh research/ojs-journal-metadata/analysis/render_meeting_report.sh
 
 The standalone HTML is written to
 `artifacts/crossref-meeting-report/crossref-meeting-report.html`, with the query
-response, seven-row example CSV and a compact run summary beside it. R requires
-`arrow`, `dplyr`, `jsonlite`, `knitr`, `rmarkdown` and `digest`; the BigQuery
+response, seven-row example CSV and a compact run summary beside it. The `nature/`
+subdirectory holds the two raw responses, retrieval time and expanded values.
+R requires `arrow`, `dplyr`, `jsonlite`, `httr2`, `htmltools`, `knitr`, `rmarkdown`
+and `digest`; the BigQuery
 section invokes the existing authenticated `bq` CLI from R. Override its path
 with `-P bq_cli:/path/to/bq` if needed. Rendering performs one constant query
-with a one-byte billing cap and does not retrieve a new dataset.
+with a one-byte billing cap. Nature's cached journal records are reused when
+present; pass `-P refresh_nature:true` to fetch both again. No article records
+or new full-cohort dataset are retrieved by this report.
 
-The QMD contains all 11 Crossref source-field names, explanations and actual
-values for one journal, alongside related OpenAlex fields and values from the
-same row. The first table compares shared or similar information; the second
-shows fields without an OpenAlex counterpart, leaving those cells blank.
-Nested examples retain expandable full saved values. R verifies the journal's
-title and ISSNs agree and checks that every Crossref source field is covered.
-The existing merge remains the input, not an assumed PKP merge inside BigQuery.
+The QMD expands every returned field on both sides into visible field paths,
+with explanations and actual Nature values. Related fields come first; fields
+without a direct counterpart follow, leaving the other source's cells blank.
+Repeated lists retain expandable full values, and documented fields without a
+Nature value are identified separately. R verifies the journal's title and
+ISSNs agree and checks field coverage in both directions. The Nature responses
+and the existing PKP merge are separate inputs; neither assumes a PKP merge
+inside BigQuery.
 The meeting report supersedes the broader technical report as the supervisor
 presentation.
 

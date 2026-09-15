@@ -13,6 +13,7 @@ requirements have been verified from source in this repository.
 |---|---|
 | Invisible Communication Science manuscript / Etmaal presentation | The [compendium README](../../papers/invisible-communication-science/README.md) and [governance boundary](../../papers/invisible-communication-science/governance/README.md) identify the sources and scientific status. The slide source is not a school or venue rulebook. |
 | Literature Evidence Notes | Follow the [evidence note specification](literature-evidence-note-spec.md), including source identity, reading scope, locators, and source/interpretation separation. |
+| Research and supervisor-facing progress/meeting reports | Follow the user's [research report requirements](research-report-requirements.md), recorded on 2026-09-15: agreed-task scope, plain-language results, executed R reports where applicable, same-case field comparisons and a required delivery check. These are user requirements, not venue rules. |
 | ASCoR participation, academic internship report, and midterm evaluation templates | Their names and hashes are recorded in the [private archive decision](../history/writing-report-human-review.md). Their contents and present applicability were not checked in this audit; they cannot yet supply binding writing rules. |
 | Other schools or projects | Requirements do not transfer automatically. This project does not inherit RYW/TUFS thesis requirements. |
 
@@ -22,6 +23,9 @@ requirements have been verified from source in this repository.
    context. Read its owner's requirements index if present. For a new formal
    target, inspect the official or supplied requirements before drafting the
    sections that depend on them.
+   For research/progress/meeting presentation reports, also read
+   [research report requirements](research-report-requirements.md) on every
+   creation or revision and use its delivery checklist before handing back the result.
 2. Separate binding institutional/venue rules, supervisor instructions,
    optional guidance, and unconfirmed requirements. Keep exact source locators
    for rules about structure, length, language, citation style, layout, required

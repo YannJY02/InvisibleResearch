@@ -1,0 +1,20 @@
+body { color: #243340; font-size: 16px; line-height: 1.65; }
+#quarto-content { max-width: 1260px; margin: auto; }
+h1, h2 { color: #174a60; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.35rem; margin-top: 2.1rem; }
+.subtitle { color: #5d6b75; }
+pre.sourceCode { border: 1px solid #e1e7eb; border-radius: 5px; }
+div.sourceCode { background: #f6f8fa; }
+code { font-size: .85em; }
+.cell-output pre { font-size: .85em; }
+table { font-size: .9em; }
+th, td { vertical-align: top; }
+th { color: #174a60; }
+details > summary { font-size: .85em; color: #526672; }
+@media print {
+  #TOC, .code-copy-button { display: none; }
+  body { font-size: 11pt; }
+  h2 { break-after: avoid; }
+  pre, tr { break-inside: avoid; }
+}

@@ -4,9 +4,12 @@ This owner builds an **Exploratory Analysis** of all journal-type OpenAlex
 Sources. It is independent of the PKP/OJS starting cohort. Neither a downloaded
 table nor this directory establishes an accepted snapshot or Paper Analysis.
 
-- [September 15 meeting preparation report](premeeting-report.md): access
+- [Current supervisor meeting report](../ojs-journal-metadata/analysis/crossref-meeting-report.qmd):
+  R-executed field comparison, additional records, missing subjects and query test.
+- [Earlier technical record](premeeting-report.md): access
   evidence, completed offline audit, candidate extraction, index matching,
-  literature overview and outstanding dependencies.
+  literature overview and outstanding dependencies; this broader record is not
+  the September 15 presentation.
 - [Input contract](input-contract.md): source identity, journal denominator,
   candidate versions, relational-table scope and missing-value rules.
 - [BigQuery access record](../../docs/testing/bigquery-access.md) and

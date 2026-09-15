@@ -32,9 +32,34 @@ row contract are tracked separately in [Plane](../../docs/operations/project-man
 The implemented PKP/OJS workflow below retains its existing row-preservation
 and exact-ISSN contract; its output does not complete the new baseline task.
 
-## Offline premeeting audit
+## September 15 meeting report
 
-The [current premeeting report](../openalex-journal-baseline/premeeting-report.md)
+The [R/Quarto meeting report](analysis/crossref-meeting-report.qmd) follows four
+immediate tasks: Crossref fields, additional matched records, empty subject
+lists and a short BigQuery query test. It reads the existing merged Parquet and
+Crossref cache, calculates the results in R, and displays the executed code.
+
+```sh
+sh research/ojs-journal-metadata/analysis/render_meeting_report.sh
+```
+
+The standalone HTML is written to
+`artifacts/crossref-meeting-report/crossref-meeting-report.html`, with the query
+response, seven-row example CSV and a compact run summary beside it. R requires
+`arrow`, `dplyr`, `jsonlite`, `knitr`, `rmarkdown` and `digest`; the BigQuery
+section invokes the existing authenticated `bq` CLI from R. Override its path
+with `-P bq_cli:/path/to/bq` if needed. Rendering performs one constant query
+with a one-byte billing cap and does not retrieve a new dataset.
+
+The interpretation table uses
+[short field descriptions](analysis/crossref-field-notes.csv); the R code checks
+that its referenced fields exist. The existing merge remains the input, not an
+assumed PKP merge inside BigQuery. The meeting report supersedes the broader
+technical report as the supervisor presentation.
+
+## Offline audit details
+
+The [earlier technical record](../openalex-journal-baseline/premeeting-report.md)
 records the September 14 offline audit of the existing 98,273 × 81 full-field
 Parquet. Reproduce that audit without API calls from the repository root:
 

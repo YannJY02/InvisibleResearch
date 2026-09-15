@@ -4,10 +4,14 @@ Observed on **2026-09-14, 23:18–23:20 Asia/Shanghai** for **INVIS-6**.
 Owner: project operations. This is a dated verification record; current task
 status remains in [Plane](../operations/project-management.md).
 
-**Latest follow-up:** the 23:39–23:52 tests below confirmed dataset OWNER but
-continued SQL denial, and completed a full official `tabledata.list` read of
-the candidate sources table. See the final section and the
-[premeeting report](../../research/openalex-journal-baseline/premeeting-report.md).
+**Latest query test (2026-09-15):** the
+[R/Quarto meeting report](../../research/ojs-journal-metadata/analysis/crossref-meeting-report.qmd)
+executed `SELECT 1 AS access_test` through `bq` from R; it still failed for
+missing `bigquery.jobs.create` in `insyspo`. This is the current supervisor
+presentation. The September 14 23:39–23:52 tests below confirmed dataset OWNER
+and completed a full official `tabledata.list` read of the candidate sources
+table; see the final section and the
+[earlier technical record](../../research/openalex-journal-baseline/premeeting-report.md).
 
 ## Result and scope
 

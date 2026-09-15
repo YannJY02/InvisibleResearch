@@ -1,0 +1,232 @@
+---
+title: "What does Crossref add to our journal data?"
+subtitle: "Meeting update · 15 September 2026"
+lang: en
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    code-fold: show
+    code-summary: "R code"
+    code-copy: true
+    embed-resources: true
+    css: crossref-meeting-report.css
+execute:
+  echo: true
+  message: false
+  warning: false
+  error: false
+  cache: false
+params:
+  data_file: "../artifacts/ojs_journal_enrichment_simple_ver/pkp-ojs-multisource-enriched-simple_ver.parquet"
+  crossref_cache: "../artifacts/ojs_journal_enrichment/full-v7/crossref-journals.rds"
+  bq_cli: "/Users/yann.jy/.local/google-cloud-sdk/bin/bq"
+---
+
+```{r}
+#| label: read-saved-data
+library(arrow)
+library(dplyr)
+library(jsonlite)
+fmt <- function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
+
+journals <- read_parquet(params$data_file)
+crossref <- readRDS(params$crossref_cache)
+```
+
+```{r}
+#| label: display-settings
+#| include: false
+n_valid <- sum(journals$identifier_status == "valid")
+snapshot_date <- substr(crossref$retrieved_at, 1, 10)
+output_dir <- "../artifacts/crossref-meeting-report"
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+stopifnot(nrow(journals) == 98273, !"admin_email" %in% names(journals))
+```
+
+We use the existing **PKP V7 list enriched with OpenAlex and Crossref**:
+`r fmt(nrow(journals))` records, including `r fmt(n_valid)` with a usable ISSN.
+The saved Crossref data were collected on `r snapshot_date`. The results below
+are calculated from that merged file when this report runs.
+
+## 1. Crossref fields
+
+**Agreed task:** Check which Crossref fields add useful information beyond OpenAlex.
+
+We check the fields in the saved data and group them by what they describe.
+The short descriptions are supplied in `crossref-field-notes.csv`.
+
+```{r}
+#| label: compare-fields
+field_notes <- read.csv("crossref-field-notes.csv", check.names = FALSE)
+cr_fields <- unlist(strsplit(field_notes$crossref_fields, ";", fixed = TRUE))
+oa_fields <- unlist(strsplit(field_notes$openalex_fields, ";", fixed = TRUE))
+stopifnot(setequal(cr_fields, names(crossref$journals[[1]])),
+          all(paste0("crossref_", cr_fields) %in% names(journals)),
+          all(paste0("openalex_", oa_fields[nzchar(oa_fields)]) %in%
+                names(journals)))
+
+field_notes$crossref_fields <- gsub(";", ", ", field_notes$crossref_fields)
+field_notes$openalex_fields <- gsub(";", ", ", field_notes$openalex_fields)
+field_notes$openalex_fields[field_notes$openalex_fields == ""] <-
+  "No equivalent in this table"
+knitr::kable(field_notes, col.names = c(
+  "Crossref fields", "Related OpenAlex fields", "What they tell us"))
+```
+
+**The main additions are DOI registration counts and information about what
+publishers deposit with Crossref.** Titles and identifiers largely serve the
+same purpose in both sources. Crossref also distinguishes print and online ISSNs.
+
+For a concrete example, take the first record with one match in each source:
+
+```{r}
+#| label: field-example
+example <- journals |>
+  filter(openalex_match_status == "unique",
+         crossref_match_status == "unique") |>
+  slice(1)
+doi_counts <- fromJSON(example$crossref_counts)
+coverage <- fromJSON(example[["crossref_coverage-type"]])$all
+
+example_values <- data.frame(
+  Measure = c("Publications recorded by OpenAlex",
+              "DOIs registered with Crossref",
+              "Crossref records with an abstract",
+              "Crossref records with references"),
+  Value = c(fmt(example$openalex_works_count), fmt(doi_counts$`total-dois`),
+            paste0(round(100 * coverage$abstracts), "%"),
+            paste0(round(100 * coverage$references), "%")))
+knitr::kable(example_values)
+```
+
+The example is **`r example$crossref_title`**. OpenAlex records
+`r fmt(example$openalex_works_count)` publications; Crossref has
+`r fmt(doi_counts[["total-dois"]])` DOI registrations. The counts describe each
+database's records, so a difference does not by itself identify an error.
+Crossref additionally reports abstracts for `r round(100 * coverage$abstracts)`%
+of this journal's Crossref records, across all years, and references for
+`r round(100 * coverage$references)`%.
+The reference figure describes what was deposited with Crossref, not whether
+the publications themselves contain references.
+
+## 2. Records added by Crossref
+
+**Agreed task:** Find records with Crossref information but no OpenAlex match,
+and show their number and examples.
+
+We select records with one Crossref match and no OpenAlex match in the saved
+ISSN search. Records with several possible OpenAlex matches are counted separately.
+
+```{r}
+#| label: crossref-only-records
+crossref_only <- journals |>
+  filter(crossref_match_status == "unique",
+         openalex_match_status == "unmatched")
+n_uncertain <- sum(journals$crossref_match_status == "unique" &
+                   journals$openalex_match_status == "ambiguous")
+
+examples <- crossref_only |>
+  transmute(Journal = crossref_title,
+            ISSN = gsub("|", ", ", crossref_matched_issns, fixed = TRUE),
+            `Registered DOIs` = vapply(crossref_counts,
+              function(x) as.numeric(fromJSON(x)$`total-dois`), numeric(1)))
+knitr::kable(examples, format.args = list(big.mark = ","))
+```
+
+Crossref adds a match where OpenAlex found none for **`r nrow(crossref_only)` of the
+`r fmt(n_valid)` records with a usable ISSN**
+(`r sprintf("%.3f", 100 * nrow(crossref_only) / n_valid)`%). Its additional reach
+is therefore small in this PKP list; its main contribution is the extra
+information it provides about records already found in both sources.
+Another **`r fmt(n_uncertain)` records** have one Crossref match but several
+possible OpenAlex matches. They need a separate identity check.
+The `r fmt(nrow(journals) - n_valid)` records without a usable ISSN were not searched.
+
+## 3. Empty lists and missing values
+
+**Agreed task:** Check an actual empty-list example and show how it should be treated.
+
+Here we inspect `subjects`, the Crossref subject-label field, for the first
+record listed above.
+
+```{r}
+#| label: inspect-empty-list
+example_issn <- strsplit(crossref_only$crossref_matched_issns[1],
+                        "|", fixed = TRUE)[[1]][1]
+raw_example <- Filter(function(x) example_issn %in% x$ISSN,
+                      crossref$journals)[[1]]
+raw_example$subjects
+```
+
+The empty list means that **no subject labels were supplied**. We treat it as
+missing subject information in the analysis:
+
+```{r}
+#| label: subject-missingness
+matched <- journals |> filter(crossref_match_status == "unique")
+matched <- matched |>
+  mutate(subjects_clean = na_if(crossref_subjects, "[]"))
+
+knitr::kable(data.frame(
+  `Subject information` = c("Supplied", "Missing"),
+  Records = c(sum(!is.na(matched$subjects_clean)),
+              sum(is.na(matched$subjects_clean))),
+  check.names = FALSE), format.args = list(big.mark = ","))
+```
+
+All **`r fmt(nrow(matched))` records with one Crossref match** have no subject labels
+in this saved data. Crossref's `subjects` field therefore does not add subject
+classification here; OpenAlex's topic information is the useful starting point.
+
+## 4. BigQuery access
+
+**Agreed task:** Test whether a query now runs and identify the permission needed.
+
+```{r}
+#| label: bigquery-test
+query_test <- system2(params$bq_cli, c(
+  "--headless=true", "--project_id=insyspo", "--location=US",
+  "--dataset_id=insyspo:userdb_yann_jyal", "query",
+  "--use_legacy_sql=false", "--maximum_bytes_billed=1",
+  shQuote("SELECT 1 AS access_test")), stdout = TRUE, stderr = TRUE)
+```
+
+```{r}
+#| label: record-query-result
+#| include: false
+query_status <- attr(query_test, "status")
+if (is.null(query_status)) query_status <- 0L
+missing_jobs_permission <- any(grepl("bigquery.jobs.create", query_test, fixed = TRUE))
+query_sentence <- if (query_status == 0L) {
+  "The constant query succeeded in insyspo; the query-job access test now passes."
+} else if (missing_jobs_permission) {
+  "The SELECT 1 test still fails in insyspo; the account needs BigQuery Job User (roles/bigquery.jobUser), which includes bigquery.jobs.create."
+} else {
+  "The query test did not complete; its error needs checking before attributing it to a permission."
+}
+writeLines(query_test, file.path(output_dir, "bigquery-test.txt"))
+stopifnot(query_status == 0L || missing_jobs_permission)
+write.csv(examples, file.path(output_dir, "crossref-only-examples.csv"), row.names = FALSE)
+write_json(list(
+  rendered_at_utc = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+  input_file = params$data_file,
+  input_sha256 = digest::digest(file = params$data_file, algo = "sha256"),
+  crossref_snapshot = crossref$retrieved_at,
+  pkp_rows = nrow(journals), valid_issn_rows = n_valid,
+  crossref_fields = cr_fields,
+  crossref_only = nrow(crossref_only), crossref_with_uncertain_openalex = n_uncertain,
+  subject_missing = sum(is.na(matched$subjects_clean)),
+  bigquery_exit_status = query_status, missing_jobs_permission = missing_jobs_permission,
+  R = R.version.string), file.path(output_dir, "run-summary.json"),
+  auto_unbox = TRUE, pretty = TRUE)
+```
+
+`r query_sentence`
+
+---
+
+Tasks follow the [meeting discussion](https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md)
+(02:13–08:29 and 34:23–34:31), alongside the
+[field-review request](https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839).

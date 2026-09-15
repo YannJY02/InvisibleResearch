@@ -1,5 +1,8 @@
 # 会前研究准备报告：BigQuery 权限、替代数据与任务进展
 
+> 展示入口已于 2026-09-15 调整为[由 R 实际运行的简短会议报告](../ojs-journal-metadata/analysis/crossref-meeting-report.qmd)。
+> 本页保留先前的技术核验和后续方向记录，不再作为本次导师会议的展示稿。
+
 数据与权限核验：2026-09-14；报告整理及 WoS 补充检查：2026-09-15。时区：Asia/Shanghai。面向 2026-09-15 16:00–16:30 会议。
 所有者：`openalex-journal-baseline`；状态：**Exploratory Analysis**。
 本报告整合 INVIS-5 至 INVIS-11 的实际证据，不把可运行代码、候选数据或准备稿等同于正式研究完成。

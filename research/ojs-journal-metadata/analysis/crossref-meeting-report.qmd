@@ -69,7 +69,10 @@ stopifnot(nrow(example) == 1,
 
 The example throughout both tables is **`r example$crossref_title`**
 (ISSNs `r paste(fromJSON(example$crossref_ISSN), collapse = " and ")`).
-All 11 Crossref source columns in the saved data are shown below.
+All 11 top-level fields from the saved Crossref **`/journals` response** are
+shown below. Nested fields contain further entries. Crossref's article-level
+`/works` endpoint provides additional information such as authors, abstracts
+and references; those article records are not part of this journal table.
 The examples are read from this one row of the merged file. Long nested fields
 show selected entries; **Full saved value** opens the complete content.
 `NA` means the corresponding field exists but has no value for this journal.
@@ -92,7 +95,7 @@ field_map <- tibble::tribble(
   "works_count", "Number of works recorded by OpenAlex.",
   "breakdowns", "DOI counts by publication (issued) year.",
   "counts_by_year", "Works published and citations received in each year.",
-  "subjects", "Subject labels supplied by Crossref.",
+  "subjects", "Legacy subject codes, retired by Crossref in April 2024.",
   "topics", "OpenAlex topic labels and associated work counts.",
   "coverage", "Share of records containing each kind of metadata, for current and backfile publications.",
   "", "",
@@ -104,7 +107,8 @@ field_map <- tibble::tribble(
   "", ""
 )
 cr_fields <- field_map$cr
-stopifnot(setequal(cr_fields, names(crossref$journals[[1]])),
+available_cr_fields <- sort(unique(unlist(lapply(crossref$journals, names))))
+stopifnot(setequal(cr_fields, available_cr_fields),
           all(paste0("crossref_", cr_fields) %in% names(example)),
           all(paste0("openalex_", field_map$oa[field_map$oa != ""]) %in%
                 names(example)))
@@ -281,11 +285,15 @@ raw_example <- Filter(function(x) example_issn %in% x$ISSN,
 raw_example$subjects
 ```
 
-The empty list means that **no subject labels were supplied**. We treat it as
-missing subject information in the analysis:
+Crossref [retired its old subject codes on 23 April 2024](https://www.crossref.org/deprecated/#2024-april-23-subject-codes-removed-from-rest-api),
+leaving the fields empty for compatibility. The empty list is already present
+in the saved API response, before merging. We represent this unavailable
+classification as missing in the analysis:
 
 ```{r}
 #| label: subject-missingness
+raw_nonempty_subjects <- sum(vapply(crossref$journals,
+  function(journal) length(journal$subjects) > 0, logical(1)))
 matched <- journals |> filter(crossref_match_status == "unique")
 matched <- matched |>
   mutate(subjects_clean = na_if(crossref_subjects, "[]"))
@@ -297,9 +305,16 @@ knitr::kable(data.frame(
   check.names = FALSE), format.args = list(big.mark = ","))
 ```
 
-All **`r fmt(nrow(matched))` records with one Crossref match** have no subject labels
-in this saved data. Crossref's `subjects` field therefore does not add subject
-classification here; OpenAlex's topic information is the useful starting point.
+The original cache contains `r fmt(length(crossref$journals))` journal records,
+of which **`r fmt(raw_nonempty_subjects)` have nonempty subject labels**.
+All **`r fmt(nrow(matched))` records with one Crossref match** likewise have empty
+subject labels in the merged data. This is consistent with the retired Crossref
+classification, rather than evidence that the journals have no subject or that
+the merge removed their labels. These legacy codes came from a Scopus-based
+experiment; they were not subject labels deposited by publishers.
+[Crossref's explanation](https://www.crossref.org/blog/subject-codes-incomplete-and-unreliable-have-got-to-go/)
+also makes clear that the empty fields are intentional. OpenAlex's `topics` is
+a separate field and is populated in the example above.
 
 ## 4. BigQuery access
 

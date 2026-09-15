@@ -115,9 +115,11 @@ is the concise delivery and weekly-work entry point.
 - INVIS-7: January 2026 US input and journal-row join rules are implemented;
   remaining topics/empty-source limitations are documented, not a reason to
   keep the obsolete project active. September 17 is the internal review point.
-- INVIS-8: the actual BigQuery merge, 32-column CSV, source/final-column missingness
-  and existing SURFdrive delivery are being executed; read the report and live
-  Plane record for verified completion. September 21 is the internal checkpoint.
+- INVIS-8: the BigQuery merge produced 209,799 rows and 32 columns; source/final-
+  column missingness and independent CSV checks passed. CSV and four companions
+  were uploaded to the existing SURFdrive folder. Full remote bytes and SHA256
+  match locally, with a stable remote version across 175 conditional ranges.
+  Delivery is ready for human review; September 21 is the feedback checkpoint.
 - INVIS-9: the supervisor investigates Scopus/WoS access in parallel; formal
   ISSN labels require versioned references and the established current baseline.
 - INVIS-11: September 22 is the seed-receipt checkpoint for the existing parallel

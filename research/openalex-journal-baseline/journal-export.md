@@ -110,7 +110,14 @@ NULL、空字符串和空列表计数一致，12 张输入表前后元数据稳�
 | `independent-validation.json` | 全文件独立复核及重复记录数量 |
 
 CSV SHA256：`7c555e0a926510d0efb4c97847c75a45709ff4b3eba6aa37fa84e164d76aca48`。
-SURFdrive 原共享 Data 文件夹上传与完整远端回读正在执行。
+**已上传到导师原共享 SURFdrive 的 Data 文件夹。** CSV、字段说明、两份缺失清单
+和执行 manifest 共 5 个文件均已远端读回。大 CSV 分 175 个区块完整读取，再按
+字节顺序计算整份 SHA256，与本地完全一致；读取前后的远端版本标识和大小一致。
+没有覆盖原有文件或重复上传 CSV。
+
+远端证据：`research/openalex-journal-baseline/artifacts/surfdrive-delivery/` 下的
+`openalex-journals-2026-01.csv.upload.json` 和 `openalex-journals-2026-01.csv.range-readback.json`；
+其余四个文件各有对应的 `.upload.json`。共享令牌仅保存在本机私有文件中。
 
 合并作业：`codex_journal_export_d22d6c52e8eb4791931d1b80830c5f50`。
 最终缺失审计：`codex_journal_missingness_3f5a74ccbe9644d896a48cd899cea8f3`。
@@ -132,7 +139,7 @@ SURFdrive 原共享 Data 文件夹上传与完整远端回读正在执行。
 |---|---|---|
 | 1 | 修正连接（INVIS-6） | 持久配置、CLI、MCP 与 Brave 证据已核验 |
 | 2 | 固定输入与行规则（INVIS-7） | 按用户指示采用新 multiobs US；一刊一行和关联规则已落实；9/17 审阅子表重复及主题缺口 |
-| 3 | 合表、缺失检查、CSV、SURFdrive（INVIS-8） | 正在实际导出与交付；9/21 为内部检查点 |
+| 3 | 合表、缺失检查、CSV、SURFdrive（INVIS-8） | 已完成合表、全部检查、CSV 上传和完整远端哈希核验，转入审阅；9/21 检查反馈 |
 | 4 | Scopus / WoS 访问与收录标记（INVIS-9） | 导师先调查访问途径；取得有版本的参照后，用本次基线做 ISSN 匹配，单独保留无标识符和歧义 |
 | 5 | 种子文献与综述（INVIS-11，原有并行任务） | 9/22 核对导师种子是否收到，随后推进引用链与草稿；已有笔记不代替种子确认 |
 

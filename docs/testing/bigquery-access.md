@@ -4,7 +4,19 @@ Observed on **2026-09-14, 23:18–23:20 Asia/Shanghai** for **INVIS-6**.
 Owner: project operations. This is a dated verification record; current task
 status remains in [Plane](../operations/project-management.md).
 
-**Latest query test (2026-09-15):** the
+**Latest successful route (2026-09-15, 18:18–18:20 China time):** using
+`gen-lang-client-0676290976` (the YannJY project selected in the user's supplied
+browser view) as the job project, actual region-local queries on
+`multiobs.publicdb_openalex_2026_01_eu_rm`,
+`multiobs.publicdb_openalex_2026_01_rm` and `multiobs.userdb_saurabh_khanna`
+all succeeded. The [dataset comparison](../../research/openalex-journal-baseline/dataset-comparison.md)
+records job IDs, regions, scan caps, full results and verification. Direct
+job creation in `multiobs` still failed for `bigquery.jobs.create`; no IAM
+repair is claimed. The existing `insyspo` failure below remains historical
+evidence for that execution project, not a blocker on the working new route.
+No default project, IAM or MCP allowlist was changed.
+
+**Earlier query test (2026-09-15, before meeting):** the
 [R/Quarto meeting report](../../research/ojs-journal-metadata/analysis/crossref-meeting-report.qmd)
 executed `SELECT 1 AS access_test` through `bq` from R; it still failed for
 missing `bigquery.jobs.create` in `insyspo`. This is the current supervisor

@@ -12,6 +12,9 @@ table nor this directory establishes an accepted snapshot or Paper Analysis.
   the September 15 presentation.
 - [Input contract](input-contract.md): source identity, journal denominator,
   candidate versions, relational-table scope and missing-value rules.
+- [January 2026 dataset comparison](dataset-comparison.md): 76-table EU/US
+  metadata comparison, full-row fingerprints for 12 journal-related tables,
+  11 verified existing clones, and the working cross-project query route.
 - [September 15 meeting outcomes](../../meeting-reports/2026-09-15-openalex-table-delivery.md):
   combined journal CSV, per-column missingness, existing SURFdrive destination
   and supervisor-led commercial-index access follow-up; execution remains open.

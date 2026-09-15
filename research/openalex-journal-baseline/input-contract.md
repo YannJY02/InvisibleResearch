@@ -1,11 +1,27 @@
 # OpenAlex 全期刊基线输入约定
 
-记录日期：2026-09-14。所有者：`openalex-journal-baseline`。对应 INVIS-7。
+记录日期：2026-09-14；候选定位更新：2026-09-15。所有者：`openalex-journal-baseline`。对应 INVIS-7。
 状态：**可复现的探索性候选约定，供人工审阅；最终快照尚未确认**。
 上游要求见[来源评论](https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839)
 和[会议记录](../../meeting-reports/2026-09-14-openalex-baseline-and-access.md)。
 
-## 已落实的行定义
+## September 15 更新：已定位 January 2026 并验证查询路线
+
+[最新比较](dataset-comparison.md)已定位 `multiobs` 中的 January 2026 EU/US
+两库：各 76 表，表清单、schema、行数和逻辑大小一致。11 张 `sources*` 表与
+`publishers` 的完整行 SHA256 指纹也一致。导师 US 工作库已有 11 张相应克隆，
+当前内容已核验。`sources` 为 260,789 行，仍须按 journal 类型筛选。
+
+执行项目采用用户页面所选的 `gen-lang-client-0676290976`，分别在 EU/US
+成功查询 `multiobs` 目标数据；直接在 `multiobs` 创建作业仍失败。已有查询
+路线不再依赖 `insyspo` 作业权限修复。建议后续沿用 US 工作库，最终快照接受、
+字段关联和空表处理仍待审阅；下方保留 September 14 候选的历史执行证据。
+
+January 2026 中 `sources_concepts` 等六张关联表为空，没有 `sources_topics`。
+不能把 August 的关联表行数与 January 混用，也不能从 topics 分类表存在推断
+期刊—主题映射已齐备。EU/US 内容一致不证明其本身没有缺失或时间混杂。
+
+## September 14 已落实的候选行定义
 
 | 项目 | 当前约定与实测 |
 |---|---|
@@ -27,7 +43,7 @@ OpenAlex 的 [Source 定义](https://help.openalex.org/data/sources/attributes/)
 区分 journal、repository 等类型；`works_count` 是 OpenAlex 收到的作品数量，
 不能等同于期刊实际全部发文量。`is_core` 即使在其他来源中出现，也不等于 WoS 收录。
 
-## 候选版本差异清单
+## September 14 候选版本差异清单（历史范围）
 
 本账号在 `insyspo` 列出 16 个可见 dataset，只看到两个 OpenAlex 快照 dataset。
 这不证明其他项目或未授权区域不存在 January 2026 或会议中的第三个候选。
@@ -73,7 +89,7 @@ source_id 形成单行列表或经说明的聚合字段后 LEFT JOIN。每次合
 
 ## 索引与模型的待审阅决定
 
-1. 确认研究快照，并提供 January 2026／第三候选的精确位置及构建方式；或明确接受 August 2025。
+1. 确认研究快照。January 2026 的两个公共库和导师克隆现已定位并比较；仍需接受实际版本及确认构建时间含义，不能由月份标签推断每张表更新进度。
 2. 明确“全部元数据”的关联表范围和时间窗口，解释稀疏关系表与 publisher_id。
 3. 固定索引定义：Scopus 主表 `Journal`、是否纳入 Trade Journal、是否区分 active/inactive；WoS 是 SCIE、SSCI、AHCI、ESCI 哪些集合。
 4. 固定参照日期。当前 Scopus August 2026 和 OpenAlex August 2025 不同期；只能报告跨时点匹配，不能称同年覆盖率或新收录预测。

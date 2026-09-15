@@ -102,6 +102,23 @@ China-time conversion or deadline is asserted. The previous user-confirmed
 September 15 appointment remains historical scheduling evidence, not the next
 meeting. Confirm the invitation before changing date-based reminders or targets.
 
+## Subsequent user clarification and verification — September 15
+
+After intake, the user reported successful manual querying of `multiobs`,
+supplied a browser view and the supervisor's single-table CLONE example from
+Mattermost, and requested a dataset comparison. The example identifies
+`multiobs.publicdb_openalex_2026_01_rm.sources_societies` as the base and
+`multiobs.userdb_saurabh_khanna.sources_societies` as the destination. This is
+additional user-supplied evidence, not reconstructed meeting-chat contents.
+
+The [subsequent live comparison](../research/openalex-journal-baseline/dataset-comparison.md)
+located the EU/US public datasets and 11 existing supervisor clones, verified
+their journal-related content fingerprints, and successfully queried the target
+tables through the YannJY execution project. It supersedes the earlier absence
+of exact identifiers and successful alternate SQL-route evidence. It does not
+show that `insyspo`/`multiobs` job permissions were repaired, that final research
+scope was accepted, or that the combined CSV/SURFdrive delivery is complete.
+
 ## Governance
 
 This report supplements the [previous meeting record](2026-09-14-openalex-baseline-and-access.md)

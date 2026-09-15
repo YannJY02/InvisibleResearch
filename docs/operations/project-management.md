@@ -101,7 +101,26 @@ the Appshot, not independently fetched from the server in this intake.
   version evidence and field-specific missingness checks. Do not redo the sent
   explanation as though no prior work existed, or mark the whole task complete.
 
-## September 15 meeting intake and current follow-up
+## September 15 dataset comparison and available SQL route
+
+The user's follow-up identified `multiobs` and supplied the supervisor's CLONE
+example. [Live comparison](../../research/openalex-journal-baseline/dataset-comparison.md)
+now verifies the January 2026 EU/US identifiers, 76 matching table inventories
+and 12 matching complete journal-table fingerprints. The existing supervisor
+workspace has 11 US-source clones whose current fingerprints also match.
+Region-local queries succeed with YannJY's selected execution project
+`gen-lang-client-0676290976`; direct job creation in `multiobs` remains denied.
+No original-project IAM repair is claimed. INVIS-6 can be reviewed as delivery
+of a working alternate SQL route; the earlier missing-identifier/SQL-route
+observations below retain their historical intake scope.
+
+INVIS-7's final snapshot acceptance and association rules remain for review.
+INVIS-8 still needs a combined journal CSV, field missingness interpretation and
+verified SURFdrive delivery; the existing clones resolve the earlier unknown
+copy status for those 11 tables, not the entire delivery. The current dependency
+chain and internal targets are unchanged. Current states remain in Plane.
+
+## September 15 meeting intake and follow-up at that point
 
 The [new meeting record](../../meeting-reports/2026-09-15-openalex-table-delivery.md)
 adds source-backed requirements to existing INVIS-6/7/8/9: identify the displayed

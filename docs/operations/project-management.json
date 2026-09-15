@@ -130,7 +130,8 @@
       "sources": [
         "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md"
       ],
       "depends_on": [],
       "planned_start": "2026-09-14",
@@ -144,7 +145,8 @@
       "sources": [
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
         "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md"
       ],
       "depends_on": [],
       "planned_start": "2026-09-15",
@@ -157,7 +159,8 @@
       "identifier": "INVIS-8",
       "sources": [
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md"
       ],
       "depends_on": [
         "openalex-snapshot"
@@ -238,5 +241,17 @@
       ],
       "scope": "Source intake and clarification of existing actions; no new research execution or acceptance inferred."
     }
-  ]
+  ],
+  "dataset_comparison": {
+    "key": "user-2026-09-15-multiobs-dataset-comparison",
+    "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md",
+    "tasks": [
+      "INVIS-6",
+      "INVIS-7",
+      "INVIS-8"
+    ],
+    "source_project": "multiobs",
+    "execution_project": "gen-lang-client-0676290976",
+    "evidence_scope": "76-table metadata comparison; complete row-multiset SHA256 fingerprints for 12 EU/US journal-related tables and 11 existing US-source clones. Final snapshot acceptance and CSV delivery remain open."
+  }
 }

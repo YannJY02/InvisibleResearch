@@ -51,11 +51,15 @@ section invokes the existing authenticated `bq` CLI from R. Override its path
 with `-P bq_cli:/path/to/bq` if needed. Rendering performs one constant query
 with a one-byte billing cap and does not retrieve a new dataset.
 
-The interpretation table uses
-[short field descriptions](analysis/crossref-field-notes.csv); the R code checks
-that its referenced fields exist. The existing merge remains the input, not an
-assumed PKP merge inside BigQuery. The meeting report supersedes the broader
-technical report as the supervisor presentation.
+The QMD contains all 11 Crossref source-field names, explanations and actual
+values for one journal, alongside related OpenAlex fields and values from the
+same row. The first table compares shared or similar information; the second
+shows fields without an OpenAlex counterpart, leaving those cells blank.
+Nested examples retain expandable full saved values. R verifies the journal's
+title and ISSNs agree and checks that every Crossref source field is covered.
+The existing merge remains the input, not an assumed PKP merge inside BigQuery.
+The meeting report supersedes the broader technical report as the supervisor
+presentation.
 
 ## Offline audit details
 

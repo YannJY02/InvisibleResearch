@@ -52,64 +52,185 @@ are calculated from that merged file when this report runs.
 
 ## 1. Crossref fields
 
-**Agreed task:** Check which Crossref fields add useful information beyond OpenAlex.
-
-We check the fields in the saved data and group them by what they describe.
-The short descriptions are supplied in `crossref-field-notes.csv`.
+**Agreed task:** Compare every Crossref source field with related OpenAlex
+fields, using actual values from the same journal.
 
 ```{r}
-#| label: compare-fields
-field_notes <- read.csv("crossref-field-notes.csv", check.names = FALSE)
-cr_fields <- unlist(strsplit(field_notes$crossref_fields, ";", fixed = TRUE))
-oa_fields <- unlist(strsplit(field_notes$openalex_fields, ";", fixed = TRUE))
-stopifnot(setequal(cr_fields, names(crossref$journals[[1]])),
-          all(paste0("crossref_", cr_fields) %in% names(journals)),
-          all(paste0("openalex_", oa_fields[nzchar(oa_fields)]) %in%
-                names(journals)))
-
-field_notes$crossref_fields <- gsub(";", ", ", field_notes$crossref_fields)
-field_notes$openalex_fields <- gsub(";", ", ", field_notes$openalex_fields)
-field_notes$openalex_fields[field_notes$openalex_fields == ""] <-
-  "No equivalent in this table"
-knitr::kable(field_notes, col.names = c(
-  "Crossref fields", "Related OpenAlex fields", "What they tell us"))
-```
-
-**The main additions are DOI registration counts and information about what
-publishers deposit with Crossref.** Titles and identifiers largely serve the
-same purpose in both sources. Crossref also distinguishes print and online ISSNs.
-
-For a concrete example, take the first record with one match in each source:
-
-```{r}
-#| label: field-example
+#| label: select-one-journal
 example <- journals |>
-  filter(openalex_match_status == "unique",
-         crossref_match_status == "unique") |>
-  slice(1)
-doi_counts <- fromJSON(example$crossref_counts)
-coverage <- fromJSON(example[["crossref_coverage-type"]])$all
-
-example_values <- data.frame(
-  Measure = c("Publications recorded by OpenAlex",
-              "DOIs registered with Crossref",
-              "Crossref records with an abstract",
-              "Crossref records with references"),
-  Value = c(fmt(example$openalex_works_count), fmt(doi_counts$`total-dois`),
-            paste0(round(100 * coverage$abstracts), "%"),
-            paste0(round(100 * coverage$references), "%")))
-knitr::kable(example_values)
+  filter(openalex_id == "https://openalex.org/S4210240683",
+         openalex_match_status == "unique",
+         crossref_match_status == "unique")
+stopifnot(nrow(example) == 1,
+          example$crossref_title == example$openalex_display_name,
+          setequal(fromJSON(example$crossref_ISSN),
+                   fromJSON(example$openalex_issn)))
 ```
 
-The example is **`r example$crossref_title`**. OpenAlex records
-`r fmt(example$openalex_works_count)` publications; Crossref has
-`r fmt(doi_counts[["total-dois"]])` DOI registrations. The counts describe each
-database's records, so a difference does not by itself identify an error.
-Crossref additionally reports abstracts for `r round(100 * coverage$abstracts)`%
-of this journal's Crossref records, across all years, and references for
-`r round(100 * coverage$references)`%.
-The reference figure describes what was deposited with Crossref, not whether
-the publications themselves contain references.
+The example throughout both tables is **`r example$crossref_title`**
+(ISSNs `r paste(fromJSON(example$crossref_ISSN), collapse = " and ")`).
+All 11 Crossref source columns in the saved data are shown below.
+The examples are read from this one row of the merged file. Long nested fields
+show selected entries; **Full saved value** opens the complete content.
+`NA` means the corresponding field exists but has no value for this journal.
+
+```{r}
+#| label: field-mapping
+#| code-fold: true
+#| code-summary: "R code: field names and explanations"
+field_map <- tibble::tribble(
+  ~cr, ~cr_meaning, ~oa, ~oa_meaning,
+  "title", "Journal name.",
+  "display_name", "Journal name.",
+  "publisher", "Publisher name.",
+  "host_organization_name", "Publisher or hosting organisation name.",
+  "ISSN", "Journal ISSNs.",
+  "issn", "Journal ISSNs, without print/online labels.",
+  "issn-type", "ISSNs with print or electronic labels.",
+  "issn", "Same identifiers; no medium labels in this list.",
+  "counts", "DOI counts: total, current and backfile publications.",
+  "works_count", "Number of works recorded by OpenAlex.",
+  "breakdowns", "DOI counts by publication (issued) year.",
+  "counts_by_year", "Works published and citations received in each year.",
+  "subjects", "Subject labels supplied by Crossref.",
+  "topics", "OpenAlex topic labels and associated work counts.",
+  "coverage", "Share of records containing each kind of metadata, for current and backfile publications.",
+  "", "",
+  "coverage-type", "The same coverage measures grouped by all, current and backfile publications.",
+  "", "",
+  "flags", "Yes/no indicators for deposited content and metadata.",
+  "", "",
+  "last-status-check-time", "Crossref status-check timestamp.",
+  "", ""
+)
+cr_fields <- field_map$cr
+stopifnot(setequal(cr_fields, names(crossref$journals[[1]])),
+          all(paste0("crossref_", cr_fields) %in% names(example)),
+          all(paste0("openalex_", field_map$oa[field_map$oa != ""]) %in%
+                names(example)))
+```
+
+```{r}
+#| label: extract-field-examples
+#| code-fold: true
+#| code-summary: "R code: select entries from nested fields"
+doi_counts <- fromJSON(example$crossref_counts)
+cr_years <- fromJSON(example$crossref_breakdowns)[["dois-by-issued-year"]]
+oa_years <- fromJSON(example$openalex_counts_by_year)
+oa_topics <- fromJSON(example$openalex_topics)
+cr_coverage <- fromJSON(example$crossref_coverage)
+coverage <- fromJSON(example[["crossref_coverage-type"]])$all
+cr_flags <- fromJSON(example$crossref_flags)
+
+# Use the same year for the DOI and work counts.
+comparison_year <- 2025
+cr_year_count <- cr_years[cr_years[, 1] == comparison_year, 2]
+oa_year <- oa_years[oa_years$year == comparison_year, ]
+stopifnot(length(cr_year_count) == 1, nrow(oa_year) == 1)
+
+# These excerpts are computed from the saved values; the full values remain available.
+excerpts <- list(
+  crossref_breakdowns = list(`dois-by-issued-year` =
+    list(c(comparison_year, cr_year_count))),
+  openalex_counts_by_year = oa_year,
+  openalex_topics = head(oa_topics[c("display_name", "count")], 3),
+  crossref_coverage = cr_coverage[c("abstracts-current", "references-current",
+                                   "orcids-current")],
+  `crossref_coverage-type` = list(all = coverage[c("abstracts", "references",
+                                                  "orcids")]),
+  crossref_flags = cr_flags[c("deposits-abstracts-current",
+                             "deposits-references-current",
+                             "deposits-orcids-current")]
+)
+```
+
+```{r}
+#| label: format-field-comparison
+#| code-fold: true
+#| code-summary: "R code: display the comparison"
+field_cell <- function(prefix, field, meaning) {
+  if (field == "") return("")
+  paste0("<code>", prefix, field, "</code><br>",
+         htmltools::htmlEscape(meaning))
+}
+value_cell <- function(column) {
+  if (column == "openalex_") return("")
+  value <- example[[column]][[1]]
+  if (is.na(value)) return("<code>NA</code> (not supplied)")
+  value <- as.character(value)
+  full <- if (jsonlite::validate(value)) prettify(value, indent = 2) else value
+  full <- paste0("<pre class='field-value'>",
+                 htmltools::htmlEscape(full), "</pre>")
+  if (is.null(excerpts[[column]])) return(full)
+  preview <- toJSON(excerpts[[column]], auto_unbox = TRUE, pretty = TRUE)
+  paste0("<pre class='field-value'>", htmltools::htmlEscape(preview),
+         "</pre><details><summary>Full saved value</summary>",
+         full, "</details>")
+}
+comparison <- data.frame(
+  `Crossref column and meaning` = mapply(field_cell, "crossref_",
+                                         field_map$cr, field_map$cr_meaning),
+  `Crossref example` = vapply(paste0("crossref_", field_map$cr),
+                              value_cell, character(1)),
+  `OpenAlex column and meaning` = mapply(field_cell, "openalex_",
+                                         field_map$oa, field_map$oa_meaning),
+  `OpenAlex example` = vapply(paste0("openalex_", field_map$oa),
+                              value_cell, character(1)),
+  check.names = FALSE
+)
+```
+
+### Fields providing the same or related information
+
+::: {.field-comparison}
+```{r}
+#| label: show-related-fields
+#| results: asis
+knitr::kable(comparison[field_map$oa != "", ], format = "html", escape = FALSE,
+             row.names = FALSE)
+```
+:::
+
+### Crossref fields without a counterpart in this OpenAlex table
+
+The OpenAlex cells are left blank where no corresponding source field exists.
+
+::: {.field-comparison}
+```{r}
+#| label: show-additional-fields
+#| results: asis
+knitr::kable(comparison[field_map$oa == "", ], format = "html", escape = FALSE,
+             row.names = FALSE)
+```
+:::
+
+**The title and both ISSNs agree.** Crossref adds the print/electronic labels
+and the publisher name, **`r example$crossref_publisher`**, which is missing
+from the related OpenAlex field for this journal. For subject information,
+Crossref supplies an empty list, while OpenAlex supplies topic labels.
+
+**Both sources describe publication volume, but count their own records.**
+Crossref has `r fmt(doi_counts[["total-dois"]])` DOI registrations and OpenAlex
+has `r fmt(example$openalex_works_count)` works. In `r comparison_year`, the
+corresponding figures are `r fmt(cr_year_count)` and `r fmt(oa_year$works_count)`.
+These figures show a difference between the databases; identifying the
+individual publications behind it would require a publication-level comparison.
+Crossref's *current* category covers the snapshot year and the preceding two
+years of publication; *backfile* covers earlier publications.
+
+**Crossref's main additional information concerns what publishers deposit.**
+For this journal, across all years, `r round(100 * coverage$abstracts)`% of
+Crossref records contain abstracts, `r round(100 * coverage$references)`%
+contain references and `r round(100 * coverage$orcids, 1)`% contain ORCIDs.
+The zero for references means references were not deposited with Crossref;
+it does not mean the papers contain no references. `coverage`, `coverage-type`
+and `flags` express related deposit information as proportions or yes/no
+indicators. The status-check timestamp is a record of Crossref's check, not
+an additional characteristic of the journal's research.
+
+Field meanings follow the [Crossref journal schema](https://api.crossref.org/swagger-docs),
+[Crossref coverage definitions](https://www.crossref.org/documentation/reports/participation-reports/)
+and [OpenAlex Source fields](https://help.openalex.org/data/sources/attributes/).
 
 ## 2. Records added by Crossref
 

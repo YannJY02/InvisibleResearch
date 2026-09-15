@@ -1,7 +1,0 @@
-crossref_fields,openalex_fields,meaning
-"title;publisher;ISSN","display_name;host_organization_name;issn","Overlapping journal descriptions and identifiers."
-"counts;breakdowns","works_count;counts_by_year","DOI registrations and their publication-year distribution, alongside OpenAlex publication counts."
-"coverage;coverage-type;flags","","Whether deposited records include abstracts, references, affiliations, ORCID, funding and licences."
-"issn-type","issn","Identifies print and electronic ISSNs."
-"subjects","topics;topic_share","Subject labels; the Crossref field is empty in this saved data."
-"last-status-check-time","updated_date","When each source checked or updated its information."

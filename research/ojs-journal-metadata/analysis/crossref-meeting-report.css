@@ -12,6 +12,15 @@ table { font-size: .9em; }
 th, td { vertical-align: top; }
 th { color: #174a60; }
 details > summary { font-size: .85em; color: #526672; }
+.field-comparison table { width: 100%; table-layout: fixed; font-size: .85em; }
+.field-comparison th, .field-comparison td { overflow-wrap: anywhere; }
+.field-comparison th:nth-child(odd), .field-comparison td:nth-child(odd) { width: 22%; }
+.field-comparison th:nth-child(even), .field-comparison td:nth-child(even) { width: 28%; }
+.field-comparison td > code { color: #174a60; }
+.field-value { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9em;
+  line-height: 1.5; background: transparent; border: 0; padding: 0; margin: 0; }
+.field-comparison details { margin-top: .6rem; }
+.field-comparison details pre { max-height: 22rem; overflow-y: auto; }
 @media print {
   #TOC, .code-copy-button { display: none; }
   body { font-size: 11pt; }

@@ -30,7 +30,8 @@
     "timezone": "Asia/Shanghai",
     "time_status": "Confirmed by user; supersedes transcript 13:00 Amsterdam. Email invitation was not located.",
     "pre_meeting_checkpoint": "2026-09-15T15:00:00+08:00",
-    "checkpoint_basis": "Internal preparation checkpoint, one hour before confirmed meeting"
+    "checkpoint_basis": "Internal preparation checkpoint, one hour before confirmed meeting",
+    "status": "previous user-confirmed appointment; new recording processed September 15"
   },
   "pages": {
     "overview": "42ce0ab8-4ab7-4b8f-a940-34122b3705ac",
@@ -59,7 +60,10 @@
       "plane_id": "adc498d6-fab4-45c2-a759-fd6108241762",
       "identifier": "INVIS-1",
       "source": "Explicit user request in this task on 2026-09-14",
-      "date_kind": "internal delivery target before confirmed meeting"
+      "date_kind": "internal delivery target before confirmed meeting",
+      "sources": [
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
+      ]
     },
     {
       "key": "history-sample",
@@ -125,7 +129,8 @@
       "identifier": "INVIS-6",
       "sources": [
         "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
-        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839"
+        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
       ],
       "depends_on": [],
       "planned_start": "2026-09-14",
@@ -138,7 +143,8 @@
       "identifier": "INVIS-7",
       "sources": [
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
-        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
       ],
       "depends_on": [],
       "planned_start": "2026-09-15",
@@ -150,15 +156,16 @@
       "plane_id": "e03c9a86-aab7-4ca1-a42c-8167cd5ef9cd",
       "identifier": "INVIS-8",
       "sources": [
-        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839"
+        "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
       ],
       "depends_on": [
-        "bigquery-access",
         "openalex-snapshot"
       ],
       "planned_start": "2026-09-17",
       "planned_target": "2026-09-21",
-      "date_kind": "Provisional internal target; replan against actual dependency status"
+      "date_kind": "Provisional internal target; replan against actual dependency status",
+      "dependency_basis": "September 15 live Plane readback: alternate core read previously removed hard SQL dependency; BigQuery-specific steps still need job access."
     },
     {
       "key": "commercial-coverage",
@@ -166,7 +173,8 @@
       "identifier": "INVIS-9",
       "sources": [
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
-        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
       ],
       "depends_on": [
         "openalex-export"
@@ -201,6 +209,34 @@
       "planned_start": "2026-09-15",
       "planned_target": "2026-09-22",
       "date_kind": "Internal dependency/status checkpoint, not a promise of external resolution"
+    }
+  ],
+  "next_meeting": {
+    "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
+    "source_locators": [
+      "08:10–08:30",
+      "10:58–11:05"
+    ],
+    "relative_date": "next week",
+    "local_time": "09:30",
+    "timezone": "Europe/Amsterdam",
+    "date": null,
+    "duration": null,
+    "status": "Invitation reported sent; exact date and receipt unverified. Wednesday is generated-summary-only wording."
+  },
+  "meeting_intakes": [
+    {
+      "key": "meeting-2026-09-15-openalex-table-delivery",
+      "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
+      "source_sha256": "21d7b9957fb5b8cb07e6e98e641b881984e5fd9bd8b2675f83825f2128fe1af5",
+      "tasks": [
+        "INVIS-1",
+        "INVIS-6",
+        "INVIS-7",
+        "INVIS-8",
+        "INVIS-9"
+      ],
+      "scope": "Source intake and clarification of existing actions; no new research execution or acceptance inferred."
     }
   ]
 }

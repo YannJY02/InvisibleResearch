@@ -101,7 +101,31 @@ the Appshot, not independently fetched from the server in this intake.
   version evidence and field-specific missingness checks. Do not redo the sent
   explanation as though no prior work existed, or mark the whole task complete.
 
-## Meeting and initial schedule
+## September 15 meeting intake and current follow-up
+
+The [new meeting record](../../meeting-reports/2026-09-15-openalex-table-delivery.md)
+adds source-backed requirements to existing INVIS-6/7/8/9: identify the displayed
+snapshot alternatives, consolidate relevant journal metadata into one inspectable
+CSV, check per-column missingness with the discussed BigQuery route, and deliver
+to the previously shared SURFdrive folder. The supervisor will investigate
+Scopus/WoS access. Journal-level analysis is explicit; article-level work remains
+only a possible future extension. Tool names discussed are options.
+
+The transcript does not verify SQL repair, a completed table copy/upload, final
+snapshot acceptance, or acceptance of earlier Crossref work. Live Plane readback
+retains INVIS-7 in In Review and INVIS-6/8/9 Blocked. The current native chain is
+INVIS-7 → INVIS-8 → INVIS-9 → INVIS-10; the earlier successful alternate core read
+already removed the hard SQL dependency for all of INVIS-8. BigQuery copy/audit
+steps still need actual successful job evidence. Existing internal dates remain
+planning targets, including the conditional September 21 delivery target.
+
+**Next meeting:** the supplied transcript says next week at **09:30 Amsterdam**,
+and reports an invitation sent. Exact date, duration and receipt are unverified;
+Wednesday appears only in the generated summary. Confirm the invitation before
+setting a date or changing reminders. The September 15 appointment below is
+historical user-confirmed scheduling evidence, not the next meeting.
+
+## Previous meeting and initial schedule
 
 The user confirmed **2026-09-15, 16:00–16:30 China time** in this task. This
 supersedes the transcript's 13:00 Amsterdam wording. The internal preparation

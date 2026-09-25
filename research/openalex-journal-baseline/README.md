@@ -6,6 +6,8 @@ the user-selected January 2026 US dataset in `multiobs`; this remains Explorator
 
 - [Current BigQuery journal export](journal-export.md): merged CSV, missingness,
   connection verification, delivery evidence and the coming week's tasks.
+- [Full table scope and join routes](table-scope.md): September 25 audit of all
+  76 tables, existing CSV coverage, actual topic-path example and proposed additions.
 - [Earlier Crossref supervisor report](../ojs-journal-metadata/analysis/crossref-meeting-report.qmd):
   R-executed field comparison, additional records, missing subjects and query test.
 - [Earlier technical record](premeeting-report.md): access

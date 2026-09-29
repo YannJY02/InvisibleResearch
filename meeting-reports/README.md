@@ -13,6 +13,7 @@ Generated HTML, PDF, and slide exports belong in the ignored
 - [2026-07-28 — OJS Journal Enrichment and Analysis: Meeting Outcomes](2026-07-28-ojs-enrichment-next-steps.md)
 - [2026-09-14 (intake-labelled date) — OpenAlex Baseline, Crossref Contribution, and BigQuery Access](2026-09-14-openalex-baseline-and-access.md)
 - [2026-09-15 — OpenAlex Table Consolidation and Delivery](2026-09-15-openalex-table-delivery.md)
+- [2026-09-29 (intake-labelled date) — Source JSON, Language, and Scopus Actions](2026-09-29-source-json-language-scopus.md)
 
 ## Boundaries
 

@@ -148,7 +148,8 @@
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
         "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
       ],
       "depends_on": [],
       "planned_start": "2026-09-15",
@@ -162,7 +163,8 @@
       "sources": [
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
       ],
       "depends_on": [
         "openalex-snapshot"
@@ -179,7 +181,8 @@
       "sources": [
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
         "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
       ],
       "depends_on": [
         "openalex-export"
@@ -194,7 +197,8 @@
       "identifier": "INVIS-10",
       "sources": [
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
-        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-07-28-ojs-enrichment-next-steps.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-07-28-ojs-enrichment-next-steps.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
       ],
       "depends_on": [
         "commercial-coverage"
@@ -217,17 +221,16 @@
     }
   ],
   "next_meeting": {
-    "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
+    "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md",
     "source_locators": [
-      "08:10–08:30",
-      "10:58–11:05"
+      "32:48–33:27"
     ],
-    "relative_date": "next week",
-    "local_time": "09:30",
-    "timezone": "Europe/Amsterdam",
+    "relative_date": "next week after the intake-labelled 2026-09-29 recording",
+    "local_time": null,
+    "timezone": null,
     "date": null,
     "duration": null,
-    "status": "Invitation reported sent; exact date and receipt unverified. Wednesday is generated-summary-only wording."
+    "status": "Proposed in conversation; calendar invitation, exact date and time unverified."
   },
   "meeting_intakes": [
     {
@@ -242,6 +245,18 @@
         "INVIS-9"
       ],
       "scope": "Source intake and clarification of existing actions; no new research execution or acceptance inferred."
+    },
+    {
+      "key": "meeting-2026-09-29-source-json-language-scopus",
+      "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md",
+      "source_sha256": "56ed29fc636c7518288a2321d6f44ae5f2f6bee3d6a58a208cd6b391fa9d96c1",
+      "tasks": [
+        "INVIS-7",
+        "INVIS-8",
+        "INVIS-9",
+        "INVIS-10"
+      ],
+      "scope": "Private transcript and upstream #5 change intake; prior CSV delivery retained, new Source JSON/language/Scopus actions not executed."
     }
   ],
   "dataset_comparison": {

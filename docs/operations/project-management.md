@@ -101,6 +101,37 @@ the Appshot, not independently fetched from the server in this intake.
   version evidence and field-specific missingness checks. Do not redo the sent
   explanation as though no prior work existed, or mark the whole task complete.
 
+## September 29 Inbox intake and current follow-up
+
+The [new meeting action record](../../meeting-reports/2026-09-29-source-json-language-scopus.md)
+uses the file's September 29 intake timestamp, not a verified calendar event.
+The supervisor-role speaker says the existing journal CSV was opened during the
+call; this does not establish acceptance of all fields. Independently, the
+September 29 edit to [upstream #5](https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839)
+checks the earlier OpenAlex metadata delivery and narrows the upcoming
+conference analysis to Scopus. The source edit and transcript add no new proof
+that a full per-journal Source JSON archive or language distribution exists.
+
+- INVIS-8: preserve the previously verified CSV/SURFdrive delivery and its
+  review history. Next collect one complete Source API JSON response per journal
+  ID and read back the new SURFdrive folder. The earlier 32-column CSV is not
+  this new deliverable.
+- INVIS-7/8: define and calculate publication-language proportions from works
+  by source ID, with an explicit denominator and missing-language accounting.
+  The BigQuery route was proposed and accepted in discussion, not executed.
+- INVIS-9: prioritize the public Scopus list for the proposed ICA scope.
+  Existing ISSN candidate matching is reusable, but its ambiguous, unmatched,
+  missing-ID, inactive and date-scope cases still need label rules. WoS remains
+  a later journal-paper question; do not treat its access gap as a block on
+  Scopus-only preparation.
+- INVIS-10: model work follows an auditable Scopus outcome and feature table.
+  Mid-October analysis and this-week-Friday data work were aspirational timing
+  discussed in the recording, not completed work or a verified submission date.
+
+The next meeting was proposed for the following week; no invitation date or
+duration was verified. Existing early targets in the sections below are
+historical planning points, not current commitments.
+
 ## Current week: September 15–22, after the user's execution clarification
 
 The user explicitly retired the old `insyspo` source for this work and selected

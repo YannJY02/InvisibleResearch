@@ -126,3 +126,47 @@ manifest 与字段说明也已完整读回匹配。最后一个数据包于 05:0
 
 采集与打包共 20 项行为测试通过，独立审查发现的打包来源一致性和损坏文件恢复问题均已修复，
 最终复核通过。全量 CSV、压缩 CSV 和 JSON ZIP 的检查来自本次实际数据，不以测试夹具代替。
+
+## 指定 Source 的逐列对照
+
+2026-09-30 09:11:34 UTC，重新读取用户指定的
+[Journal of Communication（S107737141）](https://api.openalex.org/sources/S107737141)，
+HTTP 200；与已保存的原始 JSON 和 CSV 第 10,734 条数据记录独立对照。
+本次不调用采集脚本的展开或解码函数，而按字段路径及已声明的 CSV 编码检查实际数据。
+
+| 核验项 | 实际结果 |
+|---|---|
+| API 顶层字段 | 39 个，全部保留 |
+| CSV 数据列 | 45 列；缺少 API 字段的列为 0，多余数据列为 0 |
+| CSV 采集记录列 | `source_id`、`resolved_id`、`fetch_status`、`fetched_at`，共 4 列 |
+| CSV 总列数 | 49 = 39 − 2 + 5 + 3 + 4 |
+| 实时 API 与已保存 JSON | 响应字节 SHA-256 相同，逐值无变化 |
+| CSV 与 JSON | 全部 45 个数据列的值与类型一致，可恢复完整对象 |
+
+列数增加来自两个对象的展开，其余 37 个顶层字段仍对应同名列：
+
+| API 对象 | 对应 CSV 列 |
+|---|---|
+| `ids` | `ids.openalex`、`ids.issn_l`、`ids.issn`、`ids.mag`、`ids.wikidata` |
+| `summary_stats` | `summary_stats.2yr_mean_citedness`、`summary_stats.h_index`、`summary_stats.i10_index` |
+
+因此 CSV 没有单独名为 `ids` 或 `summary_stats` 的列，但它们的所有子字段均在表内。
+所有列表完整保留在相应单元格，不只核对长度，还逐值核对内部对象与类型：
+
+| 列表列 | API / 原 JSON / CSV 的元素数 |
+|---|---|
+| `topics`、`topic_share` | 各 25 / 25 / 25 |
+| `counts_by_year` | 76 / 76 / 76 |
+| `apc_usd_by_year`、`listed_in` | 各 5 / 5 / 5 |
+| `issn`、`ids.issn`、`host_organization_lineage` | 各 2 / 2 / 2 |
+| `apc_prices` | 1 / 1 / 1 |
+| `societies`、`alternate_titles` | 各 0 / 0 / 0，真实空列表保留 |
+
+本次证据在 `artifacts/source-column-audit-2026-09-30/`：`live-source.json` 是实际
+API 响应，`csv-row.json` 是实际行，`column-check.csv` 逐项列出 45 个数据列的检查，
+`audit.json` 记录字段集合、数组数量、哈希及检查范围；`audit.py` 保留检查方法。
+API 与原 JSON 的 SHA-256 均为
+`69f2bf9b87852478f79971537f17f7579058392b10a866abd54ecdc78a966af2`。
+
+这是对指定期刊的实时 API 对照；其余期刊仍以本轮全量 CSV 读回及对象恢复检查为证据，
+没有重新请求全部期刊。API 本身的公开主题覆盖边界也不因转换完整而消失。

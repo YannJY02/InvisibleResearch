@@ -9,6 +9,9 @@ the user-selected January 2026 US dataset in `multiobs`; this remains Explorator
 - [Journal field recovery brief](field-recovery.md): September 29 official-method
   comparison, required recalculations, six additional tables and attributes
   requiring raw JSON/API; no full recalculation or replacement upload yet.
+- [Model purpose, data formats and merge rules](model-data-structure.md): September 30
+  review of the Source JSON task, Scopus prediction, variable-length topics,
+  proposed Parquet feature tables, language/year denominators and open decisions.
 - [Full table scope and join routes](table-scope.md): September 25 audit of all
   76 tables, existing CSV coverage, actual topic-path example and proposed additions.
 - [Earlier Crossref supervisor report](../ojs-journal-metadata/analysis/crossref-meeting-report.qmd):

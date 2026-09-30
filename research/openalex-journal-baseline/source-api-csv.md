@@ -1,6 +1,6 @@
 # 完整 Source JSON 与合并 CSV
 
-更新：2026-09-30；INVIS-8。取数、CSV 和本地压缩验证已完成；远端完整字节校验进行中。
+更新：2026-09-30；INVIS-8。取数、CSV、本地压缩验证及 SURFdrive 完整字节校验均已完成，供人工审阅。
 
 **约定任务：**按已有期刊清单取得完整 OpenAlex Source JSON，再生成一刊一行的 CSV；
 暂不导入 PostgreSQL，并尽量缩短处理和传输时间。原始 JSON 保留，CSV 是本轮明确选择的输出。
@@ -115,9 +115,14 @@ CSV 中 25,497 个 404 行只保留检索身份与状态，不能作为指标为
 
 `delivery/` 已生成 `openalex-sources-2026-09-30.csv.gz`、
 `openalex-sources-2026-09-30-json.zip`，以及面向接收者的 manifest 和字段说明。
-两个数据文件的 PUT 均返回 201，远端 HEAD 的长度与本地一致。
-完整文件下载较慢，正在以固定 ETag 的条件字节范围读取全部内容并计算 SHA-256；
-此时不能把上传成功或 HEAD 长度相同当成已完成远端完整核验。
+四个文件均已上传既有 SURFdrive Data 文件夹，PUT 返回 201，并完整读回核对字节数和 SHA-256。
+压缩 CSV 分 81 个区块、JSON ZIP 分 116 个区块读取，以固定 ETag 的条件请求锁定版本，
+按字节顺序计算整份哈希；读取前后的 ETag 和文件长度一致，远端哈希与上述本地哈希相同。
+manifest 与字段说明也已完整读回匹配。最后一个数据包于 05:04:28 UTC 完成核验。
+
+远端回执在 `delivery/` 下的各文件 `*.upload.json`，数据包另有
+`*.range-readback.json`，四文件汇总为 `remote-verification.json`。
+接收者可解压 `.csv.gz` 得到完整 CSV；原逐刊 JSON 和获取回执在 ZIP 内。
 
 采集与打包共 20 项行为测试通过，独立审查发现的打包来源一致性和损坏文件恢复问题均已修复，
 最终复核通过。全量 CSV、压缩 CSV 和 JSON ZIP 的检查来自本次实际数据，不以测试夹具代替。

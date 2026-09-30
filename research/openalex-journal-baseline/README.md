@@ -6,6 +6,9 @@ the user-selected January 2026 US dataset in `multiobs`; this remains Explorator
 
 - [Current BigQuery journal export](journal-export.md): merged CSV, missingness,
   connection verification, delivery evidence and the coming week's tasks.
+- [Complete Source JSON and CSV delivery](source-api-csv.md): September 30
+  acquisition for the existing journal ID cohort, reversible CSV, batch resume,
+  full readback and compressed delivery; PostgreSQL is outside this run.
 - [Journal field recovery brief](field-recovery.md): September 29 official-method
   comparison, required recalculations, six additional tables and attributes
   requiring raw JSON/API; no full recalculation or replacement upload yet.

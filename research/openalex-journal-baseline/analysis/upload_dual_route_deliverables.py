@@ -20,25 +20,33 @@ CHUNK = 4 * 1024 * 1024
 OWNER = Path(__file__).resolve().parents[1]
 
 
-def upload(file, remote_name, evidence_dir):
+def upload(file, remote_name, evidence_dir, remote_dir=""):
     private = OWNER / "artifacts/surfdrive-delivery/destination.private.json"
     destination = urllib.parse.urlsplit(json.loads(private.read_text())["url"])
     if destination.scheme != "https" or destination.hostname != "surfdrive.surf.nl":
         raise ValueError("Destination is not the existing SURFdrive share")
     if Path(remote_name).name != remote_name or not remote_name.startswith("openalex-"):
         raise ValueError("Remote filename must be a new named OpenAlex artifact")
+    if remote_dir and any(part in ("", ".", "..") or "\\" in part
+                          or any(ord(char) < 32 for char in part)
+                          for part in remote_dir.split("/")):
+        raise ValueError("Remote directory must be a relative folder path")
     token = destination.path.rstrip("/").split("/")[-1]
     auth = "Basic " + base64.b64encode((token + ":").encode()).decode()
-    path = "/public.php/webdav/" + urllib.parse.quote(remote_name, safe="")
+    relative_path = remote_dir + "/" + remote_name if remote_dir else remote_name
+    path = "/public.php/webdav/" + urllib.parse.quote(relative_path, safe="/")
     evidence_dir.mkdir(parents=True, exist_ok=True)
     receipt = evidence_dir / (remote_name + ".upload.json")
     size, digest = file.stat().st_size, base.sha256_file(file)
-    evidence = {"filename": remote_name, "local_bytes": size, "local_sha256": digest,
+    evidence = {"filename": remote_name, "remote_directory": remote_dir,
+                "local_bytes": size, "local_sha256": digest,
                 "started_at": base.now(), "verified": False}
     if receipt.exists():
         previous = json.loads(receipt.read_text())
         if any(previous.get(k) != evidence[k] for k in ("filename", "local_bytes", "local_sha256")):
             raise ValueError("Existing upload receipt belongs to a different local artifact")
+        if previous.get("remote_directory", "") != remote_dir:
+            raise ValueError("Existing upload receipt belongs to a different remote directory")
         evidence = previous
         evidence["verified"] = False
         evidence["last_resume_at"] = base.now()
@@ -158,8 +166,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("file", type=Path)
     parser.add_argument("--name", required=True)
+    parser.add_argument("--remote-dir", default="", help="Existing relative directory in the shared folder")
     parser.add_argument("--evidence", required=True, type=Path)
     args = parser.parse_args()
     if "artifacts" not in args.evidence.parts or args.evidence.name == "artifacts":
         parser.error("Use a named artifacts evidence directory")
-    upload(args.file, args.name, args.evidence)
+    upload(args.file, args.name, args.evidence, args.remote_dir)

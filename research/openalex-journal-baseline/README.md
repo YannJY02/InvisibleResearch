@@ -9,6 +9,9 @@ the user-selected January 2026 US dataset in `multiobs`; this remains Explorator
 - [Complete Source JSON and CSV delivery](source-api-csv.md): September 30
   acquisition for the existing journal ID cohort, reversible CSV, batch resume,
   full readback and compressed delivery; PostgreSQL is outside this run.
+- [Source 404 retry and version report](analysis/source-retry-report.qmd): October 1
+  full retries, historical ISSN candidates, dated official merge evidence and
+  a live API/BigQuery census; R tables distinguish identity uncertainty from request errors.
 - [Journal field recovery brief](field-recovery.md): September 29 official-method
   comparison, required recalculations, six additional tables and attributes
   requiring raw JSON/API; no full recalculation or replacement upload yet.

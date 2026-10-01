@@ -1,0 +1,475 @@
+---
+title: "OpenAlex Source 404：全量重试与版本核验"
+subtitle: "旧 BigQuery 期刊清单与实时 API · 2026 年 10 月 1 日"
+lang: zh-CN
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "查看实际执行的 R 代码"
+    code-copy: true
+    embed-resources: true
+    include-in-header:
+      text: |
+        <style>
+        .cell-output-display table { width: 100%; table-layout: fixed; }
+        .cell-output-display th, .cell-output-display td { overflow-wrap: anywhere; }
+        </style>
+execute:
+  echo: true
+  message: false
+  warning: false
+  error: false
+  cache: false
+params:
+  run_dir: "../artifacts/source-retry-2026-10-01"
+---
+
+```{r}
+#| label: read-verified-run
+library(jsonlite)
+library(knitr)
+kable <- function(x, ...) knitr::kable(x, row.names = FALSE, ...)
+root <- normalizePath(params$run_dir, mustWork = TRUE)
+read_receipt <- function(path) read_json(file.path(root, path))
+read_csv <- function(path) read.csv(file.path(root, path), colClasses = "character",
+                                   check.names = FALSE, na.strings = character())
+fmt <- function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
+pct <- function(x, total) sprintf("%.2f%%", 100 * x / total)
+count <- function(values, key) sum(values == key)
+summary <- read_receipt("summary.json")
+cohort <- read_receipt("cohort.json")
+status <- read_csv("source-retry-status.csv")
+lookups <- read_csv("issn-lookups.csv")
+edges <- read_csv("old-source-candidates.csv")
+stopifnot(summary$status == "complete", isTRUE(summary$verification$passed),
+          nrow(status) == cohort$count, !anyDuplicated(status$original_id),
+          identical(status$original_id, names(cohort$original_receipts)))
+recovered <- count(status$retry_outcome, "recovered")
+persistent <- count(status$retry_outcome, "persistent_404")
+unresolved <- count(status$retry_outcome, "error_or_unconfirmed_404")
+stopifnot(recovered + persistent + unresolved == nrow(status))
+```
+
+本报告针对先前 **25,497 个返回 404 的旧 Source ID**。Source 是 OpenAlex 对期刊、
+会议、仓储等发表来源的记录。先前已交付的完整 JSON 和 CSV 保持原样；这次新增的是
+重试回执、ISSN 查询得到的完整 Source JSON，以及供人工核验的身份对应表。
+
+## 1. 网络问题能否解释这批 404
+
+**约定任务：**全量重试原来返回 404 的 ID，区分服务端明确返回 404 与连接、限流或服务器错误。
+
+```{r}
+#| label: retry-results
+phase_table <- do.call(rbind, lapply(c("pass1", "pass2"), function(phase) {
+  receipt <- read_receipt(paste0(phase, "-summary.json"))
+  data.frame(轮次 = phase, 开始时间UTC = receipt$started_at,
+             完成时间UTC = receipt$completed_at,
+             查询ID数 = receipt$total,
+             结果 = paste(names(receipt$counts), unlist(receipt$counts), collapse = "; "),
+             check.names = FALSE)
+}))
+kable(phase_table)
+result_table <- data.frame(
+  结果 = c("旧 ID 恢复成功", "两轮均为 404", "请求错误或仍未确认"),
+  旧ID数 = c(recovered, persistent, unresolved), check.names = FALSE)
+kable(result_table)
+both <- status[status$pass1_http_status == "404" & status$pass2_http_status == "404", ]
+parse_utc <- function(x) as.POSIXct(x, format = "%Y-%m-%dT%H:%M:%OS", tz = "UTC")
+gaps <- as.numeric(difftime(parse_utc(both$pass2_completed_at),
+                            parse_utc(both$pass1_completed_at), units = "mins"))
+stopifnot(length(gaps) == persistent, all(is.finite(gaps)), all(gaps > 0))
+if (length(gaps)) kable(data.frame(两次404间隔分钟 = c("最短", "中位", "最长"),
+  实测值 = round(c(min(gaps), median(gaps), max(gaps)), 2), check.names = FALSE))
+```
+
+两轮单刊查询分开执行，请求带 `Cache-Control: no-cache`。第一轮恢复成功的对象不再
+重复请求；其余对象进入第二轮。每次请求保存时间、HTTP 状态、重定向历史和选定响应头；
+连接失败、429 限流、5xx 服务器错误会退避重试，不会记作“期刊不存在”。
+
+```{r}
+#| label: request-errors
+attempts <- unlist(summary$http_attempt_counts_all_phases)
+kable(data.frame(实际请求结果 = names(attempts), 次数 = as.numeric(attempts),
+                 check.names = FALSE))
+```
+
+上述请求次数还包括后续 ISSN 与历史合并目标查询；它们是请求层面的次数，不能和旧 ID
+数量混用。下面的已知有效 Source 对照查询独立记录，不计入上表。
+
+```{r}
+#| label: healthy-api-controls
+control_files <- list.files(file.path(root, "controls"), pattern = "^after-pass[12]\\.json$",
+                            full.names = TRUE)
+controls <- do.call(rbind, lapply(control_files, function(path) {
+  value <- read_json(path)
+  data.frame(对照查询 = basename(path), 已知Source = value$key,
+    HTTP状态 = value$status_code, 完成时间UTC = value$completed_at, check.names = FALSE)
+}))
+stopifnot(length(control_files) > 0L, all(controls$HTTP状态 == 200))
+kable(controls)
+```
+
+两轮仍为 404 的比例为 **`r pct(persistent, nrow(status))`**。
+`r if (recovered == 0 && unresolved == 0) "全量实测没有因重试而恢复的旧 ID，也没有未解决的网络请求错误。因此，短暂网络故障不能合理解释这批 404 的主要部分；更符合证据的是旧 ID 在当前 API 版本中已不可访问。" else "恢复成功的 ID 与持续 404 的 ID 已分开保存。网络问题能够解释多少，应以恢复数量和请求回执为准；不能把未解决的请求错误并入 404。"`
+持续不可访问仍不等于证明永久删除，更不等于证明对应期刊从现实中消失。
+
+## 2. ISSN 匹配、ID 合并与可以恢复的身份
+
+**约定任务：**查官方是否存在 ISSN 匹配和 ID 变更，并对持续 404 的记录用旧库中的全部有效 ISSN 补查。
+
+```{r}
+#| label: identity-results
+labels <- c(
+  one_candidate_not_confirmed_merge = "历史 ISSN 指向一个当前 Source 候选",
+  multiple_candidates = "不同历史 ISSN 指向多个候选，需核验",
+  historical_issns_not_found = "有效历史 ISSN 也未找到当前 Source",
+  no_valid_historical_issn = "旧库没有有效 ISSN，无法沿此路径核验",
+  lookup_incomplete = "ISSN 查询有未解决错误")
+identity_table <- data.frame(核验结果 = unname(labels),
+  旧ID数 = vapply(names(labels), function(x) count(status$issn_outcome, x), numeric(1)),
+  check.names = FALSE)
+stopifnot(sum(identity_table$旧ID数) == persistent)
+kable(identity_table)
+kable(data.frame(ISSN查询数 = nrow(lookups), 成功ISSN数 = count(lookups$http_status, "200"),
+  候选对应行数 = nrow(edges), 不同候选Source数 = length(unique(edges$candidate_id)),
+  check.names = FALSE))
+```
+
+ISSN 查询包含旧 `issn_l` 和 `issn` 列表，不只查询一个首选号码；号码先检查格式与校验位，
+相同号码只请求一次。一个旧 ID 可以有多个 ISSN，多个旧 ID 也可能指向同一当前 Source。
+**得到同 ISSN 候选可以帮助找回当前元数据，但不能单凭这一点认证“旧 ID 被合并到新 ID”。**
+对应表因此保留原 ID、查询 ISSN、候选 ID、候选名称和类型，`confirmed_merge` 不自动设为真。
+
+官方的 [Sources 说明](https://help.openalex.org/data/sources/)和
+[Source 属性说明](https://help.openalex.org/data/sources/attributes/)明确解释：印刷版、
+电子版等 ISSN 可以通过 **ISSN-L** 归为同一 Source；单刊接口支持按 ISSN 查询。
+因此，按 ISSN-L 归并版本和按 ISSN 查询现存 Source 具有官方依据；历史 ID 是否合并仍需独立证据。
+
+不过，截至本次查阅，[同步说明](https://help.openalex.org/access/sync/)称移除或合并后的
+旧 ID 返回 **404、不重定向**；[单对象查询说明](https://help.openalex.org/api/get-single-entities/)
+和 [错误说明](https://help.openalex.org/api/errors/)仍称合并 ID 返回 **301**。
+这些官方页面存在冲突。本报告按实际响应记录状态，不能依据其中一句说明把全部 404 认定为合并。
+
+### 同 ISSN 的实际案例
+
+```{r}
+#| label: same-identity-examples
+examples <- list(S199583 = "0011-9571", S261554 = "0367-6463")
+fields <- c("id", "display_name", "type", "issn_l", "issn", "works_count",
+            "created_date", "updated_date")
+field_explanations <- c("Source 身份", "来源名称", "来源类型", "关联 ISSN",
+                        "全部 ISSN", "收录作品数", "记录创建时间", "记录更新时间")
+show_value <- function(value) {
+  if (is.null(value)) return("null")
+  if (is.list(value)) return(toJSON(value, auto_unbox = TRUE))
+  as.character(value)
+}
+example_table <- do.call(rbind, lapply(names(examples), function(old_id) {
+  match <- lookups[lookups$issn == examples[[old_id]] & lookups$http_status == "200", ]
+  stopifnot(nrow(match) == 1L)
+  current <- read_receipt(match$json_file[[1]])
+  old <- cohort$identities[[old_id]]
+  old$id <- paste0("https://openalex.org/", old_id)
+  data.frame(案例 = old_id, 旧库字段 = fields, 说明 = field_explanations,
+    旧库实际值 = vapply(fields, function(x) show_value(old[[x]]), character(1)),
+    当前API实际值 = vapply(fields, function(x) show_value(current[[x]]), character(1)),
+    check.names = FALSE)
+}))
+kable(example_table)
+```
+
+这两个案例比较的是相同历史 ISSN 指向的当前来源候选。名称、ID、作品数和时间都来自实际
+响应；名字或作品数变化不能单独证明改名、期刊延续关系或合并过程。完整对象保存在
+`issn-candidates/`，上述表只展示本次身份和版本判断需要的字段。
+
+```{r}
+#| label: candidate-overlap
+stopifnot(all(edges$confirmed_merge == "False"))
+overlap <- data.frame(身份对应情况 = c("通过 ISSN 得到的不同当前 Source 候选",
+  "其中已在先前成功数据中的当前 ID", "存在此类重叠候选的旧 ID",
+  "查询 ISSN 未出现在响应 ISSN 集合的对应行"),
+  数量 = c(length(unique(edges$candidate_id)),
+    length(unique(edges$candidate_id[edges$candidate_already_in_accepted_success == "True"])),
+    length(unique(edges$original_id[edges$candidate_already_in_accepted_success == "True"])),
+    sum(edges$candidate_contains_lookup_issn != "True")), check.names = FALSE)
+kable(overlap)
+original_journal_ids <- sub("https://openalex.org/", "",
+  readLines(file.path(cohort$original_run, "source-ids.txt")), fixed = TRUE)
+candidate_types <- unique(edges[, c("candidate_id", "candidate_type")])
+stopifnot(!anyDuplicated(candidate_types$candidate_id))
+outside <- candidate_types[!candidate_types$candidate_id %in% original_journal_ids, ]
+kable(setNames(as.data.frame(table(candidate_types$candidate_type)), c("当前ISSN候选类型", "数量")))
+kable(setNames(as.data.frame(table(outside$candidate_type)), c("旧期刊清单外的候选类型", "数量")))
+```
+
+“已经在成功数据中”意味着这个候选 ID 本来就在同一旧期刊清单中，且 9 月 30 日已获取成功。
+因此不能把全部候选都描述成“January 2026 之后新增的替代记录”。若旧、当前身份最终确认
+对应，合并时应指向已有对象，不能再增加一条期刊。`created_date` 是对象的记录创建时间，
+不能当作旧 ID 被替换的时间。ISSN 集合不包含所查询号码的响应还须单独核验。
+共有 **`r nrow(outside)` 个候选 ID** 不在原 journal 清单中；“清单外”不证明记录新建，
+也不证明它不曾存在于旧库其他 Source 类型中。其中有 repository，不能作为 journal
+直接加入模型；新属性和标签都须遵循同一对象层级及年份。
+
+```{r}
+#| label: existing-candidate-attribute-versions
+historical_examples <- read_receipt("version-audit/historical-candidate-examples.json")
+old_value <- function(value, field) {
+  if (is.null(value) || value %in% c("\\N", "\\\\N")) return("null")
+  if (field == "issn") return(show_value(fromJSON(value, simplifyVector = FALSE)))
+  if (field == "id") return(paste0("https://openalex.org/S", value))
+  show_value(value)
+}
+candidate_versions <- do.call(rbind, lapply(names(examples), function(old_id) {
+  match <- lookups[lookups$issn == examples[[old_id]] & lookups$http_status == "200", ]
+  current <- read_receipt(match$json_file[[1]])
+  current_id <- sub("https://openalex.org/", "", current$id, fixed = TRUE)
+  prior <- historical_examples$historical_csv_core_fields[[current_id]]
+  stopifnot(!is.null(prior))
+  data.frame(当前候选ID = current_id, 字段 = fields, 说明 = field_explanations,
+    同ID旧库值 = vapply(fields, function(x) old_value(prior[[x]], x), character(1)),
+    同ID当前API值 = vapply(fields, function(x) show_value(current[[x]]), character(1)),
+    check.names = FALSE)
+}))
+kable(candidate_versions)
+```
+
+上表进一步比较**同一个候选 ID 自身**的旧、当前属性。这两个 ID 在旧库中都是 journal，
+但旧 ISSN-L 和 ISSN 列表为空；今天已有关联 ISSN。`created_date` 也在不同版本之间发生变化。
+这些实际差异说明，旧号码与当前记录的对应关系以及属性内容都需要按版本核验，
+不能仅按 ID 大小或创建日期推断替换过程。
+
+```{r}
+#| label: historical-issn-peers
+peer_summary <- read_receipt("version-audit/historical-issn-peer-summary.json")
+peer_labels <- c(shares_historical_issn_with_successful_old_id = "旧号码与成功旧记录共享",
+  shares_historical_issn_only_with_other_not_found_old_ids = "旧号码只与其他404旧记录共享",
+  historical_issns_unique_within_old_cohort = "有有效旧号码，但在旧清单中没有同号其他记录",
+  no_valid_historical_issn = "没有有效旧号码")
+peer_counts <- vapply(names(peer_labels), function(x) peer_summary$counts[[x]], numeric(1))
+stopifnot(sum(peer_counts) == nrow(status))
+kable(data.frame(同一旧清单中的号码关系 = unname(peer_labels), 旧404记录数 = peer_counts,
+                 check.names = FALSE))
+```
+
+两个展示案例的旧号码在原清单中没有同号其他记录；它们是当前属性已重新关联号码的实例。
+旧清单原本就共享 ISSN 的 404 只有 **`r fmt(peer_counts[[1]])`** 条，不能用这种旧库内重复号码
+解释整批失效。当前 ISSN 候选、历史同号记录与官方历史合并映射是三类证据，分别保留。
+
+### 官方历史合并记录
+
+```{r}
+#| label: official-merge-results
+history <- read_receipt("official-docs/historical_merge_summary.json")
+official <- read_csv("official-merge-map.csv")
+targets <- read_csv("official-merge-targets.csv")
+kable(official[, c("old_id", "new_id", "mapping_date", "mapping_cycle")])
+kable(targets[, c("target_id", "http_status", "candidate_id", "fetched_at")])
+```
+
+官方 S3 历史 Source 合并目录共 **`r fmt(history$mapping_files)` 个文件、
+`r fmt(history$mapping_rows)` 条映射**，最后一批日期为 **`r history$mapping_dates_max`**。
+它只覆盖本轮旧 ID 的 **`r fmt(nrow(official))` 条**，占
+**`r pct(nrow(official), nrow(status))`**，不能据此解释全部 404。
+这些文件属于 [legacy-data/merged_ids/sources](https://openalex.s3.amazonaws.com/?prefix=legacy-data%2Fmerged_ids%2Fsources%2F)。
+
+其中 `S4210237738 → S2738353305` 的历史映射日期是 2023-08-04；2025-05-09 又记录反向
+映射。因此不能抛开日期，把这些记录当作可一直沿用的当前 ID 对照表。
+当前文档没有给出覆盖全部现行 Source 的删除／合并明细；Works 的删除记录不能替代 Source 的记录。
+
+## 3. BigQuery 与当前 API 的版本和收录口径
+
+**约定任务：**核验库名、记录时间和当前 Source 数量，判断数据版本与收录方式变化可能造成的影响。
+
+```{r}
+#| label: compare-source-universes
+bq <- read_receipt("version-audit/bigquery-census.json")
+old_types <- do.call(rbind, lapply(bq$result$content, function(block) {
+  as.data.frame(fromJSON(block$text), stringsAsFactors = FALSE)
+}))
+api <- read_receipt("version-audit/api-census.json")
+api_types <- do.call(rbind, lapply(api$receipts[[3]]$group_by, function(row) {
+  data.frame(source_type = row$key_display_name, api_count = row$count)
+}))
+universe <- merge(old_types[, c("source_type", "row_count")], api_types,
+                  by = "source_type", all = TRUE)
+universe$row_count[is.na(universe$row_count)] <- 0
+universe$api_count[is.na(universe$api_count)] <- 0
+universe$净差 <- universe$api_count - universe$row_count
+names(universe)[1:3] <- c("Source类型", "旧BigQuery记录数", "当前API记录数")
+universe <- universe[order(-universe$旧BigQuery记录数), ]
+universe$Source类型[universe$Source类型 == "__NULL__"] <- "类型为空"
+totals <- data.frame(Source类型 = "全部类型合计",
+  旧BigQuery记录数 = sum(universe$旧BigQuery记录数),
+  当前API记录数 = sum(universe$当前API记录数), 净差 = sum(universe$净差))
+stopifnot(totals$旧BigQuery记录数 == bq$table_metadata$NumRows,
+          totals$当前API记录数 == api$receipts[[1]]$meta$count)
+kable(rbind(universe, totals))
+```
+
+当前 API 计数取得于 **`r api$receipts[[2]]$retrieved_at`**。
+旧库期刊清单 `type = journal` 有 **`r fmt(old_types$row_count[old_types$source_type == "journal"])`** 条，
+当前 API 有 **`r fmt(api$receipts[[2]]$meta$count)`** 条。
+这个净差是两个时点、相同类型筛选下的总体数量差；它不等于旧清单中失败 ID 的数量。
+新增记录、身份归并和类型重分类都可能相互抵消。
+例如 repository 的总体数量增加，与 journal ID 的具体去向是两项不同证据。
+
+```{r}
+#| label: old-cohort-returned-types
+accepted <- read_receipt("version-audit/accepted-csv-success-profile.json")
+stopifnot(isTRUE(accepted$hash_verified_against_original_manifest),
+          accepted$requested_rows == sum(unlist(accepted$status_counts)))
+kable(data.frame(旧清单中先前的查询结果 = c("成功返回且类型仍为 journal",
+  "成功返回但类型已为 repository", "旧 ID 返回 404"),
+  记录数 = c(accepted$successful_returned_type_rows$journal,
+    accepted$successful_returned_type_rows$repository, accepted$status_counts$not_found),
+  check.names = FALSE))
+```
+
+这张表来自 9 月 30 日已交付 CSV 的单次流式读回，整份文件哈希仍与交付时一致。
+因此，旧库的 journal 清单包含 **`r accepted$successful_rows_changed_type` 个在 API 中已是
+repository 的对象**。类型变化已在实际数据中出现。成功 ID 集合没有重复；候选身份核验后
+还须判断是否指向这个成功集合内已有的记录，避免把同一当前 Source 再加入一次。
+这些类型变化的对象仍能成功获取，因此类型变化本身不能用来解释全部旧 ID 的 404；
+它首先影响的是按 journal 筛选时的分母。
+
+```{r}
+#| label: verify-data-times
+updated <- read_receipt("version-audit/bigquery-updated-columns.json")
+dates <- fromJSON(updated$result$content[[1]]$text)
+times <- data.frame(
+  时间证据 = c("库名", "Source 表创建时间", "Source 表最后修改时间",
+                "全表 updated_date 最大值", "全表 updated 最大值", "API 查询时间"),
+  实际值 = c("publicdb_openalex_2026_01_rm", bq$table_metadata$CreationTime,
+    bq$table_metadata$LastModifiedTime, dates$max_updated_date,
+    dates$max_updated, api$receipts[[2]]$retrieved_at), check.names = FALSE)
+stopifnot(dates$differing_updated_values == 0,
+          dates$null_updated_date == 0, dates$null_updated == 0)
+kable(times)
+```
+
+`updated_date` 与 `updated` 在旧全表逐行相同，最新值停在 **2025-08-22**；这是记录内保存的
+更新时间，**不是已经核实的快照提取日期**。表的创建／修改时间也只是 BigQuery 存储操作的时间。
+因此不能仅凭库名 January 2026，认定这些 Source 属性已更新到 2026 年 1 月。
+旧表更早的获取记录与当前表元数据也已对照；复制到其他地区不会自动刷新内容。
+
+官方 [快照说明](https://help.openalex.org/access/snapshot/)区分持续更新的 API 与定期发布的
+快照。
+
+```{r}
+#| label: official-snapshot-count
+snapshot <- read_receipt("official-docs/sources-manifest.json")
+stopifnot(snapshot$entity == "sources",
+  sum(vapply(snapshot$files, function(x) x$meta$record_count, numeric(1))) == snapshot$record_count)
+kable(data.frame(官方快照日期 = snapshot$date, 全部类型Source数 = snapshot$record_count,
+                 文件数 = length(snapshot$files), check.names = FALSE))
+```
+
+本次查到的 **`r snapshot$date`** 官方 Source 快照有 **`r fmt(snapshot$record_count)`** 条全部类型记录；这也与今天 API 的
+全部类型计数不同，不能拿它直接与旧库 journal 数量比较。
+[发布记录](https://openalex.s3.amazonaws.com/RELEASE_NOTES.txt)记载 2025-11-12 的 Walden 切换，
+但旧表实际来源版本尚未确认，不能直接把本轮全部 404 归因于这次切换。
+[Core／XPAC 口径](https://help.openalex.org/data/works/corpus/)主要描述 Works：它会影响作品数、
+语言等指标的分母，不能单独解释 Source ID 返回 404。
+
+官方 [Sources 说明](https://help.openalex.org/data/sources/)还说明其来源包括 Crossref、MAG、
+DataCite、PubMed 和仓储数据。OpenAlex 的收录没有 Scopus／WoS 式的期刊质量门槛。
+来源接入、身份整理和分类口径会影响数据，但本轮没有取得逐条现行 Source 变更日志，
+不能把某一种接入方式的变化推定为全部旧 ID 失效的原因。
+
+### 对合并数据和后续模型的影响
+
+```{r}
+#| label: identifier-coverage
+profile <- read_receipt("version-audit/original-cohort-profile.json")
+missing <- profile$groups$original_not_found
+all_old <- profile$groups$all_journals
+coverage <- data.frame(旧记录属性 = c("有至少一个有效 ISSN", "没有有效 ISSN",
+  "旧库 works_count 大于零", "旧库 works_count 等于零"),
+  旧清单记录数 = c(all_old$any_valid_identifier, all_old$rows - all_old$any_valid_identifier,
+    all_old$positive_works_count, all_old$zero_works_count),
+  原404记录数 = c(missing$any_valid_identifier, missing$rows - missing$any_valid_identifier,
+    missing$positive_works_count, missing$zero_works_count), check.names = FALSE)
+coverage$各组原404比例 <- mapply(pct, coverage$原404记录数, coverage$旧清单记录数)
+kable(coverage)
+```
+
+旧 404 记录中有 **`r pct(missing$rows - missing$any_valid_identifier, missing$rows)`**
+没有有效历史 ISSN。这部分无法用本轮 ISSN 路径证明当前身份；旧库作品数大于零也不保证旧 ID
+如今可用。应保留原始行和缺失原因，不能把这些行的指标补成零，或把缺少商业索引匹配当作“未收录”。
+没有 ISSN 的旧记录发生 404 的比例更高，但这个差异只是缺失分布，不证明 OpenAlex 因缺少 ISSN 删除了它们。
+
+当前最稳妥的合并形式是三张 CSV：旧 ID 的逐行状态表、ISSN 查询表、旧 ID—ISSN—当前候选 ID
+的对应表。先保留一对多和多对一关系；核验后再按当前 ID 去重形成新的分析表。
+模型如果使用当前 Source 指标，应保留 `original_id`、`resolved_id`、获取时间和身份判断，
+并核验标签与指标的年份。用旧母体配当前属性的结果仍代表“旧清单可追踪的来源”，
+不能称为“最新全部期刊”。
+
+```{r}
+#| label: full-candidate-csv
+candidate_manifest <- read_receipt("candidate-csv/manifest.json")
+stopifnot(candidate_manifest$status == "complete",
+          isTRUE(candidate_manifest$verification$passed),
+          isTRUE(candidate_manifest$verification$all_source_fields_roundtrip_equal))
+kable(data.frame(补查完整属性CSV = c("当前 ID 去重后的行数", "总列数", "字节数",
+  "成功响应观察数", "按当前 ID 合并的重复观察数", "全部字段及类型还原检查"),
+  结果 = c(candidate_manifest$csv$rows, candidate_manifest$csv$columns,
+    candidate_manifest$csv$bytes, candidate_manifest$successful_observations,
+    candidate_manifest$observations_deduplicated, "通过"), check.names = FALSE))
+```
+
+此外，`candidate-csv/sources.csv` 保存补查成功对象的**完整属性**，按当前 Source ID 一行。
+一个当前 ID 有多个成功响应时，选实际获取时间最新的响应，全部观察仍保留在来源清单中。
+四个采集列之后是完整 Source 字段并集；空值、未返回字段和数组沿用原 CSV 的可恢复编码。
+这张表可与身份对应表一起审阅；生成它没有自动把旧 ID 合并进已通过的数据。
+CSV 覆盖 ISSN 候选和成功的历史合并目标，因此比 ISSN 候选集合多
+**`r candidate_manifest$csv$rows - nrow(candidate_types)` 个对象**。
+
+## 复现与结果文件
+
+数据获取由 [重试脚本](https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/analysis/retry_source_metadata.py)执行，版本数量与旧清单属性由
+[版本核验脚本](https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/analysis/audit_source_versions.py)核验；本报告的表格由上方 R 代码读取回执后计算。
+API 会继续变化，重新获取要使用新的命名产物目录。
+以下命令分别展示新取数入口和用本轮保存证据重新渲染的入口。历史映射是另外保存的带日期
+证据：重试脚本只在运行目录已有 `official-merge-map.csv` 时补查其目标。
+版本脚本的 `--accepted-csv-only`、`--issn-peers-only` 与可重复的
+`--historical-example-id` 分别复核完整已交付 CSV、旧号码共享关系与指定旧记录；这些本地模式互斥。
+本报告使用的完整目录还包括已保存的 BigQuery 查询回执和官方证据，不能仅用新取数目录替代。
+
+```sh
+python3 research/openalex-journal-baseline/analysis/retry_source_metadata.py \
+  --original research/openalex-journal-baseline/artifacts/source-api-2026-09-30 \
+  --baseline research/openalex-journal-baseline/artifacts/journal-export-2026-01/openalex-journals-2026-01.csv \
+  --output research/openalex-journal-baseline/artifacts/source-retry-new-run \
+  --workers 48 --requests-per-second 20
+
+python3 research/openalex-journal-baseline/analysis/audit_source_versions.py \
+  --export research/openalex-journal-baseline/artifacts/journal-export-2026-01/openalex-journals-2026-01.csv \
+  --original-run research/openalex-journal-baseline/artifacts/source-api-2026-09-30 \
+  --output research/openalex-journal-baseline/artifacts/source-version-new-run
+
+python3 research/openalex-journal-baseline/analysis/export_source_retry_candidates.py \
+  --run research/openalex-journal-baseline/artifacts/source-retry-2026-10-01
+
+quarto render research/openalex-journal-baseline/analysis/source-retry-report.qmd \
+  --output-dir ../artifacts/source-retry-2026-10-01/report
+```
+
+重试脚本在同一目录支持读取经过身份和哈希核验的检查点；传入不同原始数据会拒绝续跑。
+官方历史合并文件、BigQuery 只读查询和 API 计数的本轮证据保存在
+`official-docs/` 与 `version-audit/`；后者的 SQL、dry-run 和查询结果回执可重跑核验。
+下面文件均位于本地 `artifacts/source-retry-2026-10-01/`：
+
+| 文件 | 用途 |
+|---|---|
+| `source-retry-status.csv` | 每个旧 ID 固定一行，两轮状态与 ISSN 判断 |
+| `issn-lookups.csv` | 每个去重 ISSN 的查询结果、对象路径和哈希 |
+| `old-source-candidates.csv` | 保留全部旧 ID—ISSN—候选 ID 对应关系 |
+| `official-merge-map.csv`、`official-merge-targets.csv` | 历史映射与目标 ID 的当前实测 |
+| `recovered/`、`issn-candidates/`、`merge-candidates/` | 实际成功返回的完整 Source JSON |
+| `candidate-csv/sources.csv` | 按当前 ID 去重的完整属性 CSV，保留所选响应的获取时间 |
+| `candidate-csv/selection-provenance.json` | 同一当前 ID 的全部成功观察和最终选择依据 |
+| `checkpoints/`、`summary.json` | 请求证据与完整读回、哈希和行顺序检查 |
+| `report/source-retry-report.html` | 本次实际 R 渲染的可读报告 |

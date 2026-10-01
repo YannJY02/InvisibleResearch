@@ -2,20 +2,26 @@
 
 This owner builds an **Exploratory Analysis** of all journal-type OpenAlex
 Sources. It is independent of the PKP/OJS starting cohort. The active input is
-the user-selected January 2026 US dataset in `multiobs`; this remains Exploratory Analysis, not Paper Analysis.
+the user-selected January 2026 US dataset in `multiobs`. On October 1 the user
+also authorized an independently enumerated current API journal version for
+supervisor comparison. Both remain Exploratory Analysis, not Paper Analysis.
 
 - [Current BigQuery journal export](journal-export.md): merged CSV, missingness,
   connection verification, delivery evidence and the coming week's tasks.
 - [Complete Source JSON and CSV delivery](source-api-csv.md): September 30
   acquisition for the existing journal ID cohort, reversible CSV, batch resume,
   full readback and compressed delivery; PostgreSQL is outside this run.
+- [Two complete journal routes](dual-route-delivery.md): the user-authorized
+  fixed BigQuery and current API versions, complete Source attributes, all-Works
+  language proportions, pinned Scopus matches and separate delivery artifacts.
 - [Source 404 retry and version report](analysis/source-retry-report.qmd): October 1
   full retries, historical ISSN candidates, dated official merge evidence and
   a live API/BigQuery census; R tables distinguish identity uncertainty from request errors.
 - [OpenAlex acquisition and cost assessment](direct-acquisition.md): October 1
   API and snapshot probes, an actual BigQuery language dry run, a stratified
   historical ISSN trial and the available public Scopus list. The revised proposal
-  reuses the fixed cohort and API evidence; full aggregation and modelling remain unexecuted.
+  reuses the fixed cohort and API evidence. The later authorized full aggregation
+  and two-version delivery are recorded separately; modelling remains unexecuted.
 - [Journal field recovery brief](field-recovery.md): September 29 official-method
   comparison, required recalculations, six additional tables and attributes
   requiring raw JSON/API; no full recalculation or replacement upload yet.

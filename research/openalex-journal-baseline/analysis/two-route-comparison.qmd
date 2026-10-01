@@ -1,0 +1,334 @@
+---
+title: "两套 OpenAlex 期刊数据：供导师选择"
+subtitle: "完整 Source 属性、全量论文语言占比与同版 Scopus 匹配 · 2026-10-01"
+lang: zh-CN
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "查看实际执行的 R 代码"
+    code-copy: true
+    embed-resources: true
+    include-in-header:
+      text: |
+        <style>
+        table { width: 100%; }
+        th, td { overflow-wrap: anywhere; vertical-align: top; }
+        td pre { white-space: pre-wrap; max-height: 30rem; overflow-y: auto; }
+        .field-table { font-size: .82rem; }
+        </style>
+execute:
+  echo: true
+  message: false
+  warning: false
+  error: false
+  cache: false
+params:
+  delivery_dir: "../artifacts/two-route-delivery-2026-10-01"
+  scopus_dir: "../artifacts/two-route-scopus-2026-10-01"
+---
+
+```{r}
+#| label: verified-inputs
+library(jsonlite)
+library(knitr)
+root <- normalizePath(params$delivery_dir, mustWork = TRUE)
+scopus_root <- normalizePath(params$scopus_dir, mustWork = TRUE)
+art <- dirname(root)
+read <- function(path) read_json(path, simplifyVector = FALSE)
+a <- read(file.path(root, "route-a-bigquery/summary.json"))
+b <- read(file.path(root, "route-b-api/summary.json"))
+sa <- read(file.path(scopus_root, "route-a-journals-scopus.csv.gz.summary.json"))
+sb <- read(file.path(scopus_root, "route-b-journals-scopus.csv.gz.summary.json"))
+la <- read(file.path(art, "two-route-bigquery-language-2026-10-01/summary.json"))
+lb <- read(file.path(art, "two-route-current-api-2026-10-01/reconciliation.json"))
+budget <- read(file.path(art, "two-route-current-api-2026-10-01/budget-after.json"))
+api_receipts <- read(file.path(art, "two-route-current-api-2026-10-01/raw-responses-manifest.json"))
+ea <- read(file.path(root, "route-a-bigquery/example-journal-of-communication.json"))
+eb <- read(file.path(root, "route-b-api/example-journal-of-communication.json"))
+stopifnot(a$status == "complete", b$status == "complete",
+          isTRUE(a$verification$passed), isTRUE(b$verification$passed),
+          sa$rows == a$rows, sb$rows == b$rows,
+          lb$status == "complete", length(lb$per_source_denominator_mismatches) == 0,
+          ea$source$id == eb$source$id,
+          ea$provenance$route_row_id == "S107737141")
+fmt <- function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
+pct <- function(n, d) if (d == 0) "null" else sprintf("%.3f%%", 100 * n / d)
+count <- function(x, key) if (is.null(x[[key]])) 0 else x[[key]]
+table <- function(x, ...) knitr::kable(x, format = "html", row.names = FALSE, ...)
+```
+
+两套数据都各自保留一条期刊记录一行。A 保持原 BigQuery 母体，B 独立枚举当前 API
+期刊母体。此前的原始交付保持原样；下面比较的是本轮新增版本。
+
+## 1. 母体与完整属性
+
+**约定任务：**分别完成两条获取路线，保留全部期刊记录与实际取得的完整 Source 属性。
+
+```{r}
+#| label: cohort-results
+table(data.frame(
+  指标 = c("期刊行数", "完整当前属性列数", "同 ID／当前 API 期刊", "ISSN 补充候选行",
+           "缺少当前 API 对象", "共享同一当前身份的旧行", "每套 CSV 列数（含 Scopus）"),
+  A_BigQuery = c(fmt(a$rows), length(a$source_fields),
+    fmt(count(a$source_identity_status_counts, "same_id")),
+    fmt(count(a$source_identity_status_counts, "issn_candidate_unconfirmed")),
+    fmt(a$api_missing_rows), fmt(a$rows_sharing_resolved_identity),
+    a$columns_before_scopus + length(read(file.path(root, "delivery-manifest.json"))$scopus_columns)),
+  B_API = c(fmt(b$rows), length(b$source_fields),
+    fmt(count(b$source_identity_status_counts, "current_api_journal")), "0",
+    fmt(b$api_missing_rows), fmt(b$rows_sharing_resolved_identity),
+    b$columns_before_scopus + length(read(file.path(root, "delivery-manifest.json"))$scopus_columns)),
+  check.names = FALSE))
+```
+
+A 保留原始 32 列，以 `historical_` 前缀区分。ISSN 找到的对象保留为补充候选，
+不能仅凭共享号码就认定旧 ID 已经合并或改名。多个旧行共享当前对象时，原始行仍分别
+保留，老师选择分析母体时能看到重复身份的影响。无法取得当前对象的记录仍有历史数据和
+语言统计；缺少 API 属性不是数值 0。
+
+B 不以旧 ISSN 或 ID 清单为入口，无号码的期刊也被保留。API 全量分页覆盖核验包括
+ID 唯一性、全部记录为 journal，以及下载前后总数一致。获取跨越一个时间区间，
+并不构成事务快照。两套完整数组均保留在 JSON 单元格及原始对象文件中。
+
+## 2. 期刊内全部论文的语言占比
+
+**约定任务：**附上各刊全部可用 Works 的语言计数与占比，以较低成本实现，不抽样。
+
+```{r}
+#| label: language-results
+#| results: asis
+table(data.frame(
+  指标 = c("有 Works 的期刊", "无 Works 的期刊", "全部去重 Works", "未知语言 Works", "未知语言占全部 Works"),
+  A_BigQuery = c(fmt(a$journals_with_works), fmt(a$journals_without_works),
+    fmt(a$language_works_total), fmt(a$unknown_language_works),
+    pct(a$unknown_language_works, a$language_works_total)),
+  B_API = c(fmt(b$journals_with_works), fmt(b$journals_without_works),
+    fmt(b$language_works_total), fmt(b$unknown_language_works),
+    pct(b$unknown_language_works, b$language_works_total)), check.names = FALSE))
+case <- function(example) {
+  counts <- unlist(example$language$language_counts_json)
+  data.frame(语言 = names(counts), 论文数 = as.numeric(counts),
+             占全部论文 = vapply(counts, pct, character(1), d = example$language$language_works_count),
+             check.names = FALSE)
+}
+cat("\n\n同一期刊案例：**Journal of Communication，S107737141**。\n\n")
+cat("A：\n\n"); print(table(case(ea)))
+cat("\n\nB：\n\n"); print(table(case(eb)))
+```
+
+占比的分母包括未知语言，各语言与未知项合计为 100%。另附仅已知语言的占比，供后续
+分析明确选择。没有 Works 时，比例为 null，不能解释成“全部语言占比为 0”。
+大小写变体统一为小写，其他原始代码不被强行转换为标准语言；原始代码在取数回执中保留。
+
+A 的 SQL 先在全库按 Work ID 去重，再按原始 primary Source ID 聚合。重复 ID 的
+Source、语言与 XPAC 属性经过一致性检查；不一致会阻止交付。全库存在一组缺失 Work ID，
+已核验其不属于期刊母体，不计入有效全球唯一 ID。
+B 按语言与 primary Source 分组，另外用全部当前期刊 ID、取消 Source type 筛选独立
+取得每刊 Works 总数核对；语言之和与该刊总数全部一致才交付。发现不一致时，以该刊 ID
+重新取得完整语言分组，不沿用可能过时的论文内 Source 类型。两套均使用全部可用年份、
+全部类型，包含 XPAC。它们统计的是各自版本
+中的主要发表归属，不把同篇论文的全部 locations 都作为期刊归属。
+
+```{r}
+#| label: current-universe-boundary
+table(data.frame(
+  API范围 = c("按论文内 journal 类型分组的 Works", "当前期刊 ID 母体内 Works", "母体外已 404 的 Source／Works", "ID 独立分母不一致期刊"),
+  结果 = c(fmt(lb$all_works), fmt(lb$in_universe_works),
+    paste0(lb$orphan_sources, " 个 Source；", fmt(lb$orphan_works), " Works"),
+    length(lb$id_only_denominator_mismatches)), check.names = FALSE))
+```
+
+API 分组中的少量旧 Source 已返回 404，因此不属于当前期刊母体。它们的语言计数与
+全部查询回执另存，未隐去或混入当前行；当前母体内每刊全部 Works 均通过无类型筛选的
+ID 核验。若接口的语言信息本身缺失，仍保留未知计数。
+
+## 3. 同一 Scopus 名录的匹配
+
+**约定任务：**使用老师提供的公开 Scopus 数据，分别匹配两套期刊母体并保留不确定项。
+
+```{r}
+#| label: scopus-results
+keys <- c("1", "0", "unknown")
+table(data.frame(
+  结果 = c("这版名录唯一收录", "有效号码但未在这版收录表中找到", "无号码／多身份／身份未明"),
+  A_BigQuery = vapply(keys, function(k) fmt(count(sa$membership_counts, k)), character(1)),
+  B_API = vapply(keys, function(k) fmt(count(sb$membership_counts, k)), character(1)),
+  check.names = FALSE))
+table(data.frame(
+  Active_Journal结果 = c("唯一明确 Active Journal", "未列出／Inactive／明确非 Journal", "身份或状态不明"),
+  A_BigQuery = vapply(keys, function(k) fmt(count(sa$active_journal_counts, k)), character(1)),
+  B_API = vapply(keys, function(k) fmt(count(sb$active_journal_counts, k)), character(1)),
+  check.names = FALSE))
+stopifnot(sum(unlist(sa$membership_counts)) == a$rows,
+          sum(unlist(sb$membership_counts)) == b$rows)
+table(data.frame(
+  指标 = "被多条期刊记录使用的 Scopus Source ID 数",
+  A_BigQuery = sa$scopus_source_ids_used_by_multiple_cohort_rows,
+  B_API = sb$scopus_source_ids_used_by_multiple_cohort_rows, check.names = FALSE))
+```
+
+两套使用同一 August 2026 工作簿及同一匹配器。以有效 ISSN／ISSN-L 精确交集产生候选，
+保留全部候选 Source ID、收录状态、coverage 和 title history。A 的未确认补充候选仅用
+历史与当前共享的号码，不能借用无关的当前号码。待收录表另列，未被当作已经收录。
+
+这里的 0 仅表示这版参考表中的未匹配或明确定义的非 Active Journal，不能解释为“从未
+被 Scopus 收录”。未知和多身份保持空值；名录语言没有混入 OpenAlex 语言特征。
+最终模型采用“名录收录”还是“Active Journal”仍需研究定义，两列及证据均已交付。
+
+参考来源：[老师在项目讨论中提供的链接](https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839)，
+[Elsevier 官方 Scopus content 页面](https://www.elsevier.com/products/scopus/content)。
+
+## 4. 同一期刊的完整 Source 字段对照
+
+**约定任务：**让老师看到两套均保留完整属性，以及同一案例中的值与获取时间。
+
+```{r}
+#| label: version-and-retrieval-time
+table(data.frame(
+  内容 = c("Works 来源", "该案例 Source 获取时间（UTC）", "全套 API 获取区间（UTC）"),
+  A_BigQuery = c(la$source, ea$provenance$source_fetched_at, "Source 为 9 月 30 日原交付与 10 月 1 日 ISSN 候选补查"),
+  B_API = c("本轮 API corpus=all；全部当前 Source ID", eb$provenance$source_fetched_at,
+            paste0(api_receipts$acquisition_started_at, " 至 ", api_receipts$acquisition_completed_at)),
+  check.names = FALSE))
+```
+
+BigQuery 数据集名称含 2026_01，但尚不能据此认定它是 1 月 1 日的事务快照。
+获取时间与 `updated_date` 不同：前者是我们取到记录的时间，后者是 OpenAlex 更新该记录的时间。
+
+```{r}
+#| label: source-field-comparison
+#| results: asis
+flatten <- function(value, prefix = "") {
+  out <- list()
+  for (key in names(value)) {
+    path <- paste0(prefix, key); child <- value[[key]]
+    if (is.list(child) && length(child) > 0 && !is.null(names(child))) {
+      out <- c(out, flatten(child, paste0(path, ".")))
+    } else out[path] <- list(child)
+  }
+  out
+}
+escape <- function(x) {
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;", x, fixed = TRUE)
+  gsub(">", "&gt;", x, fixed = TRUE)
+}
+value <- function(x, exists = TRUE) {
+  if (!exists) return("未返回")
+  if (is.null(x)) return("null")
+  rendered <- escape(as.character(toJSON(x, auto_unbox = TRUE, null = "null", pretty = TRUE)))
+  if (is.list(x)) return(paste0("<details><summary>", length(x),
+    " 项：展开完整内容</summary><pre>", rendered, "</pre></details>"))
+  rendered
+}
+descriptions <- c(
+  alternate_titles="其他刊名", apc_prices="各币种 APC 列表", apc_usd="美元 APC",
+  apc_usd_by_year="按年 APC 列表", cited_by_count="被引用次数", country_code="国家代码",
+  counts_by_year="按年发表与引用列表", created_date="记录建立日期", display_name="刊名",
+  first_publication_year="首个发表年份", homepage_url="主页", host_organization="主办组织 ID",
+  host_organization_lineage="主办组织层级", host_organization_name="主办组织名称", id="Source ID",
+  ids.issn="标识信息里的 ISSN", ids.issn_l="标识信息里的 ISSN-L", ids.mag="历史 MAG ID",
+  ids.openalex="OpenAlex ID", ids.wikidata="Wikidata ID", is_core="OpenAlex core 标记",
+  is_high_oa_rate="高 OA 比例标记", is_high_oa_rate_since_year="高 OA 比例起始年份",
+  is_in_doaj="DOAJ 标记", is_in_doaj_since_year="DOAJ 起始年份", is_in_scielo="SciELO 标记",
+  is_oa="OA 标记", is_ojs="OJS 标记", is_preprint_repository="预印本仓储标记", issn="全部 ISSN",
+  issn_l="ISSN-L", last_publication_year="末个发表年份", listed_in="API 所列名录",
+  oa_flip_year="转为 OA 的年份", oa_works_count="OA Works 数", societies="关联学会列表",
+  summary_stats.2yr_mean_citedness="API 两年平均引用指标", summary_stats.h_index="API h-index",
+  summary_stats.i10_index="API i10-index", topic_share="API 所列主题比例列表", topics="API 所列主题列表",
+  type="Source 类型", updated_date="记录更新日期", works_api_url="Works API 地址", works_count="API Source Works 数")
+fa <- flatten(ea$source); fb <- flatten(eb$source)
+fields <- sort(union(names(fa), names(fb)))
+stopifnot(setequal(fields, unlist(a$source_fields)), setequal(fields, unlist(b$source_fields)))
+compared <- data.frame(
+  A字段与说明 = paste0(fields, " · ", descriptions[fields]),
+  A案例值 = vapply(fields, function(k) value(fa[[k]], k %in% names(fa)), character(1)),
+  B字段与说明 = paste0(fields, " · ", descriptions[fields]),
+  B案例值 = vapply(fields, function(k) value(fb[[k]], k %in% names(fb)), character(1)),
+  check.names = FALSE)
+cat("<div class='field-table'>\n", table(compared, escape = FALSE), "\n</div>\n")
+```
+
+Source 共同信息包括期刊身份、主办组织、OA／APC、发表与引用指标及 API 所列主题。
+两套都保留全部返回字段与完整列表，不因 CSV 只有一行就截断列表。
+`topics`／`topic_share` 是 API 的有限主题列表，并不等于全体论文的完整主题分布。
+Source 的 `works_count` 和本轮语言分母分别保留；A 的版本日期不同，不能要求它们相等。
+
+<details>
+<summary>展开列表条目的全部子字段路径与同一案例值</summary>
+
+```{r}
+#| label: array-subfields
+#| results: asis
+# Lists use one observed item for each path; the full arrays remain in the table above.
+children <- function(x, prefix = "") {
+  out <- list()
+  walk <- function(child, path, in_array = FALSE) {
+    if (is.list(child) && length(child) > 0 && !is.null(names(child))) {
+      for (key in names(child)) walk(child[[key]], paste0(path, if (nzchar(path)) "." else "", key), in_array)
+    } else if (is.list(child) && length(child) > 0) {
+      for (item in child) walk(item, paste0(path, "[]"), TRUE)
+    } else if (in_array && is.null(out[[path]])) {
+      out[path] <<- list(list(value = child))
+    }
+  }
+  walk(x, prefix)
+  out
+}
+ca <- children(ea$source); cb <- children(eb$source)
+subfields <- sort(union(names(ca), names(cb)))
+parent <- sub("\\[\\].*$", "", subfields)
+table_values <- data.frame(
+  A子字段与说明 = paste0(subfields, " · ", descriptions[parent], "里的条目属性"),
+  A案例值 = vapply(subfields, function(k) value(ca[[k]]$value, k %in% names(ca)), character(1)),
+  B子字段与说明 = paste0(subfields, " · ", descriptions[parent], "里的条目属性"),
+  B案例值 = vapply(subfields, function(k) value(cb[[k]]$value, k %in% names(cb)), character(1)),
+  check.names = FALSE)
+cat(table(table_values, escape = FALSE))
+```
+
+`[]` 表示列表条目，展示各路径首次实际出现的值；完整重复值在上表对应字段中展开。
+空列表或 null 没有可展示的子字段，不补造案例。这些说明是人工解释，案例值来自完整 JSON。
+
+</details>
+
+## 5. 成本与可交付文件
+
+**约定任务：**保留两套独立产物与说明，让老师能直接比较、选择。
+
+```{r}
+#| label: costs-and-files
+table(data.frame(
+  项目 = c("A BigQuery 语言扫描", "B API 取数", "下载完整 Works 快照"),
+  实际记录 = c(paste0(fmt(as.numeric(la$bytes_processed)), " bytes；计费 bytes ", fmt(as.numeric(la$bytes_billed))),
+    paste0("保存的响应计费单位 USD", api_receipts$saved_response_cost_usd,
+           "；账户当日免费用量 USD", budget$daily_used_usd), "未下载；使用云端聚合"),
+  费用说明 = c(sprintf("按 USD6.25/TiB 约 USD%.5f，未扣月度免费额度", as.numeric(la$bytes_billed)/1024^4*6.25),
+    paste0("没有购买额度；当日免费余额 USD", budget$daily_remaining_usd),
+    "避免六百多 GB 的 Works 本地下载"), check.names = FALSE))
+manifest <- read(file.path(root, "delivery-manifest.json"))
+files <- do.call(rbind, lapply(manifest$files, function(x) data.frame(
+  文件 = paste0("<a href=\"../", x$relative_path, "\">", x$name, "</a>"), 用途 = x$purpose, 大小MB = round(x$bytes/1e6, 2), SHA256 = x$sha256,
+  check.names = FALSE)))
+table(files, escape = FALSE)
+```
+
+每套交付最终 journal CSV、完整 Source JSONL、字段说明和校验清单。CSV 中 `\M` 是未返回
+属性，`\N` 是真正的 JSON null，数组与语言分布是完整 JSON；Scopus 未确定标签用空值。
+所有 Source 字段经过逐行反解核对，语言计数与比例经过分母核验，Scopus 匹配后原列与行顺序
+经过全量读回。报告由本 QMD 的 R 代码实际执行，数值直接来自这些完成回执。
+
+用户要求先检查再上传，后续远端交付已停止。A 的新 CSV、Source JSONL 在叫停前已完成
+原授权目录的上传与全字节校验；B、字段说明、清单和本报告保持本地，待用户检查。
+
+选择 A 能保持与老师最初约定的 BigQuery 母体一致，但需处理历史／当前属性的版本差异和
+旧 ID 候选。选择 B 更直接对应当前 API 的期刊范围，其语言与属性均来自本轮 API，
+但当前母体与旧版不同。两套完整保存，让最终研究母体的决定与取数执行分别可审查。
+
+这些是数据交付版本，还没有拟合模型。若研究目标涉及过去时点的首次收录预测，需要先
+确定特征截止日期，避免把收录后的当前指标当作收录前特征。
+
+具体方法、重跑入口与交付证据见 [两套路线记录](https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dual-route-delivery.md)。

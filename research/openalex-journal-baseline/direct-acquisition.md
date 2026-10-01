@@ -1,24 +1,32 @@
 # 不依赖旧 ISSN／ID 的 OpenAlex 获取方案
 
-日期：2026-10-01。性质：获取方案建议与有限范围实测；尚未更换已接受的研究母体，
-没有启动全量新下载或模型分析。
+日期：2026-10-01，追加 BigQuery 扫描成本与分层 ISSN 实测后修订。
+性质：获取方案建议与有限范围实测；尚未更换已接受的研究母体，
+没有启动全量新下载、全量语言聚合或模型分析。
 
 **约定任务：**比较 BigQuery 合并、旧 ISSN／ID 补取和直接 OpenAlex 获取，
 推荐能服务期刊 Scopus 收录预测的可执行路线，并核验接口、字段、成本与资源限制。
 
 ## 建议及研究范围
 
-建议以 **当前 Source API 直接列举的 journal 为新母体，保存完整响应，再从 Works API
-取得所需汇总，最后连接有版本的 Scopus 名录**。旧 BigQuery 清单用于历史对照，
-不作为新母体的入场条件。这里是一条 OpenAlex Source ID 一行，不声称覆盖全球实际所有期刊。
-本建议以当前横截面探索为目标；严格同一发布日期的 Sources／Works 分析应改用同一官方快照。
+考虑用户追加的语言聚合、成本及现有数据复用要求，建议改为 **已有 BigQuery 期刊母体与
+Works 云端聚合为主，复用已取得的 Source API 属性，用 ISSN 补查 ID 失败项，再匹配
+导师提供的公开 Scopus 名录**。不重新下载全 Works，也不以“必须有 ISSN”缩小母体。
+本建议面向当前横截面探索；这里是一条 OpenAlex Source ID 一行，不声称覆盖全球实际所有期刊。
+
+BigQuery 派生统计保留历史 Source ID 和数据版本，API 属性保留当前 ID 与获取日期，
+二者不能称为同版。优先在已有 BigQuery 数据范围内定义主分析的时间窗、语言和主题指标；
+当前 API 属性作为有明确日期的补充数据。它们能否共同进入最终模型仍取决于目标标签和
+时间口径，未来首次收录预测不能直接使用收录后的当前属性。严格同版且需要完整 API 对象
+结构时，应换用同一官方 Sources／Works 快照或核验可用的同版 BigQuery 数据，而非只换匹配键。
 
 | 路线 | 适用性与选择理由 |
 |---|---|
 | 固定 BigQuery 版本内合并、重算 | 适合研究那个历史版本；需核验建库来源与聚合定义。单一历史版本本身不是错误，但不能声称等于当前 API |
-| 旧 ISSN／ISSN-L 请求当前 API | 适合身份补查；历史号码缺失或对应变化使它不适合发现当前全集 |
-| 旧 Source ID 请求当前 API | 适合固定旧母体的纵向审计；成功子集遗漏当前清单新增或旧表没有的身份，并保留大量 404 |
-| **当前 Source API 直接列举** | **推荐用于本轮当前期刊母体与探索**；无旧清单匹配前置条件，接口已实际成功；仍需分页核验和保存版本 |
+| 旧 ISSN／ISSN-L 请求当前 API | 适合补查失败项；全母体有 70,349 条无有效号码，不能用这条路线替代所有 ID 获取 |
+| 旧 Source ID 请求当前 API | 已取得 184,302 对象，宜复用；25,497 个失败项需另留状态／候选，不能只分析成功子集 |
+| 当前 Source API 直接列举 | 适合改研究当前全期刊母体；Source 列举便宜，但旧 BigQuery Works 不自动变成该母体的同期论文数据 |
+| **BigQuery 聚合＋已有 API＋ISSN 补查** | **本轮推荐**；减少下载与重复请求，保留无号码记录，显式记录历史／实时版本及候选身份 |
 | 同一官方快照的 Sources＋Works | 严格同版研究的较佳路线；资源需求与实时性不同，本机不能直接存放完整 Works |
 
 研究用途依据[模型用途与合并规则](model-data-structure.md)：预测期刊 Scopus visibility，
@@ -122,3 +130,122 @@ API 的记录持续更新：同一个服务并不提供整个游标遍历的事�
 官方 [CLI](https://help.openalex.org/access/cli/)目前主要提供 Works 元数据和内容下载；
 不应把安装它等同于已经具备全 Source 获取或研究特征表。公开代码有助于核对字段计算，
 重新运行整个 OpenAlex 建库项目不是本任务最短路径。
+
+## 追加：BigQuery 与 ISSN 的成本比较
+
+**约定任务：**先估算成本，再用旧 BigQuery ISSN 小试；同时核对公开 Scopus 名录，
+重新比较哪条路线最适合现有期刊研究。
+
+### BigQuery 语言聚合的实际扫描估算
+
+本轮重新读取的 `multiobs.publicdb_openalex_2026_01_rm.works` 有 `id`、
+`primary_source_id`、`language`、`publication_year`、`is_xpac` 等所需列，
+527,656,513 行，整张表逻辑大小 166,480,820,797 bytes；没有分区或聚簇。
+整张表大小、官方全库压缩包大小和实际查询扫描量是不同数量。
+
+以下 SQL 已实际 dry run，未执行聚合。2020–2024 和排除 XPAC 是成本示例，
+不是已接受的研究窗口；`COUNT(DISTINCT id)` 避免同组重复 work 行，跨组的身份／语言
+冲突仍须另外核验，空字符串与 null 在正式管线中应明确规范。
+
+```sql
+SELECT w.primary_source_id AS source_id, w.language,
+       COUNT(DISTINCT w.id) AS n_works
+FROM `multiobs.publicdb_openalex_2026_01_rm.works` AS w
+JOIN `multiobs.publicdb_openalex_2026_01_rm.sources` AS s
+  ON w.primary_source_id = s.id
+WHERE s.type = 'journal'
+  AND w.publication_year BETWEEN 2020 AND 2024
+  AND COALESCE(w.is_xpac, FALSE) = FALSE
+GROUP BY source_id, w.language
+```
+
+dry run 精确估计 **14,112,759,264 bytes = 13.14 GiB**。按美国区
+[按需查询每 TiB 6.25 美元](https://cloud.google.com/bigquery/pricing?authuser=1)
+计算，约 **0.0802 美元**，未扣每月免费额度，也未包括额外审计、存储或其他查询。
+本次没有核验该计费账号本月额度余额，不能保证正式作业账单为零。
+这张非分区表即使仅筛一本期刊，也可能扫描同一批列，不能把 LIMIT／少量结果当作低扫描量。
+
+现有 MCP 每个执行作业上限 512 MiB，低于本查询估算，因此本轮只进行了 dry run。
+正式聚合应通过有明确扫描上限的专用导出流程执行，不能把 dry run 成功说成已取得语言表。
+只下载聚合后的期刊×语言表，不需把全 Works 搬到本机。
+SQL、原始 dry-run 配置／统计和价格换算在下述小试的同一产物目录。
+
+### ISSN 小试先估算、后执行
+
+[分层小试脚本](analysis/probe_historical_issns.py)读取已接受的旧 CSV，核对原哈希，
+固定随机种子 20261001，分三层各抽 100 条；分别查询每条记录的全部去重有效 ISSN／ISSN-L。
+无号码层只作离线覆盖检查，不发无效请求。旧 404 子集此前已做过号码补查，
+复用其经对象哈希验证的回执；本轮新增的是原 ID 成功层的 ISSN 对照，未全量重复查全部号码。
+
+```sh
+uv run --with requests python -B \
+  research/openalex-journal-baseline/analysis/probe_historical_issns.py \
+  --baseline research/openalex-journal-baseline/artifacts/journal-export-2026-01/openalex-journals-2026-01.csv \
+  --prior-retry research/openalex-journal-baseline/artifacts/source-retry-2026-10-01 \
+  --output research/openalex-journal-baseline/artifacts/issn-stratified-probe-new-run
+```
+
+此命令先离线保存 `plan.json`，不调用 API；查看计划后，以同一命令加 `--execute` 执行。
+本轮计划记录 276 个去重号码，124 个已有有效回执、152 个需新增单刊查询，
+最多为新增查询预留 456 次尝试。官方单刊查询免费，执行前 `/rate-limit` 也确认单刊费用为 0。
+实际执行为 152 次单刊请求，无重试；前后免费额度使用量均为 0.003 美元，没有购买额度。
+
+| 分层 | 旧母体记录数 | 小试实际结果 |
+|---|---:|---|
+| ID 成功且有有效 ISSN | 131,079 | 100 条均回到同一 Source ID |
+| ID 为 404 且有有效 ISSN | 8,371 | 100 条均得到不同当前 ID 候选，复用已验证回执 |
+| 无有效 ISSN | 70,349 | 100 条均无法走 ISSN 路线；未发请求 |
+
+276 个号码响应均为成功，查询号码均在返回对象的有效 ISSN 集合内。
+这是等额分层的接口与身份对照，不能把三组简单平均为全母体匹配率，
+也不能把号码候选自动认证成历史合并。既有全量 404 号码审计仍是该失败子集的覆盖证据。
+全部旧母体仅 **139,450／209,799 = 66.47%** 有有效 ISSN；
+无号码记录中仍有 **53,223** 条此前 ID 查询成功，所以只用 ISSN 会丢掉可获取的数据。
+
+全母体去重有效号码有 209,776 个。逐号码单刊查询费用为 0，但仍需网络和限速时间；
+若按此前 20 次／秒的设置，单是发起这些查询就约 2.9 小时，未含失败、退避及处理。
+以每批最多 100 号码的列表路线估算，基础约 2,098 批、0.2098 美元额度，
+还需考虑返回多页与复核；它并不会因此解决无号码覆盖或历史／当前属性日期差异。
+已成功下载的对象没有理由全量再查，优先复用。
+
+执行证据在 `artifacts/issn-stratified-probe-2026-10-01/`：`plan.json` 为事前计划，
+`summary.json` 保存分层结果与逐号码来源，`checkpoints/issn/` 是新增响应回执，
+`issn-candidates/` 是本轮实际对象；引用的旧回执保留原路径和获取日期。
+输入原文件与已接受数据包均未改写。
+
+### Scopus 公开名录的当前访问证据
+
+本轮读回[导师 GitHub #5 评论](https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839)，
+确认其提供的是[August 2026 公开 Source 名录](https://downloads.ctfassets.net/o78em1y1w4i4/7xtaTxNiNcWRTeZkV86eNy/69cf2d506c905dc299531fdc93049dbb/ext_list_Aug_2026.xlsx)。
+[Elsevier 官方入口](https://www.elsevier.com/products/scopus/content)当前仍指向同一文件。
+匿名 HEAD 返回 200、32-byte Range GET 返回 206，并核验 XLSX／ZIP 签名和 26,628,716 bytes
+总长度；ETag／Last-Modified 与本地 September 14 下载回执相同。
+本轮重新计算本地工作簿 SHA-256，与固定哈希一致：
+`11e81f686401c89fbef28de31d1880388bb7122f35c89e09db6e1848237e9afb`。
+不重复下载完整工作簿；它位于 `artifacts/scopus-2026-08/`。
+
+真实表头包括 ISSN、EISSN、Active or Inactive、Coverage、Source Type、title history 等。
+这个公开版本的名录匹配没有订阅／凭据阻碍；WoS 全名单与 Scopus 论文级订阅 API 是其他范围。
+主表有 49,009 个 Scopus ID，其中 Journal 45,393；Accepted Titles 属于待收录，不能当成已收录。
+应明确目标是“此版本名录出现”还是“Active Journal”，保留 Inactive、未知和歧义。
+有效标识符未出现在给定版本的名单，可以用于严格定义的名单成员目标，
+不能据此断言从未被 Scopus 收录。名录中的 `Article Language in Source` 仅覆盖其收录来源，
+不能拿来替代全母体语言特征，否则会产生与目标有关的缺失／信息泄漏。
+
+### 本轮选择的解释
+
+BigQuery 云端聚合的优势是把已有大表计算成小结果，费用与本地传输都可控；
+完整 API 属性已有大量缓存，ISSN 能补查身份变化。因此本轮优先复用这三项成果，
+不重复进行整套下载。号码是关联证据，不是版本修复工具。
+
+保留历史 Source ID → 当前候选 ID 的交叉表；多个旧 ID 指向同一候选时不能直接相加
+旧语言比例，候选身份、去重与合并规则需先审查。对应不了的期刊保留未知状态，
+不能静默删除或填 0。若最后选择当前 API 的全部期刊作为研究母体，则必须报告旧 Works
+对该新母体的覆盖缺口，或改用同期 Works；不能将“可用旧库连接”当作“当前全覆盖”。
+
+`same_id` 与 `different_id_candidate` 分别保留。后者的当前 Source 统计可能属于合并后的
+对象，不能直接填回一个旧 ID 的属性行。取数审计保留全部旧记录，不代表这些记录已是
+独立期刊观察；主分析应先固定身份裁决和可分析样本，候选对应另作审查／敏感性分析。
+共享当前 Source／Scopus 身份的记录还需按身份关系分组切分训练／测试集，避免相同
+属性或标签跨集泄漏。当前 API 属性如果晚于目标状态日期，也不能仅靠记录日期就消除
+预测泄漏；主分析优先使用时间口径合适的历史变量。

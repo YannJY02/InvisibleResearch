@@ -12,6 +12,10 @@ the user-selected January 2026 US dataset in `multiobs`; this remains Explorator
 - [Source 404 retry and version report](analysis/source-retry-report.qmd): October 1
   full retries, historical ISSN candidates, dated official merge evidence and
   a live API/BigQuery census; R tables distinguish identity uncertainty from request errors.
+- [Direct OpenAlex acquisition assessment](direct-acquisition.md): October 1
+  API and snapshot probes, a current journal cohort without historical identifiers,
+  Works aggregation options, research constraints and storage limits; a proposed route,
+  not a replacement of the accepted cohort or a completed new full download.
 - [Journal field recovery brief](field-recovery.md): September 29 official-method
   comparison, required recalculations, six additional tables and attributes
   requiring raw JSON/API; no full recalculation or replacement upload yet.

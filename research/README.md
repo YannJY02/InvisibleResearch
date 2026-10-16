@@ -14,6 +14,10 @@ analysis eligible for paper claims.
 | `ojs-journal-metadata` | How can PKP journal records be enriched without losing unmatched or ambiguous journals? |
 | `scimago-openalex-coverage` | Which SCImago Communication sources are represented in OpenAlex? |
 
+Teaching demonstrations are separate from empirical research:
+[feature engineering](feature-engineering-explainer/README.md) uses synthetic
+apartments to explain transformations interactively.
+
 Set `DATA_ROOT` to the external data directory before using an owner command.
 Regenerable owner outputs go under that owner's ignored `artifacts/` directory;
 large shared inputs and derived datasets remain outside Git under `DATA_ROOT`.

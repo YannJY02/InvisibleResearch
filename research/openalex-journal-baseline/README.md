@@ -2,9 +2,13 @@
 
 This owner builds an **Exploratory Analysis** of all journal-type OpenAlex
 Sources. It is independent of the PKP/OJS starting cohort. The active input is
-the user-selected January 2026 US dataset in `multiobs`. On October 1 the user
-also authorized an independently enumerated current API journal version for
-supervisor comparison. Both remain Exploratory Analysis, not Paper Analysis.
+the January 2026 US dataset in `multiobs` for the historical Route A work.
+On October 1 the user also authorized an independently enumerated API journal
+version for comparison. On October 16 the user selected that Route B for
+variable selection. Both remain Exploratory Analysis, not Paper Analysis.
+
+- [Route B variable-selection workbook](variable-selection.md): all 80 columns,
+  identical independent-review sheets, field explanations and observed missingness.
 
 - [Current BigQuery journal export](journal-export.md): merged CSV, missingness,
   connection verification, delivery evidence and the coming week's tasks.

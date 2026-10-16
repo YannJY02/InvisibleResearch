@@ -1,0 +1,81 @@
+field	group	meaning	review_note
+route	Collection	Dataset acquisition route.	Identifies the dataset, rather than a journal characteristic.
+route_row_id	Collection	Unique identifier of a delivered journal row.	Retain for row alignment and audit; assess identity memorization risk.
+source_id	Collection	Source ID used to acquire this row.	Identifier; do not interpret its numeric suffix as a quantity.
+resolved_id	Collection	Source ID of the returned API object.	Identifier; compare with source_id for identity checks.
+source_identity_status	Collection	Recorded identity-resolution status.	Collection metadata; do not confuse retrieval status with Scopus coverage.
+source_fetched_at	Collection	Timestamp of the Source API acquisition.	Collection time, not journal establishment or publication time.
+source_content_sha256	Collection	SHA-256 fingerprint of the acquired Source object.	Integrity evidence; the hash has no substantive numerical meaning.
+resolved_identity_row_count	Collection	Number of dataset rows sharing a resolved Source ID.	Identity diagnostic; consider duplicate-entity handling before model splitting.
+scopus_match_issn_json	Scopus matching	ISSNs actually used for Scopus matching.	Outcome-construction evidence; keep separate from predictor inputs.
+scopus_identifier_policy	Scopus matching	Rule used to select ISSNs for matching.	Outcome-construction metadata; keep separate from predictor inputs.
+language_basis	Language	Recorded acquisition and attribution basis of language counts.	Provenance; counts concern Works attributed by primary Source ID.
+language_source_id	Language	Source ID to which the language counts belong.	Join identifier; not a language characteristic.
+language_works_count	Language	Total Works counted in the language extraction.	Includes unknown language; may differ from Source works_count.
+language_known_works_count	Language	Works with a known language code.	Subset of language_works_count; related count fields are redundant.
+language_unknown_works_count	Language	Works with an unknown language code.	Missing-language count; zero is an observed count, not a missing value.
+language_unknown_share	Language	Unknown-language Works divided by all counted Works.	Null for no Works. Interpret as metadata coverage, not a language.
+language_counts_json	Language	Counts by language code, including __unknown__.	Nested distribution; representation remains undecided. Not declared journal language.
+language_proportions_json	Language	Language proportions using all counted Works as denominator.	Includes unknown language; empty when there are no Works.
+language_known_proportions_json	Language	Language proportions using only known-language Works.	Different denominator from language_proportions_json; empty if none are known.
+language_status	Language	Status of the language aggregation.	Distinguish no_works from a failed or missing extraction.
+alternate_titles	Source metadata	Alternative names recorded for the source.	Names may identify individual journals; not equivalent to subject categories.
+apc_prices	Source metadata	Listed article-processing charges in their recorded currencies.	Nested prices; list price is not the amount an author paid.
+apc_usd	Source metadata	Recorded article-processing charge expressed in USD.	Null does not mean free. Check price date and overlap with apc_prices.
+apc_usd_by_year	Source metadata	Recorded annual USD article-processing charges.	Nested time series; missing years do not mean a zero charge.
+cited_by_count	Source metadata	Total citations recorded for the source's Works.	Cumulative and time dependent; discuss observation date and journal age.
+country_code	Source metadata	Country code recorded for the source.	Does not establish author nationality, readership or publication language.
+counts_by_year	Source metadata	Annual work, OA-work and citation counts returned by OpenAlex.	Nested series; verify year meaning and coverage before deriving features.
+created_date	Source metadata	Date the Source record was added to OpenAlex.	Database entry date, not the journal's founding date.
+display_name	Source metadata	Recorded source title.	Can memorize journal identity; retain for interpretation and audit.
+first_publication_year	Source metadata	Earliest publication year recorded for the source.	Observed indexed history, not necessarily the journal's founding year.
+homepage_url	Source metadata	Recorded source homepage address.	Raw URL can identify a journal; do not assume it is a meaningful numeric input.
+host_organization	Source metadata	OpenAlex ID of the hosting organization.	Publisher or host identity; discuss category handling and unseen organizations.
+host_organization_lineage	Source metadata	Organization IDs in the recorded host hierarchy.	Nested hierarchy; avoid counting the same organization repeatedly.
+host_organization_name	Source metadata	Name of the hosting organization.	Overlaps with host_organization; names and IDs are alternative representations.
+id	Source metadata	Source object's OpenAlex identifier.	Identifier; overlaps with source_id, resolved_id and ids.openalex.
+ids.issn	Source metadata	ISSN list nested within the Source identifiers object.	Identifiers used in matching; compare with issn before treating as distinct information.
+ids.issn_l	Source metadata	Linking ISSN nested within the identifiers object.	Identifier; compare with issn_l and preserve leading zeros.
+ids.mag	Source metadata	Legacy Microsoft Academic Graph identifier.	Legacy identifier; numeric-looking text is not a measured journal attribute.
+ids.openalex	Source metadata	OpenAlex URL nested within the identifiers object.	Identifier; overlaps with id and collection IDs.
+ids.wikidata	Source metadata	Wikidata identifier or address.	External identifier; presence and raw identity are different candidate concepts.
+is_core	Source metadata	OpenAlex's CWTS Core source-list flag.	External-list membership proxy; inspect provenance and overlap with the target.
+is_high_oa_rate	Source metadata	OpenAlex flag for a high proportion of OA Works.	Threshold and time basis require care; overlaps with other OA information.
+is_high_oa_rate_since_year	Source metadata	Recorded year associated with the high-OA-rate flag.	Conditional year; null is not year zero and may be structurally inapplicable.
+is_in_doaj	Source metadata	OpenAlex DOAJ-membership flag.	External-list membership; discuss timing and relation to the Scopus outcome.
+is_in_doaj_since_year	Source metadata	Recorded year of DOAJ inclusion.	Conditional year; null is not year zero.
+is_in_scielo	Source metadata	OpenAlex SciELO-membership flag.	External-list membership; discuss timing and coverage.
+is_oa	Source metadata	OpenAlex flag identifying an open-access source.	Related to OA counts and high-OA-rate flag; examine redundancy and timing.
+is_ojs	Source metadata	OpenAlex flag for the Open Journal Systems platform.	Platform indicator; not a direct quality judgment.
+is_preprint_repository	Source metadata	OpenAlex flag identifying a preprint repository.	Check actual variation within this journal-selected cohort.
+issn	Source metadata	Source's recorded ISSN list.	Identifier list; preserve print/electronic variants and leading zeros.
+issn_l	Source metadata	Source's linking ISSN.	Identifier linking ISSN variants; not a numerical scale.
+last_publication_year	Source metadata	Latest publication year recorded for the source.	Does not prove a journal is active or discontinued.
+listed_in	Source metadata	IDs of external source lists containing this source.	Inspect individual list IDs for outcome proxies before any encoding.
+oa_flip_year	Source metadata	Recorded year of conversion to open access.	Conditional historical event; missing is not year zero.
+oa_works_count	Source metadata	Number of recorded open-access Works.	Overlaps with works_count and OA flags; any ratio needs a defined denominator.
+societies	Source metadata	Scholarly societies associated with the source.	Nested names and URLs; representation and coverage need discussion.
+summary_stats.2yr_mean_citedness	Source metadata	OpenAlex's two-year mean-citedness indicator.	Version-specific indicator; not automatically identical to a commercial impact factor.
+summary_stats.h_index	Source metadata	OpenAlex's source h-index.	Cumulative bibliometric indicator; depends on indexed output and citation history.
+summary_stats.i10_index	Source metadata	OpenAlex's source i10-index.	Bibliometric indicator related to citation counts; discuss redundancy.
+topic_share	Source metadata	Source's share of a topic's Works across all primary sources.	Separate top-25 list; IDs may differ from topics. Not a within-journal composition.
+topics	Source metadata	Returned topic IDs, names, counts and hierarchy links.	Up to 25 entries, not complete subject coverage. Level and encoding remain open; [] does not prove no subject.
+type	Source metadata	OpenAlex Source type.	B was selected as journal; inspect actual variation before considering a predictor.
+updated_date	Source metadata	Source record's last recorded update timestamp.	Database maintenance date, not a journal event.
+works_api_url	Source metadata	API address for Works associated with the source.	Convenience URL containing source identity; not substantive topic information.
+works_count	Source metadata	Total Works recorded on the Source object.	May differ from language_works_count because of acquisition time or counting basis.
+scopus_valid_issns_json	Scopus matching	Validated ISSNs retained by the matching procedure.	Matching evidence; keep separate from predictor inputs.
+scopus_invalid_issns_json	Scopus matching	ISSN strings rejected by validation.	Matching diagnostic; invalid identifiers do not establish non-inclusion.
+scopus_identifier_fields_json	Scopus matching	Field-level record of ISSN evidence used in matching.	Outcome-construction evidence; keep separate from predictor inputs.
+scopus_match_status	Scopus matching	Categorical result of the reference-list match.	Outcome-related status; not an eligible predictor of that same outcome.
+scopus_candidate_count	Scopus matching	Number of candidate Scopus source identities.	Matching diagnostic; multiple candidates require resolution, not automatic labeling.
+scopus_candidate_ids_json	Scopus matching	Candidate Scopus source IDs.	Outcome-related identities; keep separate from predictor inputs.
+scopus_matched_issns_json	Scopus matching	ISSNs supporting the candidate match.	Outcome-construction evidence; keep separate from predictor inputs.
+scopus_candidates_json	Scopus matching	Full candidate records retained by the matcher.	Contains target-related reference information; keep outside predictor inputs.
+scopus_source_types_json	Scopus matching	Reference source types among the matching candidates.	Reference-label evidence; not OpenAlex's source type.
+scopus_has_status_conflict	Scopus matching	Flag for inconsistent reference-status evidence.	Matching diagnostic; false is distinct from an unknown label.
+scopus_has_discontinued_evidence	Scopus matching	Flag for discontinued-status evidence in the reference.	Outcome-related status; not a general journal-closure determination.
+scopus_accepted_pending_json	Scopus matching	Evidence from the separate accepted/pending reference list.	Pending is distinct from included or absent; retain as audit evidence.
+scopus_membership_in_reference	Candidate outcome	Membership label for the pinned Scopus reference list.	1 unique included identity; 0 valid-ISSN non-match; blank unresolved. Outcome candidate, never a predictor.
+scopus_active_journal_in_reference	Candidate outcome	Active-Journal label under the pinned Scopus reference rules.	Blank is unresolved, not negative. Outcome candidate, never a predictor; choose the target separately.
+scopus_reference_version	Scopus matching	Version of the Scopus reference workbook used.	Label provenance; not a journal predictor. August 2026 reference is fixed.

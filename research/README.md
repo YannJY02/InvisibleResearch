@@ -9,6 +9,7 @@ analysis eligible for paper claims.
 | `article-metadata-conversion` | Can the ArticleInfo CSV be converted to Parquet without losing its useful schema? |
 | `author-name-sampling` | What author-field patterns need inspection before name processing? |
 | `dimensions-dataset-construction` | How can yearly Dimensions exports be merged and turned into analysis variables? |
+| [feature-selection-explainer](feature-selection-explainer/README.md) | How do Boruta selection and SHAP attribution differ? Interactive teaching examples only. |
 | `openalex-dataset-construction` | Can Communication works be acquired and converted without row or token loss? |
 | [openalex-journal-baseline](openalex-journal-baseline/README.md) | Can all journal-type Sources form a reproducible baseline for index matching? |
 | `ojs-journal-metadata` | How can PKP journal records be enriched without losing unmatched or ambiguous journals? |

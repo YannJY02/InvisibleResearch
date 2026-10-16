@@ -64,7 +64,8 @@
       "source": "Explicit user request in this task on 2026-09-14",
       "date_kind": "internal delivery target before confirmed meeting",
       "sources": [
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md"
       ]
     },
     {
@@ -153,7 +154,8 @@
         "https://github.com/YannJY02/InvisibleResearch/blob/main/docs/issues/2026-10-16-mattermost-scopus-feature-intake.md",
         "https://mattermost.invisible.info/invisible-information-lab/pl/z67wpb94rbydmfa3p6s7ok6h4c",
         "https://mattermost.invisible.info/invisible-information-lab/pl/tq5riqta3bycmj5qyz6npshybo",
-        "https://mattermost.invisible.info/invisible-information-lab/pl/igdmx5r44fgj7yjh4gd86g43jw"
+        "https://mattermost.invisible.info/invisible-information-lab/pl/igdmx5r44fgj7yjh4gd86g43jw",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md"
       ],
       "depends_on": [],
       "planned_start": "2026-09-15",
@@ -170,7 +172,8 @@
         "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/docs/issues/2026-10-16-mattermost-scopus-feature-intake.md",
-        "https://mattermost.invisible.info/invisible-information-lab/pl/mhrjp6538jnpmf4e1ygi4x1ouw"
+        "https://mattermost.invisible.info/invisible-information-lab/pl/mhrjp6538jnpmf4e1ygi4x1ouw",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md"
       ],
       "depends_on": [
         "openalex-snapshot"
@@ -190,7 +193,8 @@
         "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/docs/issues/2026-10-16-mattermost-scopus-feature-intake.md",
-        "https://mattermost.invisible.info/invisible-information-lab/pl/9mqymr3jxfbh8pji9zk1ucnd9c"
+        "https://mattermost.invisible.info/invisible-information-lab/pl/9mqymr3jxfbh8pji9zk1ucnd9c",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md"
       ],
       "depends_on": [
         "openalex-export"
@@ -211,7 +215,8 @@
         "https://mattermost.invisible.info/invisible-information-lab/pl/9mqymr3jxfbh8pji9zk1ucnd9c",
         "https://mattermost.invisible.info/invisible-information-lab/pl/ikbsehyug3g65ms1h84wiudiae",
         "https://mattermost.invisible.info/invisible-information-lab/pl/mjx1sntefinamk4wcge8zr47pe",
-        "https://mattermost.invisible.info/invisible-information-lab/pl/xxwgrfujif8q8mushepx5qnqow"
+        "https://mattermost.invisible.info/invisible-information-lab/pl/xxwgrfujif8q8mushepx5qnqow",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md"
       ],
       "depends_on": [
         "commercial-coverage"
@@ -231,21 +236,46 @@
       "planned_start": "2026-09-15",
       "planned_target": "2026-09-22",
       "date_kind": "Internal dependency/status checkpoint, not a promise of external resolution"
+    },
+    {
+      "key": "meeting-2026-10-16-variable-selection",
+      "plane_id": "6d42e9d7-83b3-48de-a6b9-1d7c1f18e0b6",
+      "identifier": "INVIS-12",
+      "sources": [
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md"
+      ],
+      "parent": "feature-model",
+      "depends_on": [],
+      "planned_start": null,
+      "planned_target": null,
+      "date_kind": "No exact deadline agreed; worksheet preparation precedes next meeting and numeric encoding",
+      "scope": "Jinyi creates two identical worksheet tabs; Jinyi and Saurabh independently mark yes/no/maybe, then discuss disagreements. Registration only; not executed."
+    },
+    {
+      "key": "meeting-2026-10-16-conference-target",
+      "plane_id": "1c8cf6b1-80d1-4bea-b558-9f184f9825aa",
+      "identifier": "INVIS-13",
+      "sources": [
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md"
+      ],
+      "depends_on": [],
+      "planned_start": null,
+      "planned_target": null,
+      "date_kind": "Oral conference dates unverified; no hard due date",
+      "scope": "Jinyi compares target conferences and proposes a choice; Saurabh supplies more candidate links. Official call requirements and dates to be checked."
     }
   ],
   "next_meeting": {
-    "source": "https://mattermost.invisible.info/invisible-information-lab/pl/xxwgrfujif8q8mushepx5qnqow",
+    "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md",
     "source_locators": [
-      "Saurabh, October 13 21:35, reply to mhrjp6538jnpmf4e1ygi4x1ouw"
+      "42:00-42:53"
     ],
-    "relative_date": "Friday of the week containing October 13, 2026",
-    "date": "2026-10-16",
+    "date": null,
     "local_time": null,
     "timezone": null,
     "duration": null,
-    "status": "Agreed Friday in conversation; exact time, timezone and calendar invitation unverified.",
-    "purpose": "Brief discussion of converting journal columns into numeric ML features",
-    "supersedes": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
+    "status": "Jinyi messages after worksheet is ready; Saurabh reviews and sends an invitation. Monday/Tuesday were availability only.",
+    "purpose": "Review independent variable choices before numeric feature encoding"
   },
   "meeting_intakes": [
     {
@@ -272,6 +302,23 @@
         "INVIS-10"
       ],
       "scope": "Private transcript and upstream #5 change intake; prior CSV delivery retained, new Source JSON/language/Scopus actions not executed."
+    },
+    {
+      "key": "meeting-2026-10-16-variable-selection-and-conferences",
+      "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md",
+      "source_sha256": "252c208d42e6097582eccfa36ba7960d3f844bb30f21359b223ef9a47bea0896",
+      "observed_on": "2026-10-16",
+      "tasks": [
+        "INVIS-1",
+        "INVIS-7",
+        "INVIS-8",
+        "INVIS-9",
+        "INVIS-10",
+        "INVIS-12",
+        "INVIS-13"
+      ],
+      "scope": "Source-backed project-safe meeting summary; separate immediate variable selection and conference actions; no data run, final route/label decision, workbook creation or collaborator message.",
+      "plane_sync_status": "in_progress"
     }
   ],
   "dataset_comparison": {
@@ -316,5 +363,28 @@
       "plane_sync_status": "blocked_oauth_authorization_required",
       "pending_sync_key": "mattermost-2026-10-13-scopus-feature-intake"
     }
-  ]
+  ],
+  "historical_meeting_plans": [
+    {
+      "source": "https://mattermost.invisible.info/invisible-information-lab/pl/xxwgrfujif8q8mushepx5qnqow",
+      "source_locators": [
+        "Saurabh, October 13 21:35, reply to mhrjp6538jnpmf4e1ygi4x1ouw"
+      ],
+      "relative_date": "Friday of the week containing October 13, 2026",
+      "date": "2026-10-16",
+      "local_time": null,
+      "timezone": null,
+      "duration": null,
+      "status": "Agreed Friday in conversation; exact time, timezone and calendar invitation unverified.",
+      "purpose": "Brief discussion of converting journal columns into numeric ML features",
+      "supersedes": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
+    }
+  ],
+  "last_meeting": {
+    "date": "2026-10-16",
+    "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md",
+    "schedule_as_displayed": "16 October 2026 17:00 - 17:30",
+    "timezone_status": "Teams displayed time; not independently verified",
+    "status": "Meeting occurred; transcript read from start to stop events, not full meeting coverage"
+  }
 }

@@ -27,23 +27,39 @@ identifiers; it is mapping and planning provenance, not a competing status track
   descriptions. Only Yann currently has a matching human Plane member; do not
   invent an account, invite a collaborator, or silently transfer their work.
 
-## Latest supervisor exchange: October 13, reviewed October 16
+## Latest meeting: October 16 — independent variable selection and conference target
 
-The [source intake](../issues/2026-10-16-mattermost-scopus-feature-intake.md)
-records the supplied Mattermost evidence and all six replies in its three
-visible reply threads. Saurabh praised the delivered work, compared A/B, and
-requested numeric feature preparation for predicting Scopus matching with
-Boruta/SHAP-like methods. He did not explicitly select Route B or settle unknown
-labels. Reuse INVIS-7/8/9/10; no duplicate task or modelling run follows from intake.
+The [meeting record](../../meeting-reports/2026-10-16-variable-selection-and-conferences.md)
+is grounded in the read-only Teams transcript, with speaker/time locators and a
+private-source hash. The original stays in the ignored Inbox; personal discussion
+and private transcript text do not enter Git or Plane.
 
-The final scheduling reply agrees Friday, October 16 for a brief feature-engineering
-discussion. Exact time, timezone and calendar invitation remain unverified.
-This supersedes the earlier next-week proposal as the latest conversation evidence.
+The immediate sequence is a complete column list, two independent yes/no/maybe
+judgments, discussion of disagreements, then numeric encoding and Boruta.
+INVIS-12 records that concrete worksheet action as a child of INVIS-10;
+INVIS-13 records the parallel conference-target choice. Both are upcoming work,
+not completed outputs. Saurabh's independent review and invitation responsibilities
+remain in task descriptions; only Jinyi has the mapped Plane assignment.
 
-Plane OAuth authorization is required as of this intake. Live task read/write and
-review-state reconciliation are blocked; local source mapping and pending sync
-are preserved. Do not read old snapshots as current state or infer acceptance
-of every deliverable from general positive feedback.
+The meeting inspected Route B and found topics in a Journal of Communication
+example. It did not select the sole analysis cohort, verify JSONL/CSV equality
+for the full cohort, settle the Scopus outcome/unknown rules or choose a final
+encoding. INVIS-7/8/9 retain their actual review scope and INVIS-10 retains its
+model prerequisites. Existing A/B delivery and hash evidence remain valid.
+
+Jinyi will message after the worksheet is ready; Saurabh will review it and
+send an invitation. Monday/Tuesday were availability, not a booking or worksheet
+due date. Candidate conferences and orally mentioned October 27 / November 3
+dates require official verification; no fixed submission deadline is entered.
+
+The [October 13 Mattermost intake](../issues/2026-10-16-mattermost-scopus-feature-intake.md)
+remains the earlier source for data feedback and the Friday meeting arrangement.
+Its OAuth failure is a dated observation: live Plane reads succeeded during this
+meeting intake. Delivery writes are reconciled and read back after Git push;
+the source-to-task registry records synchronization evidence separately from
+research completion. The raw source was reviewed independently against the
+meeting summary. No model, workbook or new conference research is executed by
+this intake.
 
 ## Current phase and historical cut
 

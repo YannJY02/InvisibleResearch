@@ -55,8 +55,10 @@ dates require official verification; no fixed submission deadline is entered.
 The [October 13 Mattermost intake](../issues/2026-10-16-mattermost-scopus-feature-intake.md)
 remains the earlier source for data feedback and the Friday meeting arrangement.
 Its OAuth failure is a dated observation: live Plane reads succeeded during this
-meeting intake. Delivery writes are reconciled and read back after Git push;
-the source-to-task registry records synchronization evidence separately from
+meeting intake. Delivery descriptions, five evidence comments and the project overview were
+written and read back after the verified `f3c1c36` push. INVIS-1 is In Review,
+INVIS-12/13 are Todo and INVIS-10 remains Backlog; INVIS-7/8/9 retain In Review.
+The source-to-task registry records synchronization evidence separately from
 research completion. The raw source was reviewed independently against the
 meeting summary. No model, workbook or new conference research is executed by
 this intake.

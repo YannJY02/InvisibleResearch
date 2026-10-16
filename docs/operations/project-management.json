@@ -318,7 +318,32 @@
         "INVIS-13"
       ],
       "scope": "Source-backed project-safe meeting summary; separate immediate variable selection and conference actions; no data run, final route/label decision, workbook creation or collaborator message.",
-      "plane_sync_status": "in_progress"
+      "plane_sync_status": "synced_readback",
+      "plane_readback_at": "2026-10-16T11:06:29.399Z",
+      "delivery_commit": "f3c1c3669f6c72a7175ed34f1c8f760a55725963",
+      "plane_delivery_comments": [
+        {
+          "n": 1,
+          "id": "e077d987-fa70-45f3-9438-d59e2b766905"
+        },
+        {
+          "n": 7,
+          "id": "9018bcd9-bae3-4d4a-bbea-ef4cd1df4d7c"
+        },
+        {
+          "n": 8,
+          "id": "1e1a33b7-536e-47d4-938b-21d86f8b6dd9"
+        },
+        {
+          "n": 9,
+          "id": "89508d54-7967-4f0c-8f9b-154ca174b8cb"
+        },
+        {
+          "n": 10,
+          "id": "127ebe51-3403-4aa1-b23f-edd47ed33d3b"
+        }
+      ],
+      "readback_evidence": "docs/operations/artifacts/project-management/meeting-intake-2026-10-16/readback.json"
     }
   ],
   "dataset_comparison": {
@@ -360,8 +385,10 @@
       ],
       "coverage": "User Appshot plus live desktop read of October 13 messages and all 4+1+1 replies in the three visible reply threads; not full chat history or calendar.",
       "scope": "Intake only; reuse existing tasks, preserve label/route decisions and original delivery evidence.",
-      "plane_sync_status": "blocked_oauth_authorization_required",
-      "pending_sync_key": "mattermost-2026-10-13-scopus-feature-intake"
+      "plane_sync_status": "synced_readback",
+      "plane_readback_at": "2026-10-16T11:06:29.399Z",
+      "sync_key": "mattermost-2026-10-13-scopus-feature-intake",
+      "reconciled_with_meeting": "meeting-2026-10-16-variable-selection-and-conferences"
     }
   ],
   "historical_meeting_plans": [

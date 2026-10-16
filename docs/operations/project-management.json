@@ -149,7 +149,11 @@
         "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/docs/issues/2026-10-16-mattermost-scopus-feature-intake.md",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/z67wpb94rbydmfa3p6s7ok6h4c",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/tq5riqta3bycmj5qyz6npshybo",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/igdmx5r44fgj7yjh4gd86g43jw"
       ],
       "depends_on": [],
       "planned_start": "2026-09-15",
@@ -164,7 +168,9 @@
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dataset-comparison.md",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/docs/issues/2026-10-16-mattermost-scopus-feature-intake.md",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/mhrjp6538jnpmf4e1ygi4x1ouw"
       ],
       "depends_on": [
         "openalex-snapshot"
@@ -182,7 +188,9 @@
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
         "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-09-14-openalex-baseline-and-access.md",
         "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-15-openalex-table-delivery.md",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/docs/issues/2026-10-16-mattermost-scopus-feature-intake.md",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/9mqymr3jxfbh8pji9zk1ucnd9c"
       ],
       "depends_on": [
         "openalex-export"
@@ -198,7 +206,12 @@
       "sources": [
         "https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839",
         "https://github.com/YannJY02/InvisibleResearch/blob/c06f31f0d517dddafd779e5cc38a6bf589d3c039/meeting-reports/2026-07-28-ojs-enrichment-next-steps.md",
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/docs/issues/2026-10-16-mattermost-scopus-feature-intake.md",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/9mqymr3jxfbh8pji9zk1ucnd9c",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/ikbsehyug3g65ms1h84wiudiae",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/mjx1sntefinamk4wcge8zr47pe",
+        "https://mattermost.invisible.info/invisible-information-lab/pl/xxwgrfujif8q8mushepx5qnqow"
       ],
       "depends_on": [
         "commercial-coverage"
@@ -221,16 +234,18 @@
     }
   ],
   "next_meeting": {
-    "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md",
+    "source": "https://mattermost.invisible.info/invisible-information-lab/pl/xxwgrfujif8q8mushepx5qnqow",
     "source_locators": [
-      "32:48–33:27"
+      "Saurabh, October 13 21:35, reply to mhrjp6538jnpmf4e1ygi4x1ouw"
     ],
-    "relative_date": "next week after the intake-labelled 2026-09-29 recording",
+    "relative_date": "Friday of the week containing October 13, 2026",
+    "date": "2026-10-16",
     "local_time": null,
     "timezone": null,
-    "date": null,
     "duration": null,
-    "status": "Proposed in conversation; calendar invitation, exact date and time unverified."
+    "status": "Agreed Friday in conversation; exact time, timezone and calendar invitation unverified.",
+    "purpose": "Brief discussion of converting journal columns into numeric ML features",
+    "supersedes": "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-09-29-source-json-language-scopus.md"
   },
   "meeting_intakes": [
     {
@@ -270,5 +285,36 @@
     "source_project": "multiobs",
     "execution_project": "gen-lang-client-0676290976",
     "evidence_scope": "76-table metadata comparison; complete row-multiset SHA256 fingerprints for 12 EU/US journal-related tables and 11 existing US-source clones. Final snapshot acceptance and CSV delivery remain open."
-  }
+  },
+  "mattermost_intakes": [
+    {
+      "key": "mattermost-2026-10-13-scopus-feature-intake",
+      "source": "https://github.com/YannJY02/InvisibleResearch/blob/main/docs/issues/2026-10-16-mattermost-scopus-feature-intake.md",
+      "observed_on": "2026-10-16",
+      "message_date": "2026-10-13",
+      "message_ids": [
+        "z67wpb94rbydmfa3p6s7ok6h4c",
+        "tq5riqta3bycmj5qyz6npshybo",
+        "igdmx5r44fgj7yjh4gd86g43jw",
+        "mhrjp6538jnpmf4e1ygi4x1ouw",
+        "9mqymr3jxfbh8pji9zk1ucnd9c",
+        "ikbsehyug3g65ms1h84wiudiae",
+        "mjx1sntefinamk4wcge8zr47pe",
+        "xxwgrfujif8q8mushepx5qnqow",
+        "h7iazyxiupbsiy9brtqw4ai8ky",
+        "nga6yh3isbfafke9fkk4xp4kqy",
+        "etosgf9fwtf4j8sh71pzkn53ic"
+      ],
+      "tasks": [
+        "INVIS-7",
+        "INVIS-8",
+        "INVIS-9",
+        "INVIS-10"
+      ],
+      "coverage": "User Appshot plus live desktop read of October 13 messages and all 4+1+1 replies in the three visible reply threads; not full chat history or calendar.",
+      "scope": "Intake only; reuse existing tasks, preserve label/route decisions and original delivery evidence.",
+      "plane_sync_status": "blocked_oauth_authorization_required",
+      "pending_sync_key": "mattermost-2026-10-13-scopus-feature-intake"
+    }
+  ]
 }

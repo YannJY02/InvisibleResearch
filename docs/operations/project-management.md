@@ -27,6 +27,24 @@ identifiers; it is mapping and planning provenance, not a competing status track
   descriptions. Only Yann currently has a matching human Plane member; do not
   invent an account, invite a collaborator, or silently transfer their work.
 
+## Latest supervisor exchange: October 13, reviewed October 16
+
+The [source intake](../issues/2026-10-16-mattermost-scopus-feature-intake.md)
+records the supplied Mattermost evidence and all six replies in its three
+visible reply threads. Saurabh praised the delivered work, compared A/B, and
+requested numeric feature preparation for predicting Scopus matching with
+Boruta/SHAP-like methods. He did not explicitly select Route B or settle unknown
+labels. Reuse INVIS-7/8/9/10; no duplicate task or modelling run follows from intake.
+
+The final scheduling reply agrees Friday, October 16 for a brief feature-engineering
+discussion. Exact time, timezone and calendar invitation remain unverified.
+This supersedes the earlier next-week proposal as the latest conversation evidence.
+
+Plane OAuth authorization is required as of this intake. Live task read/write and
+review-state reconciliation are blocked; local source mapping and pending sync
+are preserved. Do not read old snapshots as current state or infer acceptance
+of every deliverable from general positive feedback.
+
 ## Current phase and historical cut
 
 The latest substantive pivot is the [2026-09-05 comment on upstream #5,

@@ -1,0 +1,165 @@
+---
+title: "Route B 研究变量筛选建议"
+subtitle: "80 列完整分类 · 2026-10-20 · 研究者侧建议稿"
+lang: zh-CN
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "查看实际执行的 R 代码"
+    code-copy: true
+    embed-resources: true
+    include-in-header:
+      text: |
+        <style>
+        body { line-height: 1.65; }
+        table { width: 100%; }
+        th, td { overflow-wrap: anywhere; vertical-align: top; }
+        .field-list { font-size: .94rem; }
+        </style>
+execute:
+  echo: true
+  message: false
+  warning: false
+  error: false
+  cache: false
+---
+
+## 本轮任务与结果
+
+**约定任务：**依据此前会议，对 B 的全部 80 列给出选择结果；常规项只分类列出，
+仅为难以判断的项目说明理由。
+
+```{r}
+#| label: inputs-and-completeness
+library(jsonlite)
+library(knitr)
+e <- read_json("../artifacts/variable-selection-review-2026-10-20/evidence.json")
+profile <- read_json("../artifacts/variable-selection-2026-10-16/profile.json")
+d <- read.delim("variable_selection_decisions.tsv", fileEncoding = "UTF-8",
+                stringsAsFactors = FALSE, check.names = FALSE, quote = "")
+stopifnot(nrow(d) == 80L, !anyDuplicated(d$field),
+          identical(d$field, unlist(profile$header)),
+          all(d$decision[d$category == "结果变量"] == "no"),
+          e$source_sha256 == profile$source$compressed_sha256)
+choices <- c("yes", "maybe", "no")
+labels <- c("保留为候选预测信息", "待讨论，暂不进入主模型", "不作为预测输入")
+summary <- data.frame(选择 = labels,
+                      原始列数 = vapply(choices, function(x) sum(d$decision == x), integer(1)))
+shanghai_time <- function(x) format(as.POSIXct(substr(x, 1, 19),
+  format = "%Y-%m-%dT%H:%M:%S", tz = "UTC"), "%Y-%m-%d %H:%M", tz = "Asia/Shanghai")
+kable(summary, row.names = FALSE)
+```
+
+合计 **80 列，逐列归类，无遗漏**。其中的 `yes` 表示保留该研究信息，
+**不是把 JSON、年份或机构 ID 原样直接交给模型**；编码完成后的特征列数也不是 19。
+`no` 只表示不进入预测输入，原始 80 列全部继续保存。
+
+这是按用户要求形成的研究者侧建议，尚非老师判断或双方共识，也不是 Boruta 的筛选结果。
+
+本报告复用了上海时间 `r shanghai_time(profile$profile_generated_at_utc)` 生成的完整字段概况，
+并于 `r shanghai_time(e$verified_at_utc)` 重新读取原始 CSV 核对文件哈希、80 列、
+`r format(e$rows, big.mark = ",")` 行、重复身份表示和两种结果标签。
+所有数字由本页执行的 R 代码读取核验产物并计算；选择本身是人工编写的建议表。
+核验重跑入口为同目录 `review_variable_selection.py`，原始概况重跑入口为
+`profile_variable_selection.py`。未请求新 API 数据或拟合模型。
+
+## 沿用会议中的筛选尺度
+
+**约定任务：**按老师说的“最小必要排除”选择候选信息，而非提前决定哪个因素最重要。
+
+- 17:07–21:46：先去掉没有研究解释的身份号码、SHA、采集时间和访问 URL。
+- 21:21：尽量少做先验排除，保留有潜在解释价值的候选变量。
+- 22:07、24:27、37:50–38:42：国家、语言、主题与学科，以及 APC 和引用信息值得考虑。
+- 29:36–33:01：先选择变量，再讨论数值表示，之后才运行算法。
+- 34:06–35:38：共同查看主题名称与类别数量；subfield 可能比 topic 更实用，但没有定案。
+- 39:52–40:58：两人先独立判断，再讨论分歧。
+
+因此，本轮不因引用指标可能相关就先删掉其中几个，也不把高缺失率当作自动淘汰线。
+结构上重复的身份列、原始计数与拟选占比则分开保留，不重复当成独立研究发现。
+Boruta 原始论文的目标是寻找所有相关变量，而非预先压成一个最小变量集合。
+参见[会议记录](https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md)
+与[Kursa 和 Rudnicki（2010）](https://www.jstatsoft.org/article/view/v036i11)。
+
+10 月 19 日更新的[导师任务清单](https://github.com/invisibleinfo/invisible-research/issues/5#issuecomment-5553748839)
+已勾选按 ISSN 核对 Scopus 名录，下一项仍是用期刊特征研究 Scopus 可见性。
+这与本轮继续做变量准备一致，不代表模型已运行。
+
+## 完整选择清单
+
+**约定任务：**按选择与研究类别列出全部 80 列；下表不逐项附理由。
+
+```{r}
+#| label: complete-decisions
+#| results: asis
+for (i in seq_along(choices)) {
+  subset <- d[d$decision == choices[i], ]
+  cat("\n### ", labels[i], "（", nrow(subset), " 列）\n\n", sep = "")
+  for (category in unique(subset$category)) {
+    fields <- subset[subset$category == category, "field"]
+    cat("\n**", category, "（", length(fields), "）**\n\n", sep = "")
+    cat(as.character(kable(data.frame(原始字段 = fields), row.names = FALSE, format = "html",
+                           table.attr = 'class="table field-list"')), "\n\n")
+  }
+}
+```
+
+## 仅对疑难项目的说明
+
+**约定任务：**只解释仍难以判断、不能直接决定进入主模型的项目。
+
+| 项目 | 为什么先待定 |
+|---|---|
+| `topic_share` | 衡量本刊对全库某主题的贡献份额，和“本刊内容构成”不同；它还有自己独立的前 25 项列表。是否作为替代主题表示需要讨论。 |
+| `language_unknown_share`、`language_known_proportions_json` | 前者可能反映元数据覆盖；后者换了占比分母。全部 Works 分母已隐含未知比例，不宜把这些列当成互不相关的额外语言发现。 |
+| `host_organization_lineage`、`societies` | 上级出版集团或学会关联可能有解释价值，但需要决定机构层级、组织角色和空列表的含义。保留的 `host_organization` 是有意义的出版机构类别，不是把号码大小当作特征。 |
+| `is_core`、`listed_in` | 涉及其他评价与名录成员资格。CWTS Core 不等于 Scopus，但可能成为外部评价代理；`listed_in` 还有与 DOAJ、SciELO 等现有标志重叠的内容，需要逐项选。 |
+| `apc_usd_by_year`、`is_high_oa_rate_since_year`、`is_in_doaj_since_year`、`oa_flip_year` | 历史信息可能有用，但时间窗尚未约定；空值也可能表示不适用，不能填成收费或年份为零。 |
+| `is_preprint_repository` | 虽然 B 的全部行均为 `journal`，仍有 `r e$preprint_repository_flag_counts$true` 行同时带这个标志。先核查双重标志的含义，不把它误称为常量，也不直接删除这些行。 |
+
+另有两个影响如何使用保留信息的边界：
+
+- **APC：**`apc_usd` 空值占 `r sprintf("%.2f%%", 100 * profile$field_profiles$apc_usd$raw_buckets$null_marker / e$rows)`。
+  保留收费这一研究维度，不等于已经选定填补方式，更不能把缺失当作免费。
+- **主题：**保留 `topics` 信息；优先讨论 subfield 的“返回列表中有无出现”表示。
+  非空列表未出现某 subfield 只表示未在返回项中观察到，不证明没有相关论文；
+  空列表不能当成所有类别均不存在。topic、field、domain 可作为替代粒度讨论，
+  不因名称相近自动合并，也不把前 25 项汇总成完整、互斥的学科占比。
+
+当前数据每份主题列表最多 25 项，观察到 4,516 topic、252 subfield、26 field、4 domain；
+11,852 行为空列表。这些是冻结数据的覆盖事实。subfield 是本轮优先讨论的建议，
+并不是老师已经批准的最终编码。当前[Source 字段说明](https://help.openalex.org/data/sources/attributes/)
+和[层级说明](https://help.openalex.org/data/topics/)于 2026-10-20 核对，仅用于解释，
+未更新冻结数据中的值。
+
+## 结果变量与本轮交付范围
+
+**约定任务：**把 Scopus 结果与预测输入分开，并保留未决口径。
+
+本轮建议以 `scopus_membership_in_reference` 作为主结果候选，对应此前讨论的“是否匹配
+Scopus 参照名录”；`scopus_active_journal_in_reference` 作为较窄定义的替代结果。
+这属于本轮建议，仍需与老师确认；两列均不进入预测输入，也不互相充当预测特征。
+
+```{r}
+#| label: outcome-counts
+keys <- c("scopus_membership_in_reference", "scopus_active_journal_in_reference")
+outcomes <- do.call(rbind, lapply(keys, function(key) {
+  counts <- e$target_counts[[key]]
+  data.frame(字段 = key, 标签1 = counts[["1"]], 标签0 = counts[["0"]],
+             未决空白 = counts$unresolved_blank)
+}))
+kable(outcomes, row.names = FALSE, format.args = list(big.mark = ","))
+```
+
+标签 0 依赖各自固定参照规则，不等于“从未被 Scopus 收录”；未知标签保持空白。
+不是所有 207,602 行都已有可用的二元结果，标签可用样本也不能自动代表整个母体。
+
+B 的 Source 属性于 10 月取得，Scopus 使用 August 2026 名录。
+当前适合探索现有特征与参照收录状态的关系；尚不能声称预测了未来首次收录或识别了原因。
+DOAJ、SciELO 等成员资格即使保留，也应在后续比较中检查它们对其他特征解释的影响。
+
+交付包括：80 列完整分类报告；研究者侧 19 yes、12 maybe、49 no 的建议；
+仅疑难项附说明。工作簿的 `Saurabh` 判断栏保持空白；双方分歧尚未形成，
+没有执行数值编码、Boruta、SHAP 或代发协作消息。

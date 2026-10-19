@@ -1,29 +1,41 @@
 # Route B variable selection
 
-Updated October 16, 2026. INVIS-12 prepares the independent judgments agreed in the
+Updated October 20, 2026. INVIS-12 prepares the independent judgments agreed in the
 [meeting](../../meeting-reports/2026-10-16-variable-selection-and-conferences.md).
 The user subsequently selected **Route B**, then requested the complete table.
-This is workbook preparation for Exploratory Analysis, not feature encoding or modelling.
+The user has now requested selection recommendations and a complete classified
+report, with explanations only for difficult choices. This remains Exploratory
+Analysis, not feature encoding or modelling.
+
+The [current report source](analysis/variable-selection-report.qmd) executes in R.
+Its readable HTML is in
+`artifacts/variable-selection-review-2026-10-20/report/variable-selection-report.html`.
+The complete [recommendation table](analysis/variable_selection_decisions.tsv)
+assigns **19 yes, 12 maybe and 49 no** to the original 80 columns. These count
+information-bearing source columns, not final encoded design-matrix columns.
 
 ## Workbook
 
 The local Excel file is
-`artifacts/variable-selection-2026-10-16/outputs/01a1448c-26bc-7f42-b0ab-7515259cf126/route-b-variable-selection.xlsx`.
+`artifacts/variable-selection-review-2026-10-20/outputs/01a1448c-26bc-7f42-b0ab-7515259cf126/route-b-variable-selection.xlsx`.
 
 - `Jinyi` and `Saurabh` contain the same 80 fields in the delivered CSV's order.
   Each row has an explanation, real shortened example with its Source ID,
   value type, null/missing fraction, empty-container fraction and review considerations.
-- Both `Predictor?` and reason columns start blank. The dropdown offers
-  `yes`, `no`, `maybe`; the completed-field counter counts those choices.
-  Reviewers complete their own sheets before comparing judgments.
+- `Jinyi` now contains an explicitly labeled AI-assisted proposal requested by
+  the researcher: 19 yes, 12 maybe and 49 no. Only the unresolved choices have
+  selection notes; ordinary choices have no selection reason entered.
+- `Saurabh` retains its blank choices and reasons. Its values and formulas are
+  checked against the unmodified October 16 workbook. The proposal is not a
+  supervisor judgment or an already agreed selection.
 - `Guide` defines denominators, provenance and the observed topic hierarchy.
   Candidate outcomes and Scopus matching evidence remain outside predictor inputs.
   The final outcome choice is separate from the predictor judgments.
 
 The workbook and profiles are local generated outputs; Git carries the field
 dictionary and builders. No collaborator message or new SURFdrive upload was sent.
-INVIS-12 remains in progress because both independent judgments and their discussion
-are still outstanding.
+This delivers the researcher-side proposal for human review. Supervisor judgment
+and discussion of disagreements are still outstanding; the whole workflow is not Done.
 
 ## Input and observed scope
 
@@ -46,7 +58,8 @@ No observed ID has conflicting names or multiple immediate parents. The two list
 can contain different topics; their union reaches 49 IDs in a row. These are
 returned-list observations, not an exhaustive classification of every Work.
 
-No topic hierarchy or encoding was selected. `topic_share` is the journal's
+No topic encoding was executed. Subfield presence is the proposed first option
+to discuss, not an accepted final hierarchy choice. `topic_share` is the journal's
 contribution to a topic across all primary sources, not that topic's share within
 the journal. The [existing method discussion](model-data-structure.md#53-三种数量不能混用)
 records the denominator. Current [Source attributes](https://help.openalex.org/data/sources/attributes/)
@@ -62,14 +75,24 @@ python3 research/openalex-journal-baseline/analysis/profile_variable_selection.p
 node research/openalex-journal-baseline/analysis/build_variable_selection.mjs
 ```
 
-The workbook builder uses the bundled `@oai/artifact-tool` runtime; set
+To reproduce the October 20 recommendations and rendered report:
+
+```sh
+python3 research/openalex-journal-baseline/analysis/review_variable_selection.py
+node research/openalex-journal-baseline/analysis/review_variable_selection.mjs
+quarto render research/openalex-journal-baseline/analysis/variable-selection-report.qmd \
+  --output-dir ../artifacts/variable-selection-review-2026-10-20/report
+```
+
+The workbook creation and editing scripts use the bundled `@oai/artifact-tool` runtime; set
 `ARTIFACT_NODE_MODULES` if that runtime's package directory differs. Its dependency
 symlink, profile, workbook, previews and validation records remain in the named
 owner-local artifact directory. Source meanings and review notes are maintained in
 [the field dictionary](analysis/variable_selection_fields.tsv).
 
-Verification includes exact coverage of the source's 80 columns, identical review
-templates, blank judgments and reasons, dropdown and frozen-pane preservation in
-the exported XLSX, progress-counter checks for three choices and restored blanks,
-and visual inspection of the three sheets and the detailed topic rows. No model
-was run and no final human variable judgments were assigned.
+October 16 verification covered the initial blank templates. October 20 verification
+covers exact 80-column classification, 19/12/49 reconciliation, ordinary reasons
+remaining blank, 80 researcher recommendations, zero supervisor judgments, preservation
+of the supervisor sheet and exported controls, and the rerendered R report and
+affected spreadsheet views. The raw CSV hash remains identical. No model was run;
+the recommendations still require human review.

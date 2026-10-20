@@ -10,6 +10,10 @@ variable selection. Both remain Exploratory Analysis, not Paper Analysis.
 - [Route B variable-selection workbook](variable-selection.md): all 80 columns,
   identical independent-review sheets, field explanations and observed missingness.
 
+- [Journal quality indicators](journal-quality-indicators.md): literature-backed
+  measures supported by Route B, separate project adaptations, and the limits of
+  using citation impact or channel ratings to assess research content.
+
 - [Current BigQuery journal export](journal-export.md): merged CSV, missingness,
   connection verification, delivery evidence and the coming week's tasks.
 - [Complete Source JSON and CSV delivery](source-api-csv.md): September 30

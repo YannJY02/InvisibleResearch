@@ -25,8 +25,20 @@ def main():
     if any(not row["reason_zh"] or not row["reason_en"]
            for row in decisions if row["decision"] == "maybe"):
         raise ValueError("Unresolved recommendations need a short explanation")
-    if any(row["decision"] != "no" for row in decisions if row["field"].startswith("scopus_")):
+    outcome_fields = {"scopus_membership_in_reference", "scopus_active_journal_in_reference"}
+    if {row["field"] for row in decisions if row["role"] == "outcome"} != outcome_fields:
+        raise ValueError("Both retained Scopus outcomes need an explicit outcome role")
+    if any(row["role"] not in {"outcome", "predictor_candidate", "support_only"}
+           for row in decisions):
+        raise ValueError("Each field needs an explicit study role")
+    if any(row["decision"] != "yes" for row in decisions if row["role"] == "outcome"):
+        raise ValueError("The requested outcome fields must remain retained")
+    if any(row["role"] == "predictor_candidate"
+           for row in decisions if row["field"].startswith("scopus_")):
         raise ValueError("Outcome-derived Scopus fields cannot become predictor inputs")
+    if any(row["decision"] != "no" for row in decisions
+           if row["field"].startswith("scopus_") and row["field"] not in outcome_fields):
+        raise ValueError("Other Scopus fields remain matching evidence only")
     fingerprint = hashlib.sha256()
     with SOURCE.open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
@@ -65,6 +77,8 @@ def main():
         "profile_generated_at_utc": profile["profile_generated_at_utc"],
         "profile_reused_after_full_input_hash_verification": True,
         "decision_counts": dict(Counter(row["decision"] for row in decisions)),
+        "retained_role_counts": dict(Counter(row["role"] for row in decisions
+                                             if row["decision"] == "yes")),
         "category_counts": dict(Counter(row["category"] for row in decisions)),
         "duplicate_representation_unequal_rows": dict(unequal),
         "target_counts": {key: dict(counts) for key, counts in targets.items()},

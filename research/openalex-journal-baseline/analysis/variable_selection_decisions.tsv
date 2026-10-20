@@ -1,81 +1,81 @@
-field	decision	category	reason_zh	reason_en	basis
-route	no	采集与核查字段			会议17:07–21:46；B常量核查
-route_row_id	no	标识与名称			会议19:13、21:46
-source_id	no	标识与名称			会议19:13、21:46
-resolved_id	no	标识与名称			会议19:13、21:46
-source_identity_status	no	采集与核查字段			B常量核查
-source_fetched_at	no	采集与核查字段			会议16:16–17:56
-source_content_sha256	no	采集与核查字段			会议18:12–18:51
-resolved_identity_row_count	no	采集与核查字段			B常量核查
-scopus_match_issn_json	no	Scopus匹配证据			既有匹配规则；防标签泄漏
-scopus_identifier_policy	no	Scopus匹配证据			B常量核查；防标签泄漏
-language_basis	no	采集与核查字段			B常量核查；语言口径
-language_source_id	no	标识与名称			会议19:13；语言口径
-language_works_count	no	统计分母与替代表达			语言口径；本轮代表列选择
-language_known_works_count	no	统计分母与替代表达			语言口径；算术约束
-language_unknown_works_count	no	统计分母与替代表达			语言口径；本轮代表列选择
-language_unknown_share	maybe	数据覆盖与质量	可能反映元数据覆盖偏差，而非真实语言结构；建议作为敏感性或控制信息讨论。	May capture metadata coverage rather than journal language. Discuss as a sensitivity or control feature.	本轮方法建议；缺失不等于零
-language_counts_json	no	统计分母与替代表达			会议22:07；本轮代表列选择
-language_proportions_json	yes	语言与地域			会议22:07、37:50–38:42
-language_known_proportions_json	maybe	替代分母	仅已知语言分母可作替代检验；不与全部语言分母的占比不加区分地同时输入。	Alternative known-language denominator for sensitivity analysis, not an unlabeled duplicate of the primary proportions.	语言口径；本轮建议
-language_status	no	采集与核查字段			语言口径；B实测
-alternate_titles	no	标识与名称			会议19:13原则；本轮范围
-apc_prices	no	统计分母与替代表达			会议24:27；本轮代表列选择
-apc_usd	yes	出版模式与费用			会议24:27、38:42；最小排除原则
-apc_usd_by_year	maybe	历史与时间窗	年度收费可能有意义，但覆盖较少且尚未确定分析时间窗，保留待讨论。	Potentially useful price history; sparse coverage and the time window need agreement.	会议最小排除原则；本轮时间口径建议
-cited_by_count	yes	规模与引用表现			会议24:27、37:50–38:42；最小排除原则
-country_code	yes	语言与地域			会议22:07、37:50–38:42
-counts_by_year	yes	规模与引用表现			会议37:50–38:42；本轮表示建议
-created_date	no	采集与核查字段			会议17:07–21:46；字段语义
-display_name	no	标识与名称			会议19:13原则；本轮范围
-first_publication_year	yes	出版历史			会议最小排除原则；字段语义
-homepage_url	no	标识与名称			会议21:46原则；本轮范围
-host_organization	yes	出版机构			会议最小排除原则；本轮概念与ID区分
-host_organization_lineage	maybe	机构层级	集团或上级出版机构可能比细粒度机构更稳定；层级和稀有类别处理尚待讨论。	Parent publishing groups may offer a useful alternative granularity; hierarchy and rare categories remain open.	会议最小排除原则；本轮表示建议
-host_organization_name	no	统计分母与替代表达			本轮代表列选择
-id	no	标识与名称			会议19:13、21:46
-ids.issn	no	标识与名称			会议19:13
-ids.issn_l	no	标识与名称			会议19:13
-ids.mag	no	标识与名称			会议19:13原则
-ids.openalex	no	标识与名称			会议19:13、21:46
-ids.wikidata	no	标识与名称			会议19:13原则；本轮范围
-is_core	maybe	其他名录与评价	这是CWTS Core标志，不等于Scopus；可能是其他评价制度代理，先放扩展或敏感性分析讨论。	CWTS Core is not the Scopus outcome; discuss external-evaluation proxy effects before primary inclusion.	OpenAlex官方语义；本轮建议
-is_high_oa_rate	yes	出版模式与费用			会议最小排除原则；字段语义
-is_high_oa_rate_since_year	maybe	历史与时间窗	只对特定状态期刊有记录，需决定事件时间及结构性空值如何表示。	Conditional history of high-OA status; event timing and structural missingness need agreement.	本轮时间与缺失处理建议
-is_in_doaj	yes	出版模式与费用			会议最小排除原则；OpenAlex官方语义
-is_in_doaj_since_year	maybe	历史与时间窗	DOAJ加入时间可能有价值；空值可能不适用，不能填成年份零。	DOAJ entry year may be informative; inapplicable values must not become year zero.	本轮时间与缺失处理建议
-is_in_scielo	yes	出版模式与费用			会议最小排除原则；OpenAlex官方语义
-is_oa	yes	出版模式与费用			会议最小排除原则；字段语义
-is_ojs	yes	出版模式与费用			会议最小排除原则；项目研究背景
-is_preprint_repository	maybe	数据覆盖与质量	B虽按journal筛选仍有少量true，先核查双重标志的含义，不能径直当常量或直接删掉这些行。	A few journal-selected records are also flagged as preprint repositories; investigate before interpreting or removing rows.	B实测；本轮质量核查建议
-issn	no	标识与名称			会议19:13
-issn_l	no	标识与名称			会议19:13
-last_publication_year	yes	出版历史			会议最小排除原则；字段语义
-listed_in	maybe	其他名录与评价	B中有22种名录标签；需要逐项确认制度含义、与已有标志重复及目标代理，暂不整包展开进主模型。	Review all 22 observed source-list IDs for meaning, duplicate flags and outcome proxies before encoding.	B实测；本轮建议
-oa_flip_year	maybe	历史与时间窗	转OA历史有解释价值，但年份适用条件和时点尚未确定。	OA transition history is meaningful, but applicability and observation timing remain open.	本轮时间与缺失处理建议
-oa_works_count	yes	规模与引用表现			会议最小排除原则；本轮建议
-societies	maybe	机构层级	学会关联可能有意义，但多数为空，组织角色及是否存在标志的定义需先讨论。	Society association is potentially meaningful; sparse coverage and the representation of absence need discussion.	会议最小排除原则；B覆盖
-summary_stats.2yr_mean_citedness	yes	规模与引用表现			会议24:27、37:50–38:42；最小排除原则
-summary_stats.h_index	yes	规模与引用表现			会议24:27、37:50–38:42；最小排除原则
-summary_stats.i10_index	yes	规模与引用表现			会议24:27、37:50–38:42；最小排除原则
-topic_share	maybe	主题的替代表示	这是本刊对全库某主题的贡献份额；与刊内主题构成不同，且另取前25项，先保留作替代检验讨论。	This is the source's share of a topic across primary sources, with its own top-25 list; discuss as an alternative representation.	既有主题口径；本轮建议
-topics	yes	研究主题			会议22:07、31:59–35:38
-type	no	常量字段			会议21:46；B常量核查
-updated_date	no	采集与核查字段			会议21:46
-works_api_url	no	标识与名称			会议21:46
-works_count	yes	规模与引用表现			会议最小排除原则；既有数据口径
-scopus_valid_issns_json	no	Scopus匹配证据			防标签泄漏
-scopus_invalid_issns_json	no	Scopus匹配证据			B覆盖；防标签泄漏
-scopus_identifier_fields_json	no	Scopus匹配证据			防标签泄漏
-scopus_match_status	no	Scopus匹配证据			防标签泄漏
-scopus_candidate_count	no	Scopus匹配证据			防标签泄漏
-scopus_candidate_ids_json	no	Scopus匹配证据			防标签泄漏
-scopus_matched_issns_json	no	Scopus匹配证据			防标签泄漏
-scopus_candidates_json	no	Scopus匹配证据			防标签泄漏
-scopus_source_types_json	no	Scopus匹配证据			防标签泄漏
-scopus_has_status_conflict	no	Scopus匹配证据			B常量核查；防标签泄漏
-scopus_has_discontinued_evidence	no	Scopus匹配证据			防标签泄漏
-scopus_accepted_pending_json	no	Scopus匹配证据			防标签泄漏
-scopus_membership_in_reference	no	结果变量			会议10月13日匹配0/1与10月16日11:38、13:50；本轮建议
-scopus_active_journal_in_reference	no	结果变量			既有标签口径；本轮建议
-scopus_reference_version	no	Scopus匹配证据			B常量核查；防标签泄漏
+field	decision	category	reason_zh	reason_en	basis	role
+route	no	采集与核查字段			会议17:07–21:46；B常量核查	support_only
+route_row_id	no	标识与名称			会议19:13、21:46	support_only
+source_id	no	标识与名称			会议19:13、21:46	support_only
+resolved_id	no	标识与名称			会议19:13、21:46	support_only
+source_identity_status	no	采集与核查字段			B常量核查	support_only
+source_fetched_at	no	采集与核查字段			会议16:16–17:56	support_only
+source_content_sha256	no	采集与核查字段			会议18:12–18:51	support_only
+resolved_identity_row_count	no	采集与核查字段			B常量核查	support_only
+scopus_match_issn_json	no	Scopus匹配证据			既有匹配规则；防标签泄漏	support_only
+scopus_identifier_policy	no	Scopus匹配证据			B常量核查；防标签泄漏	support_only
+language_basis	no	采集与核查字段			B常量核查；语言口径	support_only
+language_source_id	no	标识与名称			会议19:13；语言口径	support_only
+language_works_count	no	统计分母与替代表达			语言口径；本轮代表列选择	support_only
+language_known_works_count	no	统计分母与替代表达			语言口径；算术约束	support_only
+language_unknown_works_count	no	统计分母与替代表达			语言口径；本轮代表列选择	support_only
+language_unknown_share	maybe	数据覆盖与质量	有些论文没标语言，这一项可能只是记录不全。先不急着用。	Some papers have no language recorded. This may just tell us how complete the records are.	本轮方法建议；缺失不等于零	predictor_candidate
+language_counts_json	no	统计分母与替代表达			会议22:07；本轮代表列选择	support_only
+language_proportions_json	yes	语言与地域			会议22:07、37:50–38:42	predictor_candidate
+language_known_proportions_json	maybe	替代分母	只算已知语言的论文，比例会变。用哪种算法再商量。	The shares change if we count only papers with a known language. We still need to choose which version to use.	语言口径；本轮建议	predictor_candidate
+language_status	no	采集与核查字段			语言口径；B实测	support_only
+alternate_titles	no	标识与名称			会议19:13原则；本轮范围	support_only
+apc_prices	no	统计分母与替代表达			会议24:27；本轮代表列选择	support_only
+apc_usd	yes	出版模式与费用			会议24:27、38:42；最小排除原则	predictor_candidate
+apc_usd_by_year	maybe	历史与时间窗	先定看哪几年的收费；目前有这项记录的期刊也比较少。	First choose which years of fees to use. Few journals have these records.	会议最小排除原则；本轮时间口径建议	predictor_candidate
+cited_by_count	yes	规模与引用表现			会议24:27、37:50–38:42；最小排除原则	predictor_candidate
+country_code	yes	语言与地域			会议22:07、37:50–38:42	predictor_candidate
+counts_by_year	yes	规模与引用表现			会议37:50–38:42；本轮表示建议	predictor_candidate
+created_date	yes	数据库记录时间	这是OpenAlex建档时间，不是创刊年份，不能用来证明期刊权威。	This is when OpenAlex added the record, not when the journal was founded. It does not establish journal authority.	2026-10-20用户明确保留；字段含义按OpenAlex说明	predictor_candidate
+display_name	no	标识与名称			会议19:13原则；本轮范围	support_only
+first_publication_year	yes	出版历史			会议最小排除原则；字段语义	predictor_candidate
+homepage_url	no	标识与名称			会议21:46原则；本轮范围	support_only
+host_organization	yes	出版机构			会议最小排除原则；本轮概念与ID区分	predictor_candidate
+host_organization_lineage	yes	机构层级			2026-10-20用户明确保留；字段含义按OpenAlex说明	predictor_candidate
+host_organization_name	no	统计分母与替代表达			本轮代表列选择	support_only
+id	no	标识与名称			会议19:13、21:46	support_only
+ids.issn	no	标识与名称			会议19:13	support_only
+ids.issn_l	no	标识与名称			会议19:13	support_only
+ids.mag	no	标识与名称			会议19:13原则	support_only
+ids.openalex	no	标识与名称			会议19:13、21:46	support_only
+ids.wikidata	no	标识与名称			会议19:13原则；本轮范围	support_only
+is_core	yes	其他名录与评价			2026-10-20用户明确保留；字段含义按OpenAlex说明	predictor_candidate
+is_high_oa_rate	yes	出版模式与费用			会议最小排除原则；字段语义	predictor_candidate
+is_high_oa_rate_since_year	maybe	历史与时间窗	先定看哪几年；没填年份不能当成0年。	First choose which years to study. A missing year is not year zero.	本轮时间与缺失处理建议	predictor_candidate
+is_in_doaj	yes	出版模式与费用			会议最小排除原则；OpenAlex官方语义	predictor_candidate
+is_in_doaj_since_year	maybe	历史与时间窗	加入DOAJ的时间可以考虑，但得先定看哪几年；空白不能当成0年。	The year a journal joined DOAJ may help, but we need a time period first. A blank is not year zero.	本轮时间与缺失处理建议	predictor_candidate
+is_in_scielo	yes	出版模式与费用			会议最小排除原则；OpenAlex官方语义	predictor_candidate
+is_oa	yes	出版模式与费用			会议最小排除原则；字段语义	predictor_candidate
+is_ojs	yes	出版模式与费用			会议最小排除原则；项目研究背景	predictor_candidate
+is_preprint_repository	maybe	数据覆盖与质量	这批都标着journal，19条却也标着预印本库。先看这19条怎么回事。	All records are marked as journals, but 19 are also marked as preprint repositories. Check those 19 first.	B实测；本轮质量核查建议	predictor_candidate
+issn	no	标识与名称			会议19:13	support_only
+issn_l	no	标识与名称			会议19:13	support_only
+last_publication_year	yes	出版历史			会议最小排除原则；字段语义	predictor_candidate
+listed_in	yes	其他名录与评价			2026-10-20用户明确保留；字段含义按OpenAlex说明	predictor_candidate
+oa_flip_year	maybe	历史与时间窗	转为开放获取的年份可以考虑，但得先定看哪几年。	The year a journal became open access may help, but we need to choose a time period first.	本轮时间与缺失处理建议	predictor_candidate
+oa_works_count	yes	规模与引用表现			会议最小排除原则；本轮建议	predictor_candidate
+societies	yes	机构层级			2026-10-20用户明确保留；字段含义按OpenAlex说明	predictor_candidate
+summary_stats.2yr_mean_citedness	yes	规模与引用表现			会议24:27、37:50–38:42；最小排除原则	predictor_candidate
+summary_stats.h_index	yes	规模与引用表现			会议24:27、37:50–38:42；最小排除原则	predictor_candidate
+summary_stats.i10_index	yes	规模与引用表现			会议24:27、37:50–38:42；最小排除原则	predictor_candidate
+topic_share	yes	研究主题			2026-10-20用户明确保留；字段含义按OpenAlex说明	predictor_candidate
+topics	yes	研究主题			会议22:07、31:59–35:38	predictor_candidate
+type	no	常量字段			会议21:46；B常量核查	support_only
+updated_date	no	采集与核查字段			会议21:46	support_only
+works_api_url	no	标识与名称			会议21:46	support_only
+works_count	yes	规模与引用表现			会议最小排除原则；既有数据口径	predictor_candidate
+scopus_valid_issns_json	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_invalid_issns_json	no	Scopus匹配证据			B覆盖；防标签泄漏	support_only
+scopus_identifier_fields_json	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_match_status	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_candidate_count	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_candidate_ids_json	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_matched_issns_json	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_candidates_json	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_source_types_json	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_has_status_conflict	no	Scopus匹配证据			B常量核查；防标签泄漏	support_only
+scopus_has_discontinued_evidence	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_accepted_pending_json	no	Scopus匹配证据			防标签泄漏	support_only
+scopus_membership_in_reference	yes	结果变量			2026-10-20用户明确保留；字段含义按OpenAlex说明	outcome
+scopus_active_journal_in_reference	yes	结果变量			2026-10-20用户明确保留；字段含义按OpenAlex说明	outcome
+scopus_reference_version	no	Scopus匹配证据			B常量核查；防标签泄漏	support_only

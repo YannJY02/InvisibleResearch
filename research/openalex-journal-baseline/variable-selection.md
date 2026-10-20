@@ -11,8 +11,15 @@ The [current report source](analysis/variable-selection-report.qmd) executes in 
 Its readable HTML is in
 `artifacts/variable-selection-review-2026-10-20/report/variable-selection-report.html`.
 The complete [recommendation table](analysis/variable_selection_decisions.tsv)
-assigns **19 yes, 12 maybe and 49 no** to the original 80 columns. These count
+assigns **27 yes, 7 maybe and 46 no** to the original 80 columns. These count
 information-bearing source columns, not final encoded design-matrix columns.
+
+The user explicitly retained `is_core`, `listed_in`, `topic_share`,
+`host_organization_lineage`, `societies`, both Scopus outcomes and `created_date`
+on October 20. These decisions replace the earlier 19/12/49 proposal.
+`created_date` is when OpenAlex added the record, not when the journal was founded;
+it is retained without treating it as journal age or evidence of authority.
+See [OpenAlex Source attributes](https://help.openalex.org/data/sources/attributes/).
 
 ## Workbook
 
@@ -23,14 +30,16 @@ The local Excel file is
   Each row has an explanation, real shortened example with its Source ID,
   value type, null/missing fraction, empty-container fraction and review considerations.
 - `Jinyi` now contains an explicitly labeled AI-assisted proposal requested by
-  the researcher: 19 yes, 12 maybe and 49 no. Only the unresolved choices have
-  selection notes; ordinary choices have no selection reason entered.
-- `Saurabh` retains its blank choices and reasons. Its values and formulas are
-  checked against the unmodified October 16 workbook. The proposal is not a
+  the researcher: 27 yes, 7 maybe and 46 no. Short notes cover the seven open choices and
+  a correction about `created_date`; ordinary choices have no reason entered.
+- `Saurabh` retains its blank choices and reasons. Its judgment cells and formulas are
+  checked against the unmodified October 16 workbook; only shared instructions
+  in A4, A5 and C8 change to ask whether to retain a field for the study. The proposal is not a
   supervisor judgment or an already agreed selection.
 - `Guide` defines denominators, provenance and the observed topic hierarchy.
-  Candidate outcomes and Scopus matching evidence remain outside predictor inputs.
-  The final outcome choice is separate from the predictor judgments.
+  `Keep?` includes both predictors and outcomes. The Yes group contains 25 candidate
+  predictor fields and two Scopus outcomes. Outcomes and other Scopus matching
+  evidence remain outside predictor inputs. The TSV `role` column records this distinction.
 
 The workbook and profiles are local generated outputs; Git carries the field
 dictionary and builders. No collaborator message or new SURFdrive upload was sent.
@@ -91,8 +100,8 @@ owner-local artifact directory. Source meanings and review notes are maintained 
 [the field dictionary](analysis/variable_selection_fields.tsv).
 
 October 16 verification covered the initial blank templates. October 20 verification
-covers exact 80-column classification, 19/12/49 reconciliation, ordinary reasons
+covers exact 80-column classification, 27/7/46 reconciliation, ordinary reasons
 remaining blank, 80 researcher recommendations, zero supervisor judgments, preservation
-of the supervisor sheet and exported controls, and the rerendered R report and
+of the supervisor judgments, noninstruction cells and exported controls, and the rerendered R report and
 affected spreadsheet views. The raw CSV hash remains identical. No model was run;
 the recommendations still require human review.

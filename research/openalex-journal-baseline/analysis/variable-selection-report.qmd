@@ -42,10 +42,12 @@ d <- read.delim("variable_selection_decisions.tsv", fileEncoding = "UTF-8",
                 stringsAsFactors = FALSE, check.names = FALSE, quote = "")
 stopifnot(nrow(d) == 80L, !anyDuplicated(d$field),
           identical(d$field, unlist(profile$header)),
-          all(d$decision[d$category == "结果变量"] == "no"),
+          all(d$decision[d$role == "outcome"] == "yes"),
+          sum(d$role == "outcome") == 2L,
+          !any(startsWith(d$field[d$role == "predictor_candidate"], "scopus_")),
           e$source_sha256 == profile$source$compressed_sha256)
 choices <- c("yes", "maybe", "no")
-labels <- c("保留为候选预测信息", "待讨论，暂不进入主模型", "不作为预测输入")
+labels <- c("Yes：保留", "Maybe：再讨论", "No：本次不选用")
 summary <- data.frame(选择 = labels,
                       原始列数 = vapply(choices, function(x) sum(d$decision == x), integer(1)))
 shanghai_time <- function(x) format(as.POSIXct(substr(x, 1, 19),
@@ -53,16 +55,19 @@ shanghai_time <- function(x) format(as.POSIXct(substr(x, 1, 19),
 kable(summary, row.names = FALSE)
 ```
 
-合计 **80 列，逐列归类，无遗漏**。其中的 `yes` 表示保留该研究信息，
-**不是把 JSON、年份或机构 ID 原样直接交给模型**；编码完成后的特征列数也不是 19。
-`no` 只表示不进入预测输入，原始 80 列全部继续保存。
+合计 **80 列，逐列归类，无遗漏**。Yes 中有 **`r sum(d$decision == "yes" & d$role == "predictor_candidate")` 列候选预测信息、2 列结果变量**。
+保留以后，列表、年份和机构信息怎么转成模型能用的数字，下一步再定。
+No 表示这次不选用，原始 80 列仍全部保存。
+
+本轮按你的要求，将 `is_core`、`listed_in`、`topic_share`、`host_organization_lineage`、
+`societies`、两个 Scopus 结果字段和 `created_date` 改为 Yes。
 
 这是按用户要求形成的研究者侧建议，尚非老师判断或双方共识，也不是 Boruta 的筛选结果。
 
 本报告复用了上海时间 `r shanghai_time(profile$profile_generated_at_utc)` 生成的完整字段概况，
 并于 `r shanghai_time(e$verified_at_utc)` 重新读取原始 CSV 核对文件哈希、80 列、
 `r format(e$rows, big.mark = ",")` 行、重复身份表示和两种结果标签。
-所有数字由本页执行的 R 代码读取核验产物并计算；选择本身是人工编写的建议表。
+本页的数字由 R 代码读取核验结果并计算；Yes、Maybe、No 来自本轮讨论后的选择表。
 核验重跑入口为同目录 `review_variable_selection.py`，原始概况重跑入口为
 `profile_variable_selection.py`。未请求新 API 数据或拟合模型。
 
@@ -78,7 +83,7 @@ kable(summary, row.names = FALSE)
 - 39:52–40:58：两人先独立判断，再讨论分歧。
 
 因此，本轮不因引用指标可能相关就先删掉其中几个，也不把高缺失率当作自动淘汰线。
-结构上重复的身份列、原始计数与拟选占比则分开保留，不重复当成独立研究发现。
+同一信息的计数和占比也不会直接算成几项不同的发现。
 Boruta 原始论文的目标是寻找所有相关变量，而非预先压成一个最小变量集合。
 参见[会议记录](https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md)
 与[Kursa 和 Rudnicki（2010）](https://www.jstatsoft.org/article/view/v036i11)。
@@ -108,25 +113,27 @@ for (i in seq_along(choices)) {
 
 ## 仅对疑难项目的说明
 
-**约定任务：**只解释仍难以判断、不能直接决定进入主模型的项目。
+**约定任务：**只给还要讨论的项目写短说明；另说明 `created_date` 容易误读的地方。
 
 | 项目 | 为什么先待定 |
 |---|---|
-| `topic_share` | 衡量本刊对全库某主题的贡献份额，和“本刊内容构成”不同；它还有自己独立的前 25 项列表。是否作为替代主题表示需要讨论。 |
-| `language_unknown_share`、`language_known_proportions_json` | 前者可能反映元数据覆盖；后者换了占比分母。全部 Works 分母已隐含未知比例，不宜把这些列当成互不相关的额外语言发现。 |
-| `host_organization_lineage`、`societies` | 上级出版集团或学会关联可能有解释价值，但需要决定机构层级、组织角色和空列表的含义。保留的 `host_organization` 是有意义的出版机构类别，不是把号码大小当作特征。 |
-| `is_core`、`listed_in` | 涉及其他评价与名录成员资格。CWTS Core 不等于 Scopus，但可能成为外部评价代理；`listed_in` 还有与 DOAJ、SciELO 等现有标志重叠的内容，需要逐项选。 |
-| `apc_usd_by_year`、`is_high_oa_rate_since_year`、`is_in_doaj_since_year`、`oa_flip_year` | 历史信息可能有用，但时间窗尚未约定；空值也可能表示不适用，不能填成收费或年份为零。 |
-| `is_preprint_repository` | 虽然 B 的全部行均为 `journal`，仍有 `r e$preprint_repository_flag_counts$true` 行同时带这个标志。先核查双重标志的含义，不把它误称为常量，也不直接删除这些行。 |
+| `language_unknown_share` | 有些论文没标语言，这一项可能只是记录不全。先不急着用。 |
+| `language_known_proportions_json` | 只算已知语言的论文，比例会变。用哪种算法再商量。 |
+| `apc_usd_by_year` | 先定看哪几年的收费；目前有这项记录的期刊也比较少。 |
+| `is_high_oa_rate_since_year`、`is_in_doaj_since_year`、`oa_flip_year` | 先定看哪几年；没填年份不能当成 0 年。 |
+| `is_preprint_repository` | 这批都标着 journal，`r e$preprint_repository_flag_counts$true` 条却也标着预印本库。先看这 `r e$preprint_repository_flag_counts$true` 条怎么回事。 |
 
-另有两个影响如何使用保留信息的边界：
+**`created_date` 已保留，但它是 OpenAlex 建立这条记录的时间，不是期刊创办年份，
+不能用来证明期刊权威。** `first_publication_year` 是 OpenAlex 收录到的最早论文年份，
+也不保证等于创刊年。见 [OpenAlex 字段说明](https://help.openalex.org/data/sources/attributes/)。
+
+保留以后，还有两点要注意：
 
 - **APC：**`apc_usd` 空值占 `r sprintf("%.2f%%", 100 * profile$field_profiles$apc_usd$raw_buckets$null_marker / e$rows)`。
-  保留收费这一研究维度，不等于已经选定填补方式，更不能把缺失当作免费。
-- **主题：**保留 `topics` 信息；优先讨论 subfield 的“返回列表中有无出现”表示。
-  非空列表未出现某 subfield 只表示未在返回项中观察到，不证明没有相关论文；
-  空列表不能当成所有类别均不存在。topic、field、domain 可作为替代粒度讨论，
-  不因名称相近自动合并，也不把前 25 项汇总成完整、互斥的学科占比。
+  没填费用不代表免费，怎么处理空值下一步再定。
+- **主题：**`topics` 和 `topic_share` 都保留。`topic_share` 看的是这本刊在某个主题里的份额，
+  不是这本刊有多少内容讲这个主题。先讨论按 subfield 分列，列表里出现就记为 1 的办法。
+  没出现只说明返回列表里没有；空列表也不能直接全填 0。怎么编码还没定。
 
 当前数据每份主题列表最多 25 项，观察到 4,516 topic、252 subfield、26 field、4 domain；
 11,852 行为空列表。这些是冻结数据的覆盖事实。subfield 是本轮优先讨论的建议，
@@ -138,9 +145,9 @@ for (i in seq_along(choices)) {
 
 **约定任务：**把 Scopus 结果与预测输入分开，并保留未决口径。
 
-本轮建议以 `scopus_membership_in_reference` 作为主结果候选，对应此前讨论的“是否匹配
-Scopus 参照名录”；`scopus_active_journal_in_reference` 作为较窄定义的替代结果。
-这属于本轮建议，仍需与老师确认；两列均不进入预测输入，也不互相充当预测特征。
+按本轮决定，`scopus_membership_in_reference` 和 `scopus_active_journal_in_reference`
+**都放在 Yes，作为结果变量保留**。前者看是否匹配 Scopus 参照名录，后者进一步看是否为活跃期刊。
+主结果用哪一个仍按此前建议讨论；预测它们时，两列都不能放进预测输入。
 
 ```{r}
 #| label: outcome-counts
@@ -160,6 +167,6 @@ B 的 Source 属性于 10 月取得，Scopus 使用 August 2026 名录。
 当前适合探索现有特征与参照收录状态的关系；尚不能声称预测了未来首次收录或识别了原因。
 DOAJ、SciELO 等成员资格即使保留，也应在后续比较中检查它们对其他特征解释的影响。
 
-交付包括：80 列完整分类报告；研究者侧 19 yes、12 maybe、49 no 的建议；
-仅疑难项附说明。工作簿的 `Saurabh` 判断栏保持空白；双方分歧尚未形成，
-没有执行数值编码、Boruta、SHAP 或代发协作消息。
+本次交付：80 列完整分类，**`r sum(d$decision == "yes")` Yes、`r sum(d$decision == "maybe")` Maybe、`r sum(d$decision == "no")` No**。
+只给 7 个待讨论项和 `created_date` 留短说明。工作簿的 `Saurabh` 判断栏保持空白，
+等老师独立填完再比较；本轮尚未编码或运行模型。

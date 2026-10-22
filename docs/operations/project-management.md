@@ -57,6 +57,11 @@ is Saurabh Khanna. No meeting-access links, private contact details or raw
 transcript enter Git/Plane, and no calendar invitation or collaborator message
 is sent by this intake.
 
+Delivery source `14cbbe9` was committed, pushed and independently read back.
+Task/comment/overview readback confirms INVIS-1 In Review, INVIS-12 In Review,
+INVIS-10 Backlog and INVIS-14 Todo under INVIS-10. The registry records the
+readback receipt separately from research completion.
+
 ## October 16 meeting — historical intake and delivery
 
 The [meeting record](../../meeting-reports/2026-10-16-variable-selection-and-conferences.md)

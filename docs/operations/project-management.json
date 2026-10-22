@@ -379,8 +379,25 @@
         "INVIS-12",
         "INVIS-14"
       ],
-      "plane_sync_status": "in_progress",
-      "scope": "Local audio/transcript retained; project-safe decisions, uncertain field checks and next meeting verified from calendar; no workbook edits or feature/model execution."
+      "plane_sync_status": "synced_readback",
+      "scope": "Local audio/transcript retained; project-safe decisions, uncertain field checks and next meeting verified from calendar; no workbook edits or feature/model execution.",
+      "plane_readback_at": "2026-10-22T07:55:01.656Z",
+      "delivery_commit": "14cbbe948c75d0f04cf849a53e7ce180f410cc86",
+      "readback_evidence": "docs/operations/artifacts/project-management/audio-intake-2026-10-22/readback.json",
+      "plane_delivery_comments": [
+        {
+          "n": 1,
+          "id": "7167e3a5-77e2-4fde-a859-8bbdf217fc47"
+        },
+        {
+          "n": 12,
+          "id": "1606a5ea-b4c9-404a-b7da-f6b9cc1a2467"
+        },
+        {
+          "n": 10,
+          "id": "7a0c5380-d175-42dd-88f4-85a2af0d9c23"
+        }
+      ]
     }
   ],
   "dataset_comparison": {
@@ -476,7 +493,24 @@
       "INVIS-12",
       "INVIS-14"
     ],
-    "plane_sync_status": "in_progress",
-    "scope": "Local audio/transcript retained; project-safe decisions, uncertain field checks and next meeting verified from calendar; no workbook edits or feature/model execution."
+    "plane_sync_status": "synced_readback",
+    "scope": "Local audio/transcript retained; project-safe decisions, uncertain field checks and next meeting verified from calendar; no workbook edits or feature/model execution.",
+    "plane_readback_at": "2026-10-22T07:55:01.656Z",
+    "delivery_commit": "14cbbe948c75d0f04cf849a53e7ce180f410cc86",
+    "readback_evidence": "docs/operations/artifacts/project-management/audio-intake-2026-10-22/readback.json",
+    "plane_delivery_comments": [
+      {
+        "n": 1,
+        "id": "7167e3a5-77e2-4fde-a859-8bbdf217fc47"
+      },
+      {
+        "n": 12,
+        "id": "1606a5ea-b4c9-404a-b7da-f6b9cc1a2467"
+      },
+      {
+        "n": 10,
+        "id": "7a0c5380-d175-42dd-88f4-85a2af0d9c23"
+      }
+    ]
   }
 }

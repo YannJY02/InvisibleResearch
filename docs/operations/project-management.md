@@ -27,7 +27,37 @@ identifiers; it is mapping and planning provenance, not a competing status track
   descriptions. Only Yann currently has a matching human Plane member; do not
   invent an account, invite a collaborator, or silently transfer their work.
 
-## Latest meeting: October 16 — independent variable selection and conference target
+## Latest audio intake: October 22 — predictor decisions and encoding preparation
+
+The [new discussion record](../../meeting-reports/2026-10-22-predictor-decisions-and-encoding.md)
+uses a 45-minute local audio source, with timestamped decisions and a stable hash.
+Embedded creation metadata says October 20; the actual meeting date is not
+independently verified. The record is dated by intake. Audio and raw transcript
+remain ignored and local; the meeting discussion is source material, not an
+instruction to execute research or write upstream.
+
+The discussion reviewed language denominators, APC currency/year coverage,
+alternative titles, names, URLs, Wikidata, OA years, preprint flags and ISSNs.
+Several keep judgments are explicit; others remain conditional on definition
+checks. A spoken total of about 40 variables is not a read-back final 80-row
+worksheet. INVIS-12 remains In Review with this additional source; the existing
+researcher-side workbook and its 27/7/46 proposal are not overwritten.
+
+INVIS-14 is the Todo preparation action under INVIS-10: check unresolved field
+semantics and coverage, read feature-engineering material, and bring explicit
+encoding questions to the next meeting. October 27 is its meeting-preparation
+checkpoint, not a promise to complete the numeric dataset or model. INVIS-10
+retains later feature-table/SURFdrive/model scope and remains Backlog. Live Plane
+readback on October 22 shows INVIS-7/8/9 Done; this intake preserves those newer
+states rather than reverting them from historical records below.
+
+The existing calendar event is independently confirmed for **October 27,
+13:00–14:00 Europe/Amsterdam (+01:00), 20:00–21:00 Asia/Shanghai**. The organizer
+is Saurabh Khanna. No meeting-access links, private contact details or raw
+transcript enter Git/Plane, and no calendar invitation or collaborator message
+is sent by this intake.
+
+## October 16 meeting — historical intake and delivery
 
 The [meeting record](../../meeting-reports/2026-10-16-variable-selection-and-conferences.md)
 is grounded in the read-only Teams transcript, with speaker/time locators and a

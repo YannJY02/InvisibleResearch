@@ -1,5 +1,17 @@
 # Route B variable selection
 
+## Agreed labels synchronized October 27, 2026
+
+The user supplied the [shared Google Sheet](https://docs.google.com/spreadsheets/d/1SsHBfflnwDjt9yDSHdy9KFbsx5QkG0kPCEC5TJxq02Q/edit) as the version agreed at the previous meeting. On October 27, the `Labels` tab was read and exported locally. Its 80 field names and order match the earlier Route B decision table; the agreed column has **40 yes and 40 no**, including both Scopus outcome fields. A yes retains information for consideration; it does not make an outcome a predictor or define its final encoding.
+
+The exact displayed cell values, including the four notes in the source's unnamed fourth column, are preserved in [agreed-variable-labels.csv](analysis/agreed-variable-labels.csv). The exported workbook is local at `artifacts/agreed-variable-labels-2026-10-27/route-b-variable-labels.xlsx` (SHA-256 `0f4c1a2bdf5f9ac8b89c65200009b214fe26153aba6c9d624ba819a7beae8526`). Cell values were compared with the live `Labels` range, and rows 101–1000 were empty. The Google Drive metadata returned a modified time of October 20, 2026; that timestamp does not establish the actual meeting date or explain the source's revision history.
+
+The source's `Jinyi's label` column has 34 yes, 4 maybe and 42 no; seven of those entries differ from the earlier local researcher-side proposal. The agreed column differs from that earlier proposal on 14 fields. Both are preserved rather than reconciled by assumption. The older workbook, proposal and report below remain historical records, not the current agreed labels. Field semantics, missing-value handling, final numeric representation and outcome selection remain separate decisions.
+
+The user also supplied the supervisor's [BERTopic documentation](https://maartengr.github.io/BERTopic/index.html) for feature-engineering preparation. It describes a modular text-topic modelling workflow; receiving the link does not establish a selected model or authorize an analysis run.
+
+## Earlier researcher-side proposal
+
 Updated October 20, 2026. INVIS-12 prepares the independent judgments agreed in the
 [meeting](../../meeting-reports/2026-10-16-variable-selection-and-conferences.md).
 The user subsequently selected **Route B**, then requested the complete table.

@@ -259,27 +259,29 @@
       "plane_id": "1c8cf6b1-80d1-4bea-b558-9f184f9825aa",
       "identifier": "INVIS-13",
       "sources": [
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-16-variable-selection-and-conferences.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/conference-comparison.md"
       ],
       "depends_on": [],
       "planned_start": null,
       "planned_target": null,
-      "date_kind": "Oral conference dates unverified; no hard due date",
-      "scope": "Jinyi compares target conferences and proposes a choice; Saurabh supplies more candidate links. Official call requirements and dates to be checked."
+      "date_kind": "No single task due date; verified 2027 conference cutoffs are in the comparison; final venue is not selected",
+      "scope": "Official conference comparison and current-stage recommendation for human review; final venue, authorship and submission remain human decisions."
     },
     {
       "key": "audio-1a0f8e9abeb5-encoding-preparation",
       "plane_id": "4c5aee96-40b7-4aae-aef4-d7c878385fd6",
       "identifier": "INVIS-14",
       "sources": [
-        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-22-predictor-decisions-and-encoding.md"
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-22-predictor-decisions-and-encoding.md",
+        "https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/analysis/feature-preparation-report.qmd"
       ],
       "parent": "feature-model",
       "depends_on": [],
       "planned_start": null,
       "planned_target": "2026-10-27",
-      "date_kind": "Preparation checkpoint for verified next meeting; not full feature-table/model delivery deadline",
-      "scope": "Check unresolved APC/title/language/ISSN/year definitions, prepare encoding questions and feature-engineering reading; registration only, no research run."
+      "date_kind": "Original October 27 preparation checkpoint recorded October 22; not a feature-table/model deadline or a fresh calendar confirmation",
+      "scope": "Check APC/title/language/ISSN/year definitions and frozen-data coverage, prepare encoding choices and method reading; final feature table and model remain under INVIS-10."
     }
   ],
   "next_meeting": {

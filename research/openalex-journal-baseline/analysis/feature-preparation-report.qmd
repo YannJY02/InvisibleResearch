@@ -1,0 +1,380 @@
+---
+title: "Route B 字段口径与编码准备"
+subtitle: "207,602 条期刊记录实测 · 2026-10-27 · INVIS-14"
+lang: zh-CN
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "查看实际执行的 R 代码"
+    code-copy: true
+    embed-resources: true
+    include-in-header:
+      text: |
+        <style>body{line-height:1.7}th,td{overflow-wrap:anywhere;vertical-align:top}table{font-size:.93rem}</style>
+execute:
+  echo: true
+  message: false
+  warning: false
+  error: false
+  cache: false
+---
+
+## 共同标签与本次范围
+
+**约定任务：**按[最近讨论](https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-22-predictor-decisions-and-encoding.md)，
+查清 APC、其他刊名、语言、ISSN 和年份的含义与覆盖，准备数值表示的选择。
+本轮只核查与提出选项；不插补缺失、不生成最终训练表、不运行 Boruta／SHAP。
+
+```{r}
+#| label: frozen-input
+library(data.table)
+library(jsonlite)
+library(knitr)
+library(digest)
+library(readr)
+show_table <- function(x) knitr::kable(x, format = "html", row.names = FALSE, escape = TRUE)
+out <- "../artifacts/feature-preparation"
+dir.create(out, recursive = TRUE, showWarnings = FALSE)
+input <- "../artifacts/two-route-delivery-2026-10-01/route-b-api/openalex-route-b-api-2026-10-01-journals.csv.gz"
+sha <- digest(input, algo = "sha256", file = TRUE)
+stopifnot(sha == "46376a4fb026936c221c466ecf0fd3c2ab373eed1722ed7bad69a88ca4715724")
+header <- names(read_csv(input, n_max = 0L, col_types = cols(.default = col_character()),
+  na = character(), show_col_types = FALSE))
+labels <- read.csv("agreed-variable-labels.csv", check.names = FALSE)
+stopifnot(length(header) == 80L, identical(header, labels[[1]]),
+          sum(labels[[3]] == "yes") == 40L,
+          all(labels[[3]][grepl("^scopus_.*_in_reference$", labels[[1]])] == "yes"))
+fields <- c("route_row_id", "source_id", "display_name", "alternate_titles", "apc_prices",
+  "apc_usd", "apc_usd_by_year", "language_works_count", "language_known_works_count",
+  "language_unknown_works_count", "language_unknown_share", "language_counts_json",
+  "language_proportions_json", "language_known_proportions_json", "issn", "issn_l",
+  "created_date", "first_publication_year", "last_publication_year",
+  "is_high_oa_rate_since_year", "is_in_doaj_since_year", "oa_flip_year")
+# readr decodes doubled CSV quotes before the embedded JSON is parsed.
+d <- read_csv(input, col_select = all_of(fields),
+  col_types = cols(.default = col_character()), na = character(),
+  show_col_types = FALSE, progress = FALSE)
+stopifnot(nrow(problems(d)) == 0L)
+setDT(d)
+stopifnot(nrow(d) == 207602L, !anyDuplicated(d$route_row_id))
+n <- nrow(d)
+is_missing <- function(x) x %in% c("\\N", "\\M", "")
+number <- function(x) as.numeric(replace(x, is_missing(x), NA_character_))
+parse <- function(x) {
+  if (is_missing(x)) return(NULL)
+  fromJSON(x, simplifyVector = FALSE)
+}
+coverage <- function(field) {
+  x <- d[[field]]
+  data.frame(字段 = field, 无值 = sum(is_missing(x)),
+    空容器 = sum(x %in% c("[]", "{}")),
+    有内容 = sum(!is_missing(x) & !x %in% c("[]", "{}")))
+}
+count_table <- function(x, name) {
+  z <- as.data.frame(table(x), stringsAsFactors = FALSE)
+  names(z) <- c(name, "期刊数")
+  z
+}
+```
+
+采用 10 月 1 日冻结的 Route B：**`r format(n, big.mark=",")` 行 × `r length(header)` 列**。
+文件 SHA-256、全部字段顺序和行身份唯一性均通过本次执行核对。
+共同标签为 **40 yes、40 no**；yes 包含 **38 个候选预测字段和 2 个结果字段**，
+不等于 40 个最终模型特征。10 月 27 日共享表回读与仓库 CSV 的 80 行、4 列逐格一致
+（尾部空单元格归一为字符串空值）。共同保留不代表已确定数值表示。
+
+这里的 `\N` 是原始 null，`\M` 是未返回字段；`[]`／`{}` 是已返回的空容器。
+本次“无值”合并前两类及空字符串，但保留空容器单列，数字 0 仍为有值。
+数据获取入口与冻结版本见[两条路线交付记录](https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/dual-route-delivery.md)。
+
+## APC：金额、币种与年份
+
+**约定任务：**核对原币报价、美元报价及历史年份是否足以直接作为同一费用变量。
+
+```{r}
+#| label: apc-coverage
+show_table(do.call(rbind, lapply(c("apc_prices", "apc_usd", "apc_usd_by_year"), coverage)))
+prices <- lapply(d$apc_prices, parse)
+history <- lapply(d$apc_usd_by_year, parse)
+price_rows <- rbindlist(lapply(which(lengths(prices) > 0L), function(i) {
+  rbindlist(lapply(prices[[i]], function(p) data.table(row = i, currency = p$currency, price = p$price)))
+}))
+history_rows <- rbindlist(lapply(which(lengths(history) > 0L), function(i) {
+  rbindlist(lapply(history[[i]], function(p) data.table(row = i, year = p$year, price = p$price)))
+}))
+usd <- number(d$apc_usd)
+apc_summary <- data.frame(
+  情况 = c("原币报价有内容，但美元报价无值", "美元报价为 0", "美元报价为正数",
+    "有历史价格的期刊", "同一期刊有多个报价币种", "历史列表内重复年份的期刊",
+    "美元报价有值，但原币列表无内容"),
+  期刊数 = c(sum(lengths(prices) > 0L & is.na(usd)), sum(usd == 0, na.rm = TRUE),
+    sum(usd > 0, na.rm = TRUE), sum(lengths(history) > 0L),
+    price_rows[, uniqueN(currency), by = row][V1 > 1L, .N],
+    history_rows[, anyDuplicated(year) > 0L, by = row][V1 == TRUE, .N],
+    sum(!is.na(usd) & lengths(prices) == 0L)))
+show_table(apc_summary)
+show_table(price_rows[, .(期刊数 = uniqueN(row), 最低报价 = min(price), 最高报价 = max(price)),
+  by = .(币种 = currency)][order(-期刊数)])
+show_table(history_rows[, .(期刊数 = uniqueN(row), 最低美元报价 = min(price), 最高美元报价 = max(price)),
+  by = .(年份 = year)][order(-年份)])
+example <- which(d$source_id == "https://openalex.org/S107737141")
+if (!length(example)) example <- which(d$source_id == "S107737141")
+stopifnot(length(example) == 1L)
+show_table(data.frame(同一期刊字段 = c("display_name", "apc_prices", "apc_usd", "apc_usd_by_year"),
+  实际值 = vapply(c("display_name", "apc_prices", "apc_usd", "apc_usd_by_year"),
+    function(k) d[[k]][example], character(1))))
+```
+
+**解释：**美元报价仅覆盖 `r sprintf("%.2f%%", 100*sum(!is.na(usd))/n)` 的期刊，
+有原币报价但没有美元值的有 `r apc_summary$期刊数[1]` 条，反方向的不一致也单独列于表中。
+不能把缺失美元报价填成免费，也不能以某个今天的汇率直接补入冻结数据。
+币种表的金额在各自币种内可读，跨币种最低／最高值没有可比性。
+历史表每年以“该年有记录的期刊”为分母；各年组成不同，不能把均价变化直接解释成价格涨跌。
+
+[Source attributes](https://help.openalex.org/data/sources/attributes/) 将这些值称为挂牌价格，
+并描述美元转换和按年价格；它们不是作者实际支付额。
+[Source overview](https://help.openalex.org/data/sources/) 则仍称只有当前挂牌价，历史费用分析使用当前价格估计，
+且 Butler 数据尚未整合。两页与冻结数据的历史列表并不完全一致。
+本轮无法确认逐年价格的来源、汇率、转换日期或是否经过追溯修改；
+因此报告实测覆盖，但不把 `apc_usd_by_year` 当作已验证的收费历史。
+
+**待选编码：**先讨论使用现有美元价及单独的“费用是否有记录”，
+原币价用于核对，不与美元重复当作独立费用发现。
+如需历史费用，先确定分析年份并补证来源；如决定插补，应只在训练折内估计，避免测试信息进入训练。
+
+## 其他刊名：计数不等于缩写数
+
+**约定任务：**核对 `alternate_titles` 是否可按会议建议转成刊名数量。
+
+```{r}
+#| label: title-counts
+titles <- lapply(d$alternate_titles, parse)
+title_n <- lengths(titles)
+title_unique_n <- vapply(titles, function(x) length(unique(unlist(x))), integer(1))
+title_matches_main <- vapply(seq_len(n), function(i) d$display_name[i] %in% unlist(titles[[i]]), logical(1))
+show_table(count_table(title_n, "其他刊名条目数"))
+show_table(data.frame(情况 = c("列表内有完全相同的重复值", "列表包含 display_name 的完全相同文本"),
+  期刊数 = c(sum(title_n != title_unique_n), sum(title_matches_main))))
+title_case <- which(title_n > 0L)[1:3]
+show_table(data.frame(期刊 = d$display_name[title_case], 列表 = d$alternate_titles[title_case],
+                 条目数 = title_n[title_case]))
+```
+
+**解释：**[官方属性说明](https://help.openalex.org/data/sources/attributes/)把它定义为其他或历史名称；
+缩写字段 `abbreviated_title` 另列且未填充。列表里可能碰巧有缩写，不能把整个字段命名成“缩写数量”。
+建议候选名为 `alternate_title_count`，并讨论是否按完全相同文本去重；
+空列表仅表示没有返回其他名称，不证明期刊从未改名。
+其中 `r sum(title_matches_main)` 条列表已经包含主刊名。若要计算“含主刊名的总名称数”，
+需要把 `display_name` 与列表合并后去重，不能直接在条目数上加 1。
+若研究问题关心改名历史，仅凭这个无日期、无名称类型的列表还不够。
+
+## 语言：全体论文还是已知语言论文
+
+**约定任务：**核实占比的分母、语言代码和未识别语言，避免把同一信息重复计入。
+
+```{r}
+#| label: language-denominators
+total <- number(d$language_works_count)
+known <- number(d$language_known_works_count)
+unknown <- number(d$language_unknown_works_count)
+unknown_share <- number(d$language_unknown_share)
+counts <- lapply(d$language_counts_json, parse)
+shares <- lapply(d$language_proportions_json, parse)
+known_shares <- lapply(d$language_known_proportions_json, parse)
+positive <- which(total > 0)
+language_errors <- vapply(positive, function(i) {
+  cts <- unlist(counts[[i]])
+  ps <- unlist(shares[[i]])
+  ks <- unlist(known_shares[[i]])
+  known_cts <- cts[names(cts) != "__unknown__"]
+  expected_unknown <- if ("__unknown__" %in% names(cts)) cts[["__unknown__"]] else 0
+  max(c(abs(sum(cts) - total[i]), abs(expected_unknown - unknown[i]),
+    abs(known[i] + unknown[i] - total[i]), abs(sum(ps) - 1),
+    abs(ps - cts[names(ps)] / total[i]), abs(unknown_share[i] - unknown[i] / total[i]),
+    if (known[i] > 0) abs(ks - known_cts[names(ks)] / known[i]) else length(ks)))
+}, numeric(1))
+stopifnot(all(is.finite(language_errors)), max(language_errors) < 1e-9,
+  all(vapply(positive, function(i) setequal(names(counts[[i]]), names(shares[[i]])), logical(1))),
+  all(vapply(positive, function(i) setequal(setdiff(names(counts[[i]]), "__unknown__"),
+    names(known_shares[[i]])), logical(1))),
+  all(lengths(counts)[total == 0] == 0L), all(lengths(shares)[total == 0] == 0L),
+  all(is.na(unknown_share[total == 0])))
+language_codes <- sort(unique(unlist(lapply(counts, names))))
+show_table(data.frame(情况 = c("分母为零，语言占比不可计算", "分母大于零", "至少一篇论文语言未知", "全部论文语言未知"),
+  期刊数 = c(sum(total == 0), sum(total > 0), sum(unknown > 0), sum(total > 0 & known == 0))))
+language_rows <- rbindlist(lapply(positive, function(i) {
+  data.table(row = i, code = names(counts[[i]]), count = as.numeric(unlist(counts[[i]])))
+}))
+language_totals <- language_rows[, .(期刊数 = uniqueN(row), 论文数 = sum(count)),
+  by = .(代码 = code)][order(-论文数)]
+non_two_letter_codes <- setdiff(language_codes[!grepl("^[a-z]{2}$", language_codes)], "__unknown__")
+code_anomaly_journals <- language_rows[code %in% non_two_letter_codes, uniqueN(row)]
+show_table(head(language_totals, 12L))
+lang_case <- which(unknown > 0 & known > 0)[1]
+show_table(data.frame(同一期刊字段 = c("display_name", "language_works_count", "language_known_works_count",
+  "language_unknown_works_count", "language_counts_json", "language_proportions_json",
+  "language_known_proportions_json", "language_unknown_share"),
+  实际值 = vapply(c("display_name", "language_works_count", "language_known_works_count",
+    "language_unknown_works_count", "language_counts_json", "language_proportions_json",
+    "language_known_proportions_json", "language_unknown_share"), function(k) d[[k]][lang_case], character(1))))
+```
+
+**解释：**全体论文口径包含 `__unknown__`，分母为 `language_works_count`；
+已知语言口径去掉未知论文，分母为 `language_known_works_count`。
+本次逐刊核对计数与两种占比，最大数值误差为 `r format(max(language_errors), scientific=TRUE)`。
+前者符合共同表保留 `language_proportions_json` 的选择；后者已标 no，仅在这里用于验证分母。
+`language_unknown_share` 与全体占比中的 `__unknown__` 是同一信息，最终展开时应避免重复列。
+
+观察到 `r length(setdiff(language_codes, "__unknown__"))` 个非未知代码，
+以及采集程序自己定义的 `__unknown__`。它不是 ISO 语言代码。
+[OpenAlex 的语言说明](https://help.openalex.org/data/languages/)说明语言由标题和摘要自动推断，
+使用 ISO 639-1 代码。**但本批数据有 `r length(non_two_letter_codes)` 种非未知值不符合两个小写拉丁字母的形式，
+涉及 `r format(code_anomaly_journals, big.mark=",")` 条期刊记录**，包括 `eng`、`zh-cn`、`other` 和 `英语`。
+这说明不能直接按当前文档假定代码已统一；两个字母的形状检查也不等于核实了代码标准。
+应先建立有来源的代码对应表，区分别名、细分语言和未明类别，再讨论合并，不能全部压成未知。
+自动推断的语言也不足以证明全文或期刊编辑政策的语言。
+上表汇总的是期刊关联论文计数，并非去重后的全球论文总数，也不是期刊数占比。
+
+<details>
+<summary>展开本批全部语言代码及覆盖</summary>
+
+```{r}
+#| label: complete-language-codes
+show_table(language_totals)
+```
+
+</details>
+
+**待选编码：**保留一个规模变量和全体论文语言比例；稀有语言是否合并，应以研究解释和训练数据为依据。
+有论文、但某语言键缺席时，在这个完整计数字典内可表示该语言计数为 0；
+总论文数为 0 时比例无定义，不能整行填成语言比例 0。
+
+## ISSN：可计数，不能从数组位置判断载体
+
+**约定任务：**核对 ISSN 个数、ISSN-L 关系，以及电子版／纸质版能否直接分开。
+
+```{r}
+#| label: issn-counts
+issns <- lapply(d$issn, parse)
+issn_n <- vapply(seq_len(n), function(i) {
+  if (is_missing(d$issn[i])) return(NA_integer_)
+  length(unique(unlist(issns[[i]])))
+}, integer(1))
+issn_check <- function(x) {
+  if (!grepl("^[0-9]{4}-[0-9]{3}[0-9X]$", x)) return(FALSE)
+  chars <- strsplit(gsub("-", "", x), "")[[1]]
+  digits <- as.numeric(replace(chars, chars == "X", "10"))
+  sum(digits * 8:1) %% 11 == 0
+}
+issn_tokens <- unique(unlist(issns))
+issn_valid <- vapply(issn_tokens, issn_check, logical(1))
+invalid_issns <- issn_tokens[!issn_valid]
+l_present <- !is_missing(d$issn_l)
+l_in_list <- vapply(which(l_present), function(i) d$issn_l[i] %in% unlist(issns[[i]]), logical(1))
+show_table(count_table(ifelse(is.na(issn_n), "无值", as.character(issn_n)), "不同 ISSN 数"))
+show_table(data.frame(情况 = c("ISSN-L 有值", "ISSN-L 有值且已在 issn 列表中",
+  "ISSN-L 有值但 issn 列表无值", "ISSN-L 有值、列表也有值，但未包含该 L 值",
+  "存在格式或校验位不合法 ISSN 的期刊"),
+  期刊数 = c(sum(l_present), sum(l_in_list), sum(l_present & is.na(issn_n)),
+    sum(l_present & !is.na(issn_n)) - sum(l_in_list),
+    sum(vapply(issns, function(x) any(unlist(x) %in% invalid_issns), logical(1))))))
+show_table(data.frame(期刊 = d$display_name[example], issn = d$issn[example], issn_l = d$issn_l[example]))
+```
+
+**解释：**不同 ISSN 数在已返回列表中最大为 **`r max(issn_n, na.rm=TRUE)`**，
+所以会议中“0、1、2”的举例不宜直接做成固定三类。
+无值的 `issn` 不能当成已确认的“0 个 ISSN”；列表中的编号也未标注纸质或电子载体。
+[ISSN 国际中心](https://www.issn.org/understanding-the-issn/assignment-rules/the-issn-l-for-publications-on-multiple-media/)
+说明 ISSN-L 从已有 ISSN 中指定，用于连接不同载体。因此不能把 `issn_l` 再加 1。
+
+**待选编码：**计数已返回列表中去重后的 ISSN，并保留缺失标记；
+如需要电子／纸质的单独状态，要补充带载体标签的权威来源，不能依靠数组顺序推断。
+校验位通过也只证明编号形式有效，不证明与期刊身份匹配。
+
+## 年份与记录日期：先确定观察时点
+
+**约定任务：**核查年份覆盖，区分未填、零、研究窗口外的值，以及不同时间含义。
+
+```{r}
+#| label: year-coverage
+year_fields <- c("first_publication_year", "last_publication_year",
+  "is_high_oa_rate_since_year", "is_in_doaj_since_year", "oa_flip_year")
+year_summary <- rbindlist(lapply(year_fields, function(k) {
+  x <- number(d[[k]])
+  data.table(字段 = k, 有值 = sum(!is.na(x)), 无值 = sum(is.na(x)), 零值 = sum(x == 0, na.rm=TRUE),
+    最早 = min(x, na.rm=TRUE), 最晚 = max(x, na.rm=TRUE),
+    晚于冻结年份 = sum(x > 2026, na.rm=TRUE))
+}))
+show_table(year_summary)
+show_table(coverage("created_date"))
+first <- number(d$first_publication_year)
+last <- number(d$last_publication_year)
+show_table(data.frame(情况 = c("首篇年份晚于末篇年份", "DOAJ 或高 OA 年份至少一项有值"),
+  期刊数 = c(sum(first > last, na.rm=TRUE), sum(!is_missing(d$is_in_doaj_since_year) |
+    !is_missing(d$is_high_oa_rate_since_year)))))
+year_anomalies <- rbindlist(lapply(year_fields, function(k) {
+  rows <- which(!is.na(number(d[[k]])) & (number(d[[k]]) <= 0 | number(d[[k]]) > 2026))
+  data.table(期刊 = d$display_name[rows], Source = d$source_id[rows], 字段 = rep(k, length(rows)), 原值 = d[[k]][rows])
+}))
+show_table(year_anomalies)
+```
+
+**解释：**首末发表年描述 OpenAlex 收录到的论文范围，不能直接等同于创刊与停刊年。
+OA／DOAJ 年份无值也不能写成 0 年或“从未开放”。任何“截至某年”的模型都需要先固定观察时点，
+只用当时可获得的预测信息，避免后来的引用、收录状态或 OA 转变解释更早的结果。
+本批还有 `r nrow(year_anomalies)` 个字段值为非正数或晚于冻结年份，已列出期刊身份。
+建议保留原值和异常标记，核查后再决定是否在分析列设为缺失；不能直接用它们计算期刊年龄。
+
+另有两处需要版本证据：当前[通用属性文档](https://help.openalex.org/data/common-attributes/)
+把年度引用描述为该年收到的引用，把 `created_date` 描述为记录进入 OpenAlex 的日期；
+而本项目保留的[固定版本聚合源码](https://github.com/ourresearch/openalex-walden/blob/7021748a6946c262484437b356f355d2b9e1a494/notebooks/sources/CreateSourcesApi.ipynb)
+按论文发表年汇总其累计被引，并取关联论文最早的创建日期；
+同一代码中的 `oa_flip_year` 是优先取高 OA 年、否则 DOAJ 年，再减 1。
+代码存在不证明它生成了 10 月 1 日 API 数据，当前文档也不能反向证明冻结数据口径。
+因此，本轮不将这些字段改名为“当年新获引用”“期刊建库年”或“经核实的 OA 转型年”。
+
+## 会议可以直接决定的事项
+
+**约定任务：**将核查结果变成可讨论的编码选择，并阅读特征工程与 BERTopic 的原始说明。
+
+| 需要共同决定 | 有证据支持的备选方案 | 决定前仍缺什么 |
+|---|---|---|
+| 结果变量 | 名录中存在；或在该版本名录中是 active journal | 主结果、敏感性结果与未知标签的处理 |
+| 分析时点 | 冻结数据的横截面关联；或指定历史年份 | 历史研究需要当时版本的预测值和结果标签 |
+| APC | 当前美元报价＋有无记录；历史报价另行验证 | 历史来源、年份与汇率证据；缺失处理方案 |
+| 语言 | 全体论文占比＋规模；未知份额只表示一次 | 代码标准化、稀有语言合并、零分母处理 |
+| 刊名／ISSN | 已返回不同条目数；缺失单列 | 文本去重规则；ISSN 无值不能当 0 |
+| OA 年份／引用年／创建日 | 暂保留原值与缺失，解释附版本限制 | API 冻结版本的计算定义 |
+| 主题表示 | 原有分类展开到约定层级；或单独研究文本主题 | 层级、返回列表截断及空列表规则；文本语料 |
+
+[scikit-learn 的官方实践说明](https://scikit-learn.org/stable/common_pitfalls.html#data-leakage)
+要求先拆分训练／测试，再在训练数据中拟合预处理与特征选择。
+因此未来的缺失插补、稀有类合并与 Boruta 选择都不能先对全样本学习规则再报告测试表现。
+连续变量无需为了形式统一就全部标准化，处理应与后续模型一致。
+
+[BERTopic 的原作者算法说明](https://maartengr.github.io/BERTopic/algorithm/algorithm.html)
+按文本嵌入、降维、聚类和主题词表示构建主题。
+它需要明确的文档语料；现有 OpenAlex topic/subfield 列表并不是 BERTopic 的同义字段。
+当前任务可以先讨论现有主题层级的表示；若另做 BERTopic，应先确定用论文标题、摘要还是其他文本，
+以及如何把文档主题汇总到期刊。不把期刊名直接作为足够的内容语料，也不把主题编号当连续数量。
+
+本轮阅读完成的是方法准备，不代表已运行主题模型或确定预测模型。
+共同标签不变；INVIS-10 的最终特征表、SURFdrive 交付和模型执行仍依赖上述决定。
+
+```{r}
+#| label: execution-receipt
+#| include: false
+write_json(list(executed_at_utc = format(Sys.time(), tz="UTC", usetz=TRUE),
+  source_sha256 = sha, rows = n, columns = length(header),
+  yes = sum(labels[[3]] == "yes"), no = sum(labels[[3]] == "no"),
+  apc_coverage = do.call(rbind, lapply(c("apc_prices", "apc_usd", "apc_usd_by_year"), coverage)),
+  apc_summary = apc_summary, language_max_error = max(language_errors),
+  language_zero_denominator = sum(total == 0), language_codes = language_codes,
+  non_two_letter_codes = non_two_letter_codes, code_anomaly_journals = code_anomaly_journals,
+  issn_max_unique_count = max(issn_n, na.rm=TRUE), year_summary = year_summary,
+  R_version = R.version.string), file.path(out, "execution.json"), pretty=TRUE, auto_unbox=TRUE)
+writeLines(capture.output(sessionInfo()), file.path(out, "session-info.txt"))
+```

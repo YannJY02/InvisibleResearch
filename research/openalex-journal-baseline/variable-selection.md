@@ -1,5 +1,23 @@
 # Route B variable selection
 
+The October 27 [field-preparation report](analysis/feature-preparation-report.qmd)
+checks the frozen cohort against the agreed labels and develops encoding options.
+It does not replace the shared decisions or select a final model representation.
+Its version caveat also qualifies the older `created_date` explanation below:
+current documentation and the preserved aggregation code differ, so the frozen
+field's exact generation rule remains unverified. Neither supports journal age.
+
+Reproduce its actual R execution and local HTML from the repository root:
+
+```sh
+quarto render research/openalex-journal-baseline/analysis/feature-preparation-report.qmd \
+  --output-dir ../artifacts/feature-preparation/report
+```
+
+The rendered report, execution receipt and R session record are under this owner's
+ignored `artifacts/feature-preparation/`. Official-source links and the distinction
+between current documentation and frozen-data semantics are in the report.
+
 ## Agreed labels synchronized October 27, 2026
 
 The user supplied the [shared Google Sheet](https://docs.google.com/spreadsheets/d/1SsHBfflnwDjt9yDSHdy9KFbsx5QkG0kPCEC5TJxq02Q/edit) as the version agreed at the previous meeting. On October 27, the `Labels` tab was read and exported locally. Its 80 field names and order match the earlier Route B decision table; the agreed column has **40 yes and 40 no**, including both Scopus outcome fields. A yes retains information for consideration; it does not make an outcome a predictor or define its final encoding.

@@ -27,7 +27,51 @@ identifiers; it is mapping and planning provenance, not a competing status track
   descriptions. Only Yann currently has a matching human Plane member; do not
   invent an account, invite a collaborator, or silently transfer their work.
 
-## Latest audio intake: October 22 — predictor decisions and encoding preparation
+## October 27 — completed-scope reconciliation and authorized preparation
+
+The user requested reconciliation of completed work against meeting conclusions,
+followed by autonomous execution of work whose prerequisites are available.
+Live Plane records and comments, the latest meeting records, the upstream
+supervisor checklist, and the shared worksheet were read before changes.
+
+INVIS-1/5/6/12 were moved to Done for their supported delivered scopes:
+management setup and prior synchronization; the Crossref comparison; the adopted
+BigQuery access route; and the now-agreed variable choices. This does not claim
+an indefinitely running monitor, RPubs publication, repair of the old `insyspo`
+permissions, or completed feature encoding. Already-Done INVIS-2/3/4/7/8/9
+were preserved. The upstream collection remained read-only.
+
+The shared `Labels!A1:D81` range was reread and compared cell-for-cell to
+[the preserved CSV](../../research/openalex-journal-baseline/analysis/agreed-variable-labels.csv),
+normalizing only trailing blank cells. All 80 rows agree: 40 yes and 40 no,
+with 38 predictor candidates and two outcomes in yes. The earlier independent
+proposal remains historical; it no longer determines the current task state.
+
+INVIS-14 and INVIS-13 entered In Progress for the
+[R field-preparation report](../../research/openalex-journal-baseline/analysis/feature-preparation-report.qmd)
+and [official conference comparison](../../research/openalex-journal-baseline/conference-comparison.md).
+The former checks frozen-data coverage and denominators and distinguishes
+current documentation from unresolved version semantics. The latter separates
+verified deadlines and formats from the human choice of audience and venue.
+Delivery verification, commit/push and subsequent human-review state are recorded
+in their Plane comments; these outputs do not constitute human acceptance.
+The report was executed in R against all 207,602 rows with the frozen SHA-256,
+80-column header, unique row IDs and language count/share identities checked.
+Its final HTML tables, raw-value display, navigation and expandable language
+inventory were inspected in the browser. Document governance passed locally.
+
+INVIS-10 remains Backlog pending the main outcome, unknown-label treatment,
+observation time and encoding choices. INVIS-11 remains Blocked: the existing
+task/comments, July meeting action, local Inbox listing and a bounded connected
+Gmail query did not establish receipt of the supervisor's selected seeds.
+This is not proof of absence across all communication channels. Existing 18-note
+literature work is retained rather than relabelled as new seed receipt or a draft.
+
+No collaborator messages, calendar changes, submission, new recurring monitor,
+or model fitting were performed. Prior meeting dates below are historical
+observations, not a fresh confirmation of an upcoming appointment.
+
+## October 22 audio intake — historical predictor discussion
 
 The [new discussion record](../../meeting-reports/2026-10-22-predictor-decisions-and-encoding.md)
 uses a 45-minute local audio source, with timestamped decisions and a stable hash.

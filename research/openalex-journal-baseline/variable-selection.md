@@ -1,7 +1,11 @@
 # Route B variable selection
 
 The October 27 [field-preparation report](analysis/feature-preparation-report.qmd)
-checks the frozen cohort against the agreed labels and develops encoding options.
+answers the meeting questions in English, with executed verification code and results.
+It checks the frozen cohort against the agreed labels and develops encoding options.
+The revised investigation traces the annual APC import to Butler / ScholCommLab and
+verifies all 19 preprint flags against the original API responses; their coexistence
+with `type=journal` is inherited from OpenAlex, not introduced by the local join.
 It does not replace the shared decisions or select a final model representation.
 Its version caveat also qualifies the older `created_date` explanation below:
 current documentation and the preserved aggregation code differ, so the frozen

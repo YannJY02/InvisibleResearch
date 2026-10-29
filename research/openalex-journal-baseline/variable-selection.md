@@ -1,12 +1,18 @@
 # Route B variable selection
 
-The October 27 [field-preparation report](analysis/feature-preparation-report.qmd)
+The October 29 [field-preparation report](analysis/feature-preparation-report.qmd)
 answers the meeting questions in English, with executed verification code and results.
-It checks the frozen cohort against the agreed labels and develops encoding options.
+It gives explicit retain/exclude/defer recommendations, with highlighted decisions and
+next actions for language mapping, publication medium, population and observation date.
+It checks the frozen cohort against the agreed labels without changing those labels.
 The revised investigation traces the annual APC import to Butler / ScholCommLab and
 verifies all 19 preprint flags against the original API responses; their coexistence
 with `type=journal` is inherited from OpenAlex, not introduced by the local join.
-It does not replace the shared decisions or select a final model representation.
+The new registry audit includes short unrecognized language labels; a matched Crossref
+example verifies that medium labels can be retrieved but cannot be decoded from ISSN digits.
+The report recommends deferring a medium predictor pending a coverage audit and excluding
+`created_date` from the first substantive feature set until its meaning is established.
+These recommendations do not replace the shared decisions or select a final model representation.
 Its version caveat also qualifies the older `created_date` explanation below:
 current documentation and the preserved aggregation code differ, so the frozen
 field's exact generation rule remains unverified. Neither supports journal age.

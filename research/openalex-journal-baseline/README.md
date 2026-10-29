@@ -11,8 +11,9 @@ variable selection. Both remain Exploratory Analysis, not Paper Analysis.
   identical independent-review sheets, field explanations and observed missingness.
 
 - [Field definitions and encoding preparation](analysis/feature-preparation-report.qmd):
-  English answers with executed checks for APC, alternative titles, language, ISSNs
-  and years, including the upstream origin of the 19 preprint flags.
+  English retention recommendations with executed checks for APC, names, language,
+  ISSNs and years; highlighted open decisions and next actions, including a verified
+  Crossref medium example and the upstream origin of the 19 preprint flags.
 - [Conference comparison](conference-comparison.md): official ICA/FAccT deadlines
   converted to Beijing time, submission formats and current-stage fit; IC2S2 2027
   call remains unverified and the final venue remains a human decision.

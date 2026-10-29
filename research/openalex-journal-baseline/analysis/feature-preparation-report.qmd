@@ -1,6 +1,6 @@
 ---
-title: "Route B: answers to the field-preparation questions"
-subtitle: "Frozen cohort: 1 October 2026 · Verified: 27 October 2026 · INVIS-14"
+title: "Route B: which disputed fields should we retain?"
+subtitle: "Frozen cohort: 1 October 2026 · Verified: 29 October 2026 · INVIS-14"
 lang: en
 format:
   html:
@@ -10,10 +10,11 @@ format:
     code-fold: true
     code-summary: "Show executed verification code"
     code-copy: true
+    code-overflow: wrap
     embed-resources: true
     include-in-header:
       text: |
-        <style>body{line-height:1.65}th,td{overflow-wrap:anywhere;vertical-align:top}table{font-size:.93rem}#why-are-19-preprint-sources-present-in-a-journal-dataset table{table-layout:fixed;width:100%}#why-are-19-preprint-sources-present-in-a-journal-dataset th:nth-child(1){width:44%}#why-are-19-preprint-sources-present-in-a-journal-dataset th:nth-child(2){width:20%}</style>
+        <style>body{line-height:1.65}th,td{overflow-wrap:anywhere;vertical-align:top}table{font-size:.93rem}td[style*="text-align: right"],th[style*="text-align: right"]{white-space:nowrap}#why-are-19-preprint-sources-present-in-a-journal-dataset table{table-layout:fixed;width:100%}#why-are-19-preprint-sources-present-in-a-journal-dataset th:nth-child(1){width:44%}#why-are-19-preprint-sources-present-in-a-journal-dataset th:nth-child(2){width:20%}</style>
 execute:
   echo: true
   message: false
@@ -24,10 +25,10 @@ execute:
 
 At the [previous discussion](https://github.com/YannJY02/InvisibleResearch/blob/main/meeting-reports/2026-10-22-predictor-decisions-and-encoding.md), we agreed to retain potentially useful information and check what these fields mean before choosing numeric features.
 
-## 1. What does the agreed set of 40 fields contain?
+Each question below gives a retention recommendation, the evidence supporting it and its practical meaning. **Yellow “Decision needed” boxes identify choices that still need agreement and state the next action.** Recommendations do not overwrite the shared labels.
 
-**Answer:** It contains **38 candidate predictor fields and two Scopus outcome fields**, not 40 model features. The frozen dataset contains 207,602 sources and 80 columns. This report checks those data without changing the agreed labels or fitting a model.
-
+<details>
+<summary>Input checks and shared analysis setup</summary>
 
 ```{r}
 #| label: frozen-input
@@ -55,10 +56,28 @@ fields <- c("route_row_id", "source_id", "display_name", "alternate_titles", "ap
   "type", "is_preprint_repository", "homepage_url", "created_date", "first_publication_year", "last_publication_year",
   "is_high_oa_rate_since_year", "is_in_doaj_since_year", "oa_flip_year")
 # readr decodes doubled CSV quotes before the embedded JSON is parsed.
-d <- read_csv(input, col_select = all_of(fields),
-  col_types = cols(.default = col_character()), na = character(),
-  show_col_types = FALSE, progress = FALSE)
-stopifnot(nrow(problems(d)) == 0L)
+# Select columns with a streaming CSV parser before R reads the data. This avoids
+# readr materializing the entire 80-column decompressed input on a nearly full disk.
+select_probe <- '
+import csv, gzip, json, sys
+csv.field_size_limit(sys.maxsize)
+fields = json.loads(sys.argv[3])
+with gzip.open(sys.argv[1], "rt", newline="") as src:
+    reader = csv.DictReader(src)
+    with gzip.open(sys.argv[2], "wt", newline="") as dst:
+        writer = csv.DictWriter(dst, fieldnames=fields)
+        writer.writeheader()
+        for row in reader:
+            writer.writerow({field: row[field] for field in fields})
+'
+select_file <- file.path(out, "select-report-fields.py")
+selected_input <- file.path(out, "selected-report-fields.csv.gz")
+writeLines(select_probe, select_file)
+stopifnot(system2("python3", c(shQuote(select_file), shQuote(input),
+  shQuote(selected_input), shQuote(toJSON(fields)))) == 0L)
+d <- read_csv(selected_input, col_types = cols(.default = col_character()),
+  na = character(), show_col_types = FALSE, progress = FALSE)
+stopifnot(identical(names(d), fields), nrow(problems(d)) == 0L)
 setDT(d)
 stopifnot(nrow(d) == 207602L, !anyDuplicated(d$route_row_id))
 n <- nrow(d)
@@ -81,11 +100,13 @@ count_table <- function(x, name) {
 }
 ```
 
-**Result:** The file hash, 80-column order, 40 yes / 40 no labels and unique row identities pass the checks above. `\N` means null, `\M` means an absent field, and `[]` / `{}` mean returned empty containers. Zero remains a value.
+The frozen input and row identities passed verification. `\N` means null, `\M` means an absent field, and `[]` / `{}` mean returned empty containers. Zero remains a value.
 
-## 2. Are APC amounts already in dollars, and does the original currency list add anything?
+</details>
 
-**Answer:** `apc_usd` is a USD list price; `apc_prices` retains currency-labelled quotes. USD is present for **15,178 sources (7.31%)**. The original-price list adds **251 sources without a USD value**, so it should remain available for checking. Missing prices do not mean free publication; 660 sources explicitly record USD 0.
+## 1. Are APC amounts already in dollars, and does the original currency list add anything?
+
+**Answer: retain `apc_usd` as a candidate price measure and retain `apc_prices` for supplementary information and verification.** APC means *article processing charge*, an advertised publication fee; USD means US dollars. `apc_usd` is a USD list price; `apc_prices` retains currency-labelled quotes. USD is present for **15,178 sources (7.31%)**. The original-price list adds **251 sources without a USD value**, so it should remain available for checking. Missing prices do not mean free publication; 660 sources explicitly record USD 0.
 
 
 ```{r}
@@ -126,9 +147,9 @@ show_table(data.frame(Field = c("display_name", "apc_prices", "apc_usd", "apc_us
 
 The [pre-freeze APC import code](https://github.com/ourresearch/openalex-sources/blob/ec51507ab4cb5ca917b9c0de2351252c478d1434/jobs/butler_apc.py) uses the dataset's USD values and refreshes original-currency quotes for recent covered journals. Other registry values can remain older. This explains why the three fields are not interchangeable. The export has no quote-level conversion date for the 251 USD-missing cases: retain their currency and amount, and leave USD missing rather than apply today's exchange rate to an undated quote.
 
-## 3. Where do annual APCs come from, and which years are available?
+## 2. Where do annual APCs come from, and which years are available?
 
-**Answer:** The documented upstream route is the **Butler / ScholCommLab APC datasets**, including the 2019–2025 release. Our data contain annual prices for **12,407 sources (5.98%)**, covering **2019–2025**. Missing years were not filled by that importer; a blank year is not a zero charge.
+**Answer: retain annual APC information; do not replace it with the current price.** The documented upstream route is the **Butler / ScholCommLab APC datasets**, including the 2019–2025 release. Our data contain annual prices for **12,407 sources (5.98%)**, covering **2019–2025**. Missing years were not filled by that importer; a blank year is not a zero charge.
 
 ```{r}
 #| label: annual-apc-check
@@ -146,9 +167,9 @@ show_table(data.frame(Check = c("Current USD equals latest observed annual price
 
 The [importer](https://github.com/ourresearch/openalex-sources/blob/ec51507ab4cb5ca917b9c0de2351252c478d1434/jobs/butler_apc.py) keeps observed years only and updates current prices only when the latest observation is sufficiently recent. It takes converted USD from the input dataset; it does not perform a fresh exchange-rate conversion for these priced rows. The code identifies the import method, but our export does not contain a per-record import receipt. Use recorded yearly USD for the matching year, preserve gaps, and do not label the series inflation-adjusted or transaction prices.
 
-## 4. Does `alternate_titles` mean abbreviations, and how should it be counted?
+## 3. Does `alternate_titles` mean abbreviations, and how should it be counted?
 
-**Answer:** It contains alternative or former names, sometimes abbreviations. Count distinct returned names as `alternate_title_count`; do not call it an abbreviation count. If the main title is included, deduplicate it before counting total names. An empty list means no alternative name was returned.
+**Answer: retain `alternate_titles` and derive a distinct-name count.** It contains alternative or former names, sometimes abbreviations. Count distinct returned names as `alternate_title_count`; do not call it an abbreviation count. If the main title is included, deduplicate it before counting total names. An empty list means no alternative name was returned.
 
 
 ```{r}
@@ -167,9 +188,9 @@ show_table(data.frame(Source = d$display_name[title_case], List = d$alternate_ti
 
 **Result:** `r sum(title_matches_main)` lists already contain the exact main title, and `r sum(title_n != title_unique_n)` contain exact duplicates. Adding one to every list length would overcount some sources. [OpenAlex distinguishes alternative titles from its separate abbreviation field](https://help.openalex.org/data/sources/attributes/); the list has no dates with which to reconstruct name changes.
 
-## 5. What is the denominator of each language share?
+## 4. What is the denominator of each language share?
 
-**Answer:** `language_proportions_json` divides each language count by **all counted works, including unknown language**. `language_known_proportions_json` divides by known-language works only. The agreed version is the first. For the 11,392 sources with no counted works, shares are undefined, not zero.
+**Answer: retain the all-work shares; do not add the known-only shares as a second default representation.** JSON is a text format for storing name–value pairs. `language_proportions_json` divides each language count by **all counted works, including unknown language**. `language_known_proportions_json` divides by known-language works only. The agreed version is the first. For the 11,392 sources with no counted works, shares are undefined, not zero.
 
 
 ```{r}
@@ -220,9 +241,9 @@ show_table(data.frame(Field = c("display_name", "language_works_count", "languag
 
 **Result:** Counts, totals and both share definitions agree for every source with works; the maximum numerical error is `r format(max(language_errors), scientific=TRUE)`. These are counts of works assigned to each source, not editorial language policies or confirmed full-text languages.
 
-## 6. Are unknown-language counts and shares perfectly correlated?
+## 5. Are unknown-language counts and shares perfectly correlated?
 
-**Answer:** No. The Pearson correlation is **0.117** across sources with works. Counts measure volume; shares measure the fraction with unknown language. The exact duplicate is `language_unknown_share` and the `__unknown__` entry in the all-work share dictionary.
+**Answer: retain unknown-language share once; do not reinstate unknown count as an additional default feature.** The count and share are not perfectly correlated: their Pearson correlation (a measure of linear association) is **0.117** across sources with works. Counts measure volume; shares measure the fraction with unknown language. The exact duplicate is `language_unknown_share` and the `__unknown__` entry in the all-work share dictionary.
 
 ```{r}
 #| label: unknown-language-correlation
@@ -235,11 +256,11 @@ show_table(data.frame(Sources = length(positive), Pearson_r = unknown_correlatio
   Maximum_duplicate_difference = max(abs(unknown_dictionary_share - unknown_share[positive]))))
 ```
 
-**Result:** Keep unknown share once when expanding the dictionary. The low count–share correlation corrects the untested claim in the discussion; it does not by itself establish which field improves a model.
+**Result:** Keep unknown share once when expanding the dictionary. Unknown count is exactly recoverable as total counted works × unknown share, and total count is already retained. This supports the existing decision not to add unknown count separately, although a nonlinear transformation could still affect a particular model. The low correlation alone is not evidence of independent information or predictive benefit.
 
-## 7. Are all language codes already standardized?
+## 6. Are all language codes already standardized?
 
-**Answer:** No. There are **`r length(setdiff(language_codes, "__unknown__"))` non-unknown labels**, including 79 that are not two lowercase letters, affecting 10,814 sources. They include valid longer language codes as well as aliases and miscellaneous labels. This is mixed upstream metadata, not evidence that all 79 are invalid languages. Keep the original codes; map verified aliases before expanding them into model columns.
+**Answer: retain language composition, but do not turn unreviewed labels directly into separate model columns.** There are **`r length(setdiff(language_codes, "__unknown__"))` non-unknown labels**, including 79 that are not two lowercase letters, affecting 10,814 sources. They include valid longer language codes as well as aliases and miscellaneous labels. This is mixed upstream metadata, not evidence that all 79 are invalid languages. Keep the original codes; map verified aliases before expanding them into model columns.
 
 ```{r}
 #| label: language-code-check
@@ -250,20 +271,74 @@ show_table(language_totals[Code %in% c("en", "eng", "英语", "영어", "zh", "z
 
 **Result:** [The local import](https://github.com/YannJY02/InvisibleResearch/blob/main/research/openalex-journal-baseline/analysis/build_dual_route_datasets.py) preserves API language groups, lowercases their labels and combines `unknown` / `null` into `__unknown__`. It does not generate `eng`, `zh-cn` or Chinese-language labels. [Current OpenAlex guidance](https://help.openalex.org/data/languages/) describes title/abstract language inference and two-letter codes; the frozen values show that this description is not a complete validation rule. Keep dialect distinctions and unresolved labels separate rather than silently convert everything to English, Chinese or unknown.
 
+### Which labels can be reconciled, and which require a decision?
+
+The [IANA language subtag registry](https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry) supplies registered names and broader-language relationships. IANA is the Internet Assigned Numbers Authority. Registration verifies a label's definition, **not whether the underlying paper was classified correctly**. The [Library of Congress ISO correspondence table](https://www.loc.gov/standards/iso639-2/php/code_list.php) confirms `eng → en`, `fra → fr` and `spa → es`. ISO is the International Organization for Standardization.
+
+```{r}
+#| label: language-registry-audit
+registry_file <- file.path(out, "decision-sources", "iana-language-subtag-registry.txt")
+dir.create(dirname(registry_file), recursive = TRUE, showWarnings = FALSE)
+# Cached retrieval: 29 October 2026; registry File-Date is shown below.
+# Remove this cache to retrieve a new registry; a new version can change the audit.
+if (!file.exists(registry_file)) download.file(
+  "https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry",
+  registry_file, mode = "wb")
+registry_text <- readLines(registry_file, warn = FALSE)
+registry_blocks <- strsplit(paste(registry_text, collapse = "\n"), "%%", fixed = TRUE)[[1]]
+registry <- rbindlist(lapply(registry_blocks, function(block) {
+  lines <- strsplit(block, "\n", fixed = TRUE)[[1]]
+  if (!"Type: language" %in% lines) return(NULL)
+  value <- function(key) paste(sub(paste0("^", key, ": "), "",
+    grep(paste0("^", key, ": "), lines, value = TRUE)), collapse = "; ")
+  data.table(Code = value("Subtag"), Meaning = value("Description"),
+    Scope = value("Scope"), Broader_language = value("Macrolanguage"),
+    Deprecated = value("Deprecated"))
+}))
+# This small proposal is editorial interpretation, not returned API metadata.
+alias_proposal <- c(eng = "en", fra = "fr", spa = "es", "英语" = "en",
+  "영어" = "en", "中文" = "zh")
+code_audit <- merge(language_totals, registry, by = "Code", all.x = TRUE, sort = FALSE)
+code_audit[, Action := fifelse(!is.na(Meaning), "Keep registered distinction",
+  fifelse(Code %in% names(alias_proposal), "Merge equivalent label (proposal)",
+  fifelse(Code %in% c("zh-cn", "zh-tw"), "Keep region tag; decide aggregation",
+  fifelse(Code == "__unknown__", "Keep unknown once", "Review unresolved label"))))]
+code_audit[Code == "eml", `:=`(Action = "Keep legacy combined label",
+  Meaning = "Emiliano-Romagnolo; retired and split into egl / rgn")]
+code_audit[, Proposed_code := fifelse(Code %in% names(alias_proposal),
+  unname(alias_proposal[Code]), Code)]
+show_table(data.frame(Registry_version = registry_text[1]))
+show_table(code_audit[, .(Labels = .N), by = Action])
+show_table(code_audit[Action != "Keep registered distinction" & Code != "__unknown__",
+  .(Code, Sources, Works, Action, Proposed_code)][order(Action, Code)])
+show_table(code_audit[Code %in% c("zh", "cmn", "yue", "wuu", "nah"),
+  .(Code, Meaning, Scope, Broader_language, Sources, Works)])
+```
+
+**Result:** A two-letter pattern is insufficient: `ot`, `pr`, `ua`, `wl` and `xx` also fail this registry match. They must not be guessed from resemblance (for example, `ua` is not automatically Ukrainian). `other` is an unspecified category. Keep these six labels' original counts in a separately identified unresolved group until their meaning is established. The [Glottolog historical record](https://glottolog.org/resource/languoid/id/emil1243) identifies `eml` as retired Emiliano-Romagnolo, split into Emilian (`egl`) and Romagnol (`rgn`) in 2009. Retain that legacy combined label separately: its count cannot be allocated between the two successors from this aggregate alone. Registered longer codes such as `yue` and `wuu` carry real distinctions and must not be rejected for their length. `nah` denotes a collection of languages, not one language.
+
+::: {.callout-warning title="Decision needed — language granularity and unresolved labels"}
+**Recommendation:** retain the language information. Merge the six explicit equivalent labels above in a reviewed mapping, preserving the originals. Keep `zh-cn` and `zh-tw` as region-tagged Chinese; they do not themselves prove simplified/traditional script. Keep Mandarin (`cmn`), Cantonese (`yue`) and Wu (`wuu`) distinct from broad Chinese (`zh`) in the first representation.
+
+**Choice still needed:** whether the research question requires these distinctions or a broader Chinese aggregate, and whether unresolved labels should form one explicitly named “unresolved” share. My recommendation is to preserve the distinctions (including the legacy `eml` grouping) and pool only unresolved labels for the initial analysis, while retaining the original labels for audit. Do not silently turn them into missing language.
+
+**Next action:** review the displayed mapping with the supervisor; investigate the six unresolved labels (`ot`, `other`, `pr`, `ua`, `wl`, `xx`) against their original work records. Then sum counts within each approved mapped category **before dividing by the unchanged all-work denominator**. Verify per-source totals and that defined shares still sum to one. These mapping choices are proposed here; no final language features have been generated.
+:::
+
 <details>
 <summary>All observed language labels and coverage</summary>
 
 
 ```{r}
 #| label: complete-language-codes
-show_table(language_totals)
+show_table(code_audit[order(-Works), .(Code, Meaning, Sources, Works)])
 ```
 
 </details>
 
-## 8. Why are 19 preprint sources present in a journal dataset?
+## 7. Why are 19 preprint sources present in a journal dataset?
 
-**Answer:** They were already labelled **`type=journal` and `is_preprint_repository=true` in the original OpenAlex responses**. Our journal filter used the first field; it did not exclude the second. Upstream stores and exports the two fields independently. This is inherited source classification, not a join error introduced by this project.
+**Answer: retain the preprint flag and the 19 records in the agreed cohort; do not delete them solely because of the flag.** They were already labelled **`type=journal` and `is_preprint_repository=true` in the original OpenAlex responses**. Our journal filter used the first field; it did not exclude the second. Upstream stores and exports the two fields independently. This is inherited source classification, not a join error introduced by this project.
 
 The labels also describe different publishing arrangements: [Preprints.org](https://www.preprints.org/about) hosts unreviewed manuscripts, whereas [Qeios](https://www.qeios.com/publishing-policy) publishes preprints and peer-approved journal articles. Treating every flagged source as the same kind of mistake would lose this distinction. **Retain the 19 records and their flag in the agreed OpenAlex-defined cohort; report a sensitivity analysis excluding them if the study claims to describe conventional journals.** No rows are deleted here.
 
@@ -305,9 +380,13 @@ show_table(preprints[, .(Source = display_name, Source_ID = source_id, ISSNs = i
 
 **Result:** All 19 flags agree with the original responses collected on 1 October. The [upstream source snapshot](https://github.com/ourresearch/openalex-walden/blob/7021748a6946c262484437b356f355d2b9e1a494/notebooks/sources/CreateSources.ipynb) passes through both registry fields, and its [API builder](https://github.com/ourresearch/openalex-walden/blob/7021748a6946c262484437b356f355d2b9e1a494/notebooks/sources/CreateSourcesApi.ipynb) exports them separately. That establishes the origin of the coexistence; it does not certify every historical classification decision. The cohort is therefore accurately described as *OpenAlex sources classified as journals*, not a verified census of peer-reviewed journals.
 
-## 9. Can ISSNs be counted, and does ISSN-L identify print or electronic editions?
+::: {.callout-warning title="Decision needed — what population does the study claim to describe?"}
+**Recommendation:** keep the current OpenAlex-defined cohort and add an exclusion comparison for the 19 flagged sources. **Next action:** agree whether the main claim concerns all OpenAlex journal-labelled sources or conventional journals. If it is the latter, review the 19 sources' publication policies and report results with and without them; this report establishes their provenance, not that all are conventional journals.
+:::
 
-**Answer:** Count distinct ISSNs in the returned list. **Do not add ISSN-L as another edition:** it is a linking identifier selected from the ISSNs. The arrays have no print/electronic labels, so their order cannot identify the medium. A missing list is unknown, not a confirmed count of zero.
+## 8. Can ISSNs be counted, and does ISSN-L identify print or electronic editions?
+
+**Answer: retain the distinct ISSN count as a count of recorded identifiers, not a count of media or editions. Do not include an inferred print/electronic feature yet.** ISSN means *International Standard Serial Number*. Count distinct ISSNs in the returned list. **Do not add ISSN-L as another edition:** it is a linking identifier selected from the ISSNs. **Neither the digits, the final check digit (including X), nor the list order identifies print versus electronic.** The [ISSN International Centre](https://www.issn.org/understanding-the-issn/what-is-an-issn/) defines the number as an identifier without intrinsic meaning. The arrays have no medium labels. A missing list is unknown, not a confirmed count of zero.
 
 
 ```{r}
@@ -340,9 +419,53 @@ show_table(data.frame(Source = d$display_name[example], issn = d$issn[example], 
 
 **Result:** The largest returned list has `r max(issn_n, na.rm=TRUE)` distinct ISSNs, so the suggested 0/1/2 categories are insufficient. [The ISSN International Centre](https://www.issn.org/understanding-the-issn/assignment-rules/the-issn-l-for-publications-on-multiple-media/) defines ISSN-L as a link across media. Use a distinct-count feature with missingness retained; separate print/electronic indicators require medium-labelled records. Checksum validity alone does not verify a journal–identifier match.
 
-## 10. What do the years mean, and how should missing or suspicious values be handled?
+### Can another field establish the medium?
 
-**Answer:** First/last publication years describe indexed works, not a verified journal lifespan. Missing OA years do not mean “never OA.” Use missing values as missing, and do not calculate age from year 0. Two specific values need interpretation: Kew's first year 0 is unusable, while the high-OA year 2027 can reflect an upstream year-offset convention rather than an announced future launch.
+**No existing Route B predictor is an equivalent substitute.** Homepage presence shows that a URL was returned; an open-access flag concerns access conditions; `is_ojs` concerns a publishing platform; DOI presence concerns identifiers. None establishes whether a print edition exists. Multiple ISSNs can also reflect title histories and metadata grouping, so their number is not a reliable medium proxy.
+
+**A medium-labelled external record can supply direct evidence.** Crossref, a scholarly metadata registry, exposes `issn-type`; its [API documentation](https://github.com/CrossRef/rest-api-doc/blob/master/api_format.md#issn-with-type) describes typed ISSNs. The following live journal response verifies the actual labels used by this endpoint. It is a current lookup for one matched journal, separate from the frozen October 1 dataset.
+
+```{r}
+#| label: crossref-medium-example
+crossref_file <- file.path(out, "decision-sources", "crossref-journal-communication.json")
+# Cached retrieval: 29 October 2026. Remove the cache to repeat the lookup.
+if (!file.exists(crossref_file)) download.file(
+  "https://api.crossref.org/journals/0021-9916", crossref_file, mode = "wb")
+crossref <- fromJSON(crossref_file, simplifyVector = FALSE)$message
+medium_rows <- rbindlist(lapply(crossref[["issn-type"]], function(x) {
+  data.table(ISSN = x$value, Crossref_medium = x$type)
+}))
+stopifnot(crossref$title == d$display_name[example],
+  setequal(medium_rows$ISSN, unlist(issns[[example]])),
+  all(medium_rows$Crossref_medium %in% c("print", "electronic")))
+show_table(data.frame(Source = d$display_name[example],
+  OpenAlex_ISSN_list = d$issn[example], OpenAlex_ISSN_L = d$issn_l[example],
+  Crossref_title = crossref$title))
+show_table(medium_rows)
+```
+
+**Result:** For the same Journal of Communication record, Crossref labels **0021-9916 as print** and **1460-2466 as electronic**. The labels come from the registry response, not a numerical pattern. This establishes a feasible enrichment route, not its coverage or accuracy across the cohort. A typed ISSN records a medium version; it does not by itself establish that the print edition was still active on October 1.
+
+| Evidence route | What it can contribute | Consequence for this study |
+|---|---|---|
+| Crossref `issn-type`; ISSN Portal medium record | Explicit medium associated with the exact identifier | Suitable first sources; inspect missing and conflicting labels and preserve retrieval dates |
+| Publisher journal information | Print / online identifier labels and sometimes cessation dates | Resolve conflicting cases and check whether a medium was active at the study date |
+| Existing Scopus `ISSN` / `EISSN` reference columns | A source already organized by identifier field | Do **not** derive a predictor from availability in the reference used to define the Scopus outcome; it would reveal part of that outcome |
+| Existing homepage, OA, OJS or identifier-count fields | Web presence, access, platform or number of recorded identifiers | Retain their own meanings; do not relabel them as print/electronic status |
+
+The [ISSN Portal guidance](https://publishers.issn.org/faq3) confirms that medium is a separate searchable attribute. OA means open access; OJS means Open Journal Systems. EISSN is an electronic ISSN. A missing medium label means **not established**, not “no print” or “no electronic edition.”
+
+::: {.callout-warning title="Decision needed — add a medium attribute, or keep identifier count only?"}
+**Recommendation:** keep distinct ISSN count now; **defer a print/electronic predictor until an enrichment audit supports it**. If the substantive interest is digital availability, use a directly observed digital-access measure and name it accordingly; do not substitute it for publication medium.
+
+**Choice still needed:** is the intended attribute “a registered print/electronic version exists” or “that version was actively publishing at the study date”? The second needs dated publication/cessation evidence.
+
+**Next action:** first agree on that definition. Then query typed records by exact valid ISSN for a predeclared sample spanning one/multiple/missing identifiers; check publisher evidence for conflicts and report matched, unresolved, conflicting and dated-evidence coverage. Only then decide whether cohort-wide enrichment is worthwhile. If retained, encode separately **print evidence present / absent / unknown** and **electronic evidence present / absent / unknown**; use “absent” only with explicit evidence. Both media can be present. Do not force a binary print-versus-electronic category.
+:::
+
+## 9. What do the years mean, and how should missing or suspicious values be handled?
+
+**Answer: retain first/last indexed years and distinct OA timing fields with their own definitions; exclude `created_date` from substantive predictors until its meaning is resolved.** Keep the raw `created_date` for provenance. First/last publication years describe indexed works, not a verified journal lifespan. Missing OA years do not mean “never OA.” Use missing values as missing, and do not calculate age from year 0. Two specific values need interpretation: Kew's first year 0 is unusable, while the high-OA year 2027 can reflect an upstream year-offset convention rather than an announced future launch.
 
 
 ```{r}
@@ -375,24 +498,33 @@ For *Digestive and Liver Disease*, the frozen record contains high-OA year **202
 
 The same API code aggregates cumulative citations by the works' publication year and derives `created_date` from associated work records, whereas [current documentation](https://help.openalex.org/data/common-attributes/) describes these dates differently. Use neutral field labels and the frozen values; neither `created_date` nor first indexed publication establishes journal age. Historical prediction requires predictor values actually available at its observation date.
 
-## 11. What can be encoded next, and where does BERTopic fit?
+::: {.callout-warning title="Decision needed — distinguish OA history from metadata timing"}
+**Recommendation:** retain indexed first/last years and the DOAJ / high-OA / flip-year fields for their separate events, with missingness preserved. DOAJ is the Directory of Open Access Journals; entry into that directory and becoming open access are different events. **Do not use `created_date` as journal age or as a substantive predictor while its source definition is unresolved.** This is a proposed change in model use, not a change to the shared raw-field label.
 
-**Answer:** The checks support counts for returned names/ISSNs, language shares with unknown represented once, and year-specific USD prices with gaps retained. Title words, homepage presence and identifier presence remain simple candidates. BERTopic is a separate text-analysis option; it does not convert the existing OpenAlex topic IDs into meaningful numbers.
+**Next action:** choose the outcome and observation date; compare the OA timing fields on the same journals to quantify overlap before deciding on the final representation. Review the 2027/2026 pair as an offset convention and exclude future-valued events from completed-event features. Obtain a version-matched definition or record-level generation trace before reconsidering `created_date`; otherwise leave it out of the first feature set.
+:::
 
-| Information retained in the discussion | Supported next representation |
-|---|---|
-| Alternative names / ISSNs | Distinct returned count; preserve missing ISSN lists |
-| Language | Verified code mapping, then all-work shares; one unknown-share column |
-| APC | USD for the relevant year, with missingness; original currency for checks |
-| Main title / homepage / Wikidata | Declared title-word indicators or text features; presence indicators; publisher identity requires a verified match |
-| Preprint flag | Retain; compare results with and without the 19 flagged sources |
-| Dates and OA years | Keep distinct meanings; invalid analysis values missing; no future information |
-| Existing topic classifications | Categorical indicators or shares at an explicitly selected hierarchy level |
+## 10. What should we retain, exclude or decide next?
 
-[BERTopic's original method](https://maartengr.github.io/BERTopic/algorithm/algorithm.html) combines text embeddings, dimensionality reduction, clustering and topic-word representations. A journal-level study would need a stated corpus, such as article titles/abstracts, followed by aggregation to journals. Journal names alone are not an adequate substitute for that corpus. No topic model was run for this field check.
+**Answer:** Retain the information that has a defensible meaning; remove duplicate representations and defer features whose intended meaning cannot yet be established. The recommendations below are concrete proposals for the next discussion, not newly recorded joint decisions.
 
-These are evidence-backed recommendations, not new shared decisions. The next implementation needs the study's outcome and observation date to be selected; then missing-value treatment and feature selection must be fitted within training data, following the [official guidance on data leakage](https://scikit-learn.org/stable/common_pitfalls.html#data-leakage).
+| Disputed item | Recommendation | Decision evidence and next action |
+|---|---|---|
+| Original-currency APC | **Retain for audit and supplementary prices; not as an extra raw model column** | Adds 251 sources without USD; conversion dates absent. Keep currency and value; do not impute with today's rate. |
+| Annual APC | **Retain** | Adds historical information and 187 sources without current USD; select the observation year and preserve gaps. |
+| Alternative titles | **Retain as a distinct-name count** | Observed duplication requires deduplication; describes returned names, not abbreviations or complete name history. |
+| All-work language shares | **Retain; exclude known-only shares from the default representation** | Same counts with a different denominator. Use all counted works and preserve undefined shares for zero totals. |
+| Unknown-language share / count | **Retain share once; exclude extra unknown count by default** | Share is duplicated in the dictionary; count is recoverable from retained total and share. |
+| Language-code granularity | **Retain information; decision needed on mapping** | Registry audit and explicit aliases shown above. Approve mapping and unresolved category before generating columns. |
+| Preprint flag and 19 records | **Retain in current cohort; decision needed on population claim** | Confirmed in raw responses. Review publication policies if restricting to conventional journals; compare exclusion results. |
+| ISSN list / ISSN-L | **Retain distinct identifier count; exclude extra ISSN-L count** | Linking ISSN is not another edition. Medium cannot be decoded from the number. |
+| Print/electronic feature | **Defer; decision needed on definition and enrichment** | Crossref's typed records work for the verified example. Audit coverage and dated validity before inclusion. No existing field is an equivalent proxy. |
+| Indexed years and OA timing | **Retain distinct information; decision needed on time alignment** | Year 0 is invalid; 2027 is not a completed event at the freeze. Define observation date and compare timing fields. |
+| `created_date` | **Exclude from first substantive feature set; retain raw for provenance** | Documentation and upstream generation differ. Resolve source semantics before reconsidering. |
 
+**Recommended next sequence:** agree on the language mapping and medium definition first; settle the population claim and observation date; then implement the approved representations and assess missingness. Keep the current shared-label file intact until the proposed changes are jointly accepted.
+
+BERTopic remains a separate possible text analysis, not a prerequisite for these decisions. It groups documents using text representations and clustering; it does not turn existing OpenAlex topic IDs into meaningful continuous values. Its [method documentation](https://maartengr.github.io/BERTopic/algorithm/algorithm.html) can guide a later corpus-based decision. No text model or predictive model was run for this report.
 
 ```{r}
 #| label: execution-receipt
@@ -404,6 +536,11 @@ write_json(list(executed_at_utc = format(Sys.time(), tz="UTC", usetz=TRUE),
   apc_summary = apc_summary, language_max_error = max(language_errors),
   language_zero_denominator = sum(total == 0), language_codes = language_codes,
   non_two_letter_codes = non_two_letter_codes, code_anomaly_journals = code_anomaly_journals,
+  language_registry_version = registry_text[1],
+  language_mapping_actions = code_audit[, .(Labels = .N), by = Action],
+  crossref_medium_example = medium_rows,
+  decision_source_sha256 = list(registry = digest(registry_file, algo="sha256", file=TRUE),
+    crossref = digest(crossref_file, algo="sha256", file=TRUE)),
   issn_max_unique_count = max(issn_n, na.rm=TRUE), year_summary = year_summary,
   preprint_sources = nrow(preprints), raw_preprint_rows_verified = raw_check$rows,
   unknown_count_share_pearson = unknown_correlation, R_version = R.version.string), file.path(out, "execution.json"), pretty=TRUE, auto_unbox=TRUE)
